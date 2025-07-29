@@ -1,10 +1,12 @@
+import React from 'react';
+import {
+  FaPlus, FaMinus, FaTrash, FaSearch, FaUser, FaMobileAlt, FaUtensils,
+  FaTruck, FaMoneyBillWave, FaCreditCard, FaMobileScreenButton, FaSave,
+  FaPrint, FaKitchenSet, FaRedo
+} from "react-icons/fa";
 
-import { FaPlus, FaMinus, FaTrash, FaSearch } from "react-icons/fa";
-
-
-// OrderSummary Component
 const OrderSummary = ({
-  customer, mobile, setMobile, handleCustomerSearch, isCustomerModalOpen, setCustomerModalOpen,
+  customer, mobile, setMobile, handleCustomerSearch,
   orderType, handleOrderTypeChange, TableName, deliveryProvider,
   addedProducts, incrementQuantity, decrementQuantity, removeProduct,
   invoiceSummary, setInvoiceSummary, subtotal, vat, payable, paid, change,
@@ -14,116 +16,127 @@ const OrderSummary = ({
 
   const handlePaymentButtonClick = (method) => {
     handlePaymentMethodSelect(method);
-
   };
 
-
   return (
-    <div className="w-full lg:w-2/6 p-4"> {/* Added padding for overall component */}
-      <div className="bg-white rounded-xl shadow-lg p-6 mb-6"> {/* Increased padding, rounded corners, and shadow */}
-        {/* This grid layout ensures responsiveness for mobile input and order type specific fields */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6"> {/* Used grid for better responsiveness */}
-          <div className="flex flex-col">
-            <label htmlFor="mobileInput" className="block text-sm font-semibold text-gray-700 mb-2">Enter Mobile Number:</label>
-            <div className="flex gap-1"> {/* Increased gap */}
-              <input
-                id="mobileInput"
-                type="text"
-                className="flex-grow border border-gray-300 px-1 py-2.5 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" // Slightly more padding
-                value={mobile}
-                onChange={(e) => setMobile(e.target.value)}
-              />
-                  <button
-                className="px-1 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 ease-in-out shadow-md" // Darker blue, more padding, larger shadow
-                onClick={handleCustomerSearch}
-              >
-                <FaSearch className="text-lg" /> {/* Replaced "Search" text with FaSearch icon */}
-              </button>
-            </div>
+    <div className="w-full lg:w-2/6 p-1 md:p-6 font-inter">
+      {/* Customer and Order Details Section */}
+      <div className="bg-white rounded-2xl shadow-xl p-1 md:p-8 mb-6 border border-gray-100">
+
+        {/* Mobile Number Input and Search */}
+        <div className="flex flex-col mb-2 md:mb-4">
+          <label htmlFor="mobileInput" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+            <FaMobileAlt className="text-base text-blue-500" /> Enter Customer Mobile Number:
+          </label>
+          <div className="flex gap-2 md:gap-3">
+            <input
+              id="mobileInput"
+              type="text"
+              className="flex-grow border border-gray-300 px-3 py-2 md:px-4 md:py-3 rounded-xl focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 text-sm md:text-base"
+              value={mobile}
+              onChange={(e) => setMobile(e.target.value)}
+              placeholder="e.g., 01712345678"
+            />
+            <button
+              className="px-4 py-2 md:px-5 md:py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors duration-300 ease-in-out shadow-lg transform hover:scale-105 flex items-center justify-center"
+              onClick={handleCustomerSearch}
+              aria-label="Search Customer"
+            >
+              <FaSearch className="text-base md:text-lg" />
+            </button>
           </div>
-          {orderType === 'dine-in' && (
-            <div className="flex flex-col">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Selected Table:</label>
-              <div className="px-1 py-2.5  border border-gray-300 rounded-lg bg-gray-100 font-bold text-center text-gray-800 h-10 flex items-center justify-center"> {/* Centered text vertically */}
-                {TableName || 'N/A'}
-              </div>
-            </div>
-          )}
-          {orderType === 'delivery' && (
-            <div className="flex flex-col">
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Provider:</label>
-              <div className="px-1 py-2.5 border border-gray-300 rounded-lg bg-gray-100 font-bold text-center text-gray-800 h-10 flex items-center justify-center"> {/* Centered text vertically */}
-                {deliveryProvider || 'N/A'}
-              </div>
-            </div>
-          )}
         </div>
 
+        {/* Customer Info */}
         {customer && (
-          <div className="mb-6 p-4 border border-blue-300 rounded-lg bg-blue-50 text-blue-800 shadow-sm"> {/* Refined colors and shadow */}
-            <p className="font-semibold text-base">Customer Name: <span className="font-normal">{customer.name}</span></p>
-            <p className="font-semibold text-base">Customer Mobile: <span className="font-normal">{customer.mobile}</span></p>
+          <div className="mb-4 md:mb-6 p-4 border border-blue-400 rounded-xl bg-blue-50 text-blue-800 shadow-md">
+            <p className="font-semibold text-sm md:text-base flex items-center gap-2">
+              <FaUser className="text-blue-600" /> Customer Name: <span className="font-normal">{customer.name}</span>
+            </p>
+            <p className="font-semibold text-sm md:text-base flex items-center gap-2">
+              <FaMobileAlt className="text-blue-600" /> Customer Mobile: <span className="font-normal">{customer.mobile}</span>
+            </p>
           </div>
         )}
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg p-6"> {/* Increased padding, rounded corners, and shadow */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 pb-4 border-b border-gray-200"> {/* Adjusted alignment */}
-          <h2 className="text-2xl font-bold text-gray-800 mb-3 sm:mb-0">Invoice Summary</h2>
-          <select
-            value={orderType || ''}
-            onChange={(e) => handleOrderTypeChange(e.target.value)}
-            className="border border-gray-300 px-4 py-2 rounded-lg text-gray-700 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" // More padding, rounded
-          >
-            <option value="dine-in">Dine-in</option>
-            <option value="takeaway">Takeaway</option>
-            <option value="delivery">Delivery</option>
-          </select>
+      {/* Invoice Summary Section */}
+      <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 border border-gray-100">
+        {/* Invoice Header with Order Type & Table/Provider */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-4 md:mb-6 gap-4 border-b border-gray-200 pb-4">
+          {/* Left: Title and Dropdown */}
+          <div className="flex-1">
+            <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 mb-3">Invoice Summary</h2>
+            <select
+              value={orderType || ''}
+              onChange={(e) => handleOrderTypeChange(e.target.value)}
+              className="border border-gray-300 px-4 py-2 md:px-5 md:py-3 rounded-xl text-sm md:text-base text-gray-700 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 bg-white shadow-sm"
+            >
+              <option value="dine-in">Dine-in</option>
+              <option value="takeaway">Takeaway</option>
+              <option value="delivery">Delivery</option>
+            </select>
+          </div>
+
+          {/* Right: Table or Provider Info */}
+          {(orderType === 'dine-in' || orderType === 'delivery') && (
+            <div className="min-w-[160px]">
+              <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2">
+                {orderType === 'dine-in' ? (
+                  <>
+                    <FaUtensils className="text-green-500" />
+                    Selected Table:
+                  </>
+                ) : (
+                  <>
+                    <FaTruck className="text-purple-500" />
+                    Provider:
+                  </>
+                )}
+              </label>
+              <div className="px-4 py-2 border border-gray-300 rounded-xl bg-gray-100 font-bold text-center text-gray-800 h-10 md:h-12 flex items-center justify-center text-sm md:text-base">
+                {orderType === 'dine-in' ? (TableName || 'N/A') : (deliveryProvider || 'N/A')}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Added Products Table */}
-        <div className="overflow-x-auto max-h-80 mb-6 border border-gray-200 rounded-lg shadow-inner custom-scrollbar"> {/* Increased max-height, rounded, inner shadow */}
+        <div className="overflow-x-auto max-h-96 mb-4 md:mb-6 border border-gray-200 rounded-xl shadow-inner custom-scrollbar">
           <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-100 sticky top-0"> {/* Sticky header */}
+            <thead className="bg-gray-100 sticky top-0 shadow-sm">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Product</th> {/* Increased padding, darker text */}
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Quantity</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Action</th>
+                <th className="px-4 py-2 md:px-6 md:py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Product</th>
+                <th className="px-4 py-2 md:px-6 md:py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Quantity</th>
+                <th className="px-4 py-2 md:px-6 md:py-4 text-right text-xs font-bold text-gray-700 uppercase tracking-wider">Price</th>
+                <th className="px-4 py-2 md:px-6 md:py-4 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Action</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-gray-100">
               {addedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="4" className="px-4 py-6 text-center text-gray-500 italic">No products added yet.</td> {/* Increased padding, italicized */}
+                  <td colSpan="4" className="px-4 py-6 md:px-6 md:py-8 text-center text-gray-500 italic text-sm md:text-base">
+                    No products added yet.
+                  </td>
                 </tr>
               ) : (
                 addedProducts.map((product) => (
-                  <tr key={product._id} className="hover:bg-gray-50 transition-colors duration-150"> {/* Hover effect */}
-                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{product.productName}</td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                  <tr key={product._id} className="hover:bg-blue-50 transition-colors duration-200">
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm font-medium text-gray-900">{product.productName}</td>
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm text-gray-700">
                       <div className="flex items-center justify-center gap-2">
-                        <button
-                          onClick={() => decrementQuantity(product._id)}
-                          className="p-1.5 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400" // Added focus styles
-                        >
-                          <FaMinus className="text-gray-600 text-xs" />
+                        <button onClick={() => decrementQuantity(product._id)} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300">
+                          <FaMinus className="text-xs" />
                         </button>
-                        <span className="font-semibold text-base">{product.quantity}</span> {/* Larger font size */}
-                        <button
-                          onClick={() => incrementQuantity(product._id)}
-                          className="p-1.5 bg-gray-200 rounded-full hover:bg-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400" // Added focus styles
-                        >
-                          <FaPlus className="text-gray-600 text-xs" />
+                        <span className="font-extrabold text-sm text-gray-900">{product.quantity}</span>
+                        <button onClick={() => incrementQuantity(product._id)} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300">
+                          <FaPlus className="text-xs" />
                         </button>
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right font-medium">{product.price * product.quantity} TK</td> {/* Added font-medium */}
-                    <td className="px-4 py-3 whitespace-nowrap text-sm text-center">
-                      <button
-                        onClick={() => removeProduct(product._id)}
-                        className="p-2 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors duration-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-red-400" // Added focus styles
-                      >
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm text-right font-bold">{product.price * product.quantity} TK</td>
+                    <td className="px-4 py-3 md:px-6 md:py-4 text-center">
+                      <button onClick={() => removeProduct(product._id)} className="p-2.5 bg-red-600 text-white rounded-full hover:bg-red-700">
                         <FaTrash className="text-xs" />
                       </button>
                     </td>
@@ -135,115 +148,108 @@ const OrderSummary = ({
         </div>
 
         {/* Invoice Summary Details */}
-        <div className="mt-4">
+        <div className="mt-6">
           <table className="w-full border-collapse">
             <tbody>
               <tr className="border-b border-gray-200">
-                <td className="px-4 py-2.5 text-gray-700 text-base">Sub Total (TK):</td> {/* Increased padding, larger text */}
-                <td className="px-4 py-2.5 text-right font-semibold text-gray-900 text-base">{subtotal}</td>
+                <td className="px-4 py-2 text-sm text-gray-700">Sub Total (TK):</td>
+                <td className="px-4 py-2 text-right font-bold">{subtotal}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="px-4 py-2.5 text-gray-700 text-base">VAT (TK):</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-gray-900 text-base">{vat}</td>
+                <td className="px-4 py-2 text-sm text-gray-700">VAT (TK):</td>
+                <td className="px-4 py-2 text-right font-bold">{vat}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="px-4 py-2.5 text-gray-700 text-base">Discount (TK):</td>
-                <td className="px-4 py-2.5 text-right">
+                <td className="px-4 py-2 text-sm text-gray-700">Discount (TK):</td>
+                <td className="px-4 py-2 text-right">
                   <input
                     type="number"
-                    className="border border-gray-300 px-3 py-1.5 w-28 text-right rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" // Larger input
+                    className="border border-gray-300 px-3 py-1.5 w-28 text-right rounded-lg"
                     value={invoiceSummary.discount}
                     onChange={(e) => setInvoiceSummary({ ...invoiceSummary, discount: parseFloat(e.target.value) || 0 })}
+                    min="0"
                   />
                 </td>
               </tr>
-              <tr className="border-b border-gray-200 bg-blue-50">
-                <td className="px-4 py-3 font-bold text-blue-800 text-lg">Total Amount (TK):</td> {/* Larger text, more padding */}
-                <td className="px-4 py-3 text-right font-bold text-blue-800 text-xl">{payable}</td> {/* Larger text */}
+              <tr className="border-b border-blue-300 bg-blue-50">
+                <td className="px-4 py-3 font-extrabold text-blue-800">Total Amount (TK):</td>
+                <td className="px-4 py-3 text-right font-extrabold text-blue-800">{payable}</td>
               </tr>
               <tr className="border-b border-gray-200">
-                <td className="px-4 py-2.5 text-gray-700 text-base">Paid Amount (TK):</td>
-                <td className="px-4 py-2.5 text-right">
+                <td className="px-4 py-2 text-sm text-gray-700">Paid Amount (TK):</td>
+                <td className="px-4 py-2 text-right">
                   <input
                     type="number"
-                    className="border border-gray-300 px-3 py-1.5 w-28 text-right rounded-md focus:ring-blue-500 focus:border-blue-500 transition-all duration-200" // Larger input
+                    className="border border-gray-300 px-3 py-1.5 w-28 text-right rounded-lg"
                     value={invoiceSummary.paid}
                     onChange={(e) => setInvoiceSummary({ ...invoiceSummary, paid: parseFloat(e.target.value) || 0 })}
+                    min="0"
                   />
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-2.5 text-gray-700 text-base">Change Amount (TK):</td>
-                <td className="px-4 py-2.5 text-right font-semibold text-gray-900 text-base">{change}</td>
+                <td className="px-4 py-2 text-sm text-gray-700">Change Amount (TK):</td>
+                <td className="px-4 py-2 text-right font-bold">{change}</td>
               </tr>
             </tbody>
           </table>
 
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg shadow-inner mt-6"> {/* Added margin top, shadow */}
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Payment Method</h3> {/* Larger margin bottom */}
-            <div className="flex flex-wrap justify-center gap-3"> {/* Used flex-wrap and gap for better spacing on small screens */}
-              <button
-                onClick={() => handlePaymentButtonClick("Cash")}
-                className={`flex-1 min-w-[100px] py-3 rounded-lg font-bold text-lg transition-all duration-200 transform hover:scale-105
-                  ${selectedPaymentMethod === "Cash" ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`} // Added transform and hover scale
-                disabled={isProcessing}
-              >
-                Cash
-              </button>
-              <button
-                onClick={() => handlePaymentButtonClick("Card")}
-                className={`flex-1 min-w-[100px] py-3 rounded-lg font-bold text-lg transition-all duration-200 transform hover:scale-105
-                  ${selectedPaymentMethod === "Card" ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                disabled={isProcessing}
-              >
-                Card
-              </button>
-              <button
-                onClick={() => handlePaymentButtonClick("Mobile")}
-                className={`flex-1 min-w-[100px] py-3 rounded-lg font-bold text-lg transition-all duration-200 transform hover:scale-105
-                  ${selectedPaymentMethod === "Mobile" ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
-                disabled={isProcessing}
-              >
-                Mobile
-              </button>
+          {/* Payment Method */}
+          <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">Payment Method</h3>
+            <div className="flex flex-wrap justify-center gap-3">
+              {["Cash", "Card", "Mobile"].map((method) => (
+                <button
+                  key={method}
+                  onClick={() => handlePaymentButtonClick(method)}
+                  className={`min-w-[100px] px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm
+                    ${selectedPaymentMethod === method ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                  disabled={isProcessing}
+                >
+                  {method === "Cash" && <FaMoneyBillWave />}
+                  {method === "Card" && <FaCreditCard />}
+                  {method === "Mobile" && <FaRedo />}
+                  {method}
+                </button>
+              ))}
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6"> {/* Used grid for better responsiveness */}
+          <div className="grid grid-cols-2 gap-4 mt-6">
             <button
               onClick={() => printInvoice(false)}
-              className="px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors duration-200 ease-in-out shadow-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-green-400"
+              className="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold flex items-center justify-center gap-2"
               disabled={isProcessing}
             >
-              {isProcessing ? "Processing..." : "Save"}
+              <FaSave /> {isProcessing ? "Processing..." : "Save"}
             </button>
             <button
               onClick={() => printInvoice(true)}
-              className="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors duration-200 ease-in-out shadow-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+              className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold flex items-center justify-center gap-2"
               disabled={isProcessing}
             >
-              {isProcessing ? "Processing..." : "Print"}
+              <FaPrint /> Print
             </button>
             <button
               onClick={handleKitchenClick}
-              className="px-4 py-3 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors duration-200 ease-in-out shadow-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-yellow-400"
+              className=" bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 font-bold flex items-center justify-center gap-2"
               disabled={isProcessing}
             >
-              Kitchen
+              <FaSave /> Kitchen
             </button>
             <button
               onClick={resetOrder}
-              className="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200 ease-in-out shadow-md text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-red-400"
+              className=" bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-bold flex items-center justify-center gap-2"
               disabled={isProcessing}
             >
-              Reset
+              <FaRedo /> Reset
             </button>
           </div>
         </div>
       </div>
     </div>
-  );
+  ); 
 };
 
 export default OrderSummary;

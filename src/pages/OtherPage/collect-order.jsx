@@ -444,7 +444,7 @@ const CollectOrder = () => {
 
       {/* Main Order Screen will only render when all preliminary modals are closed */}
       {!isOrderTypeModalOpen && !isTableSelectionModalOpen && !isDeliveryProviderModalOpen && (
-        <div className="flex flex-col lg:flex-row p-4 gap-6">
+        <div className="flex flex-col lg:flex-row p-1 gap-1">
           {/* New Customer Modal */}
           <NewCustomerModal
             isOpen={isCustomerModalOpen}
