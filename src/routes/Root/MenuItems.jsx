@@ -43,6 +43,14 @@ const menuItems = () => {
       icon: <MdPendingActions className="text-lg" />,
     },
     {
+      title: "Finished Order",
+      path: "/dashboard/UpdateOrdersHistory",
+      icon: <MdPendingActions className="text-lg" />,
+    },
+
+
+    
+    {
       title: "Order History",
       path: "/dashboard/order-history",
       icon: <MdHistory className="text-lg" />,
@@ -76,6 +84,11 @@ const menuItems = () => {
         {
           title: "Table Management",
           path: "/dashboard/tables/manage",
+          icon: <MdTableView className="text-lg" />,
+        },
+        {
+          title: "Table Reservation",
+          path: "/dashboard/tables/reservation",
           icon: <MdTableView className="text-lg" />,
         },
       ],

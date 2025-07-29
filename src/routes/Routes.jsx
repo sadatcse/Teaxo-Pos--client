@@ -27,11 +27,11 @@ import PrivateRoot from "./Root/PrivateRoot";
 
 // Other imports (assuming they are correct)
 import PrintPreview from "../pages/OtherPage/PrintPreview";
-import DeliveryTimeReport from "../pages/OtherPage/delivery-time-report";
-import MaterialsUsedReport from "../pages/OtherPage/materials-used-report";
-import FundReportDaily from "../pages/OtherPage/fund-report-daily";
-import SalesReportsWithAddons from "../pages/OtherPage/sales-reports-with-addons";
-import SalesReportDetails from "../pages/OtherPage/sales-report-details";
+// import DeliveryTimeReport from "../pages/OtherPage/delivery-time-report";
+// import MaterialsUsedReport from "../pages/OtherPage/materials-used-report";
+// import FundReportDaily from "../pages/OtherPage/fund-report-daily";
+// import SalesReportsWithAddons from "../pages/OtherPage/sales-reports-with-addons";
+// import SalesReportDetails from "../pages/OtherPage/sales-report-details";
 import AHome from './../pages/Admin/AHome';
 import ACatagroie from './../pages/Admin/ACatagroie';
 import ACompany from './../pages/Admin/ACompany';
@@ -42,6 +42,8 @@ import ErrorLog from './../pages/Admin/ErrorLog';
 import LoginLog from "../pages/Admin/LoginLog";
 import ARoot from "./Root/Aroot";
 import SuperAdminPrivateRoute from "./Root/SuperAdminPrivateRoute";
+import UpdateOrdersHistory from './../pages/OtherPage/update-orders-history';
+import TableReservation from "../pages/Table/TableReservation";
 
 
 export const router = createBrowserRouter([
@@ -74,6 +76,10 @@ export const router = createBrowserRouter([
         path: "home",
         element: <PrivateRoot><DashboardHome /></PrivateRoot>,
       },
+            {
+        path: "UpdateOrdersHistory",
+        element: <PrivateRoot><UpdateOrdersHistory /></PrivateRoot>,
+      },
       {
         // Changed from "collect-order" to match menu
         path: "pos",
@@ -104,6 +110,11 @@ export const router = createBrowserRouter([
         // Changed from "table" to match menu
         path: "tables/manage",
         element: <PrivateRoot><TableManagement /></PrivateRoot>,
+      },
+            {
+        // Changed from "table" to match menu
+        path: "tables/reservation",
+        element: <PrivateRoot><TableReservation /></PrivateRoot>,
       },
 
       // --- Report Routes ---

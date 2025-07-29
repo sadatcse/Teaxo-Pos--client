@@ -10,7 +10,7 @@ import Foodpanda from "../../assets/Delivery/Foodpanda.png";
 // --- STEP 2 (IMPROVED): Define providers as an array of objects for more flexibility ---
 const providers = [
   {
-    id: "InHouse",
+    id: "DeliveryBoy",
     name: "In-House Delivery",
     image: home,
   },

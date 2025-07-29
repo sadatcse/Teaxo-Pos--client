@@ -16,6 +16,7 @@ const Sidebar = ({ isCollapsed }) => {
   const navigate = useNavigate();
   const UserRole = "admin"; 
   const { companies } = useCompanyHook();
+  console.log(companies);
 
 
   const handleNavigation = (path) => {
