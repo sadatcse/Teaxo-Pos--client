@@ -44,6 +44,7 @@ import ARoot from "./Root/Aroot";
 import SuperAdminPrivateRoute from "./Root/SuperAdminPrivateRoute";
 import UpdateOrdersHistory from './../pages/OtherPage/update-orders-history';
 import TableReservation from "../pages/Table/TableReservation";
+import Kitchendisplay from "../pages/ExtraPage/Kitchendisplay";
 
 
 export const router = createBrowserRouter([
@@ -99,7 +100,15 @@ export const router = createBrowserRouter([
         path: "customers",
         element: <PrivateRoot><Customer /></PrivateRoot>,
       },
+      {
+        // Changed from "customer" to match menu
+        path: "kitchendisplay",
+        element: <PrivateRoot><Kitchendisplay /></PrivateRoot>,
+      },
 
+
+
+      
       // --- Table Management Routes ---
       {
         // Changed from "lobby" to match menu

@@ -1,4 +1,4 @@
-import { useState, useContext, useRef } from "react"; // Added useEffect, useCallback if not already there
+import { useState, useContext, useRef } from "react";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import useCompanyHook from "../../Hook/useCompanyHook";
@@ -36,48 +36,45 @@ const CollectOrder = () => {
   // Axios instance for secure API calls
   const axiosSecure = UseAxiosSecure();
 
-  // Product and Category States - REPLACED WITH NEW HOOK
+  // Product and Category States using the custom hook
   const {
-    products, // These are now the filtered products
+    products,
     categories,
     selectedCategory,
     setSelectedCategory,
-    loadingProducts, // Renamed for clarity
-  } = useCategoriesWithProducts(branch); // Pass the branch to the hook
+    loadingProducts,
+  } = useCategoriesWithProducts(branch);
 
   // Order Details States
   const [addedProducts, setAddedProducts] = useState([]); // Products added to the current order
   const [orderType, setOrderType] = useState(null); // 'dine-in', 'takeaway', 'delivery'
   const [TableName, setTableName] = useState(""); // Name of the selected table for dine-in
-  const [deliveryProvider, setDeliveryProvider] = useState(""); // Selected delivery provider for delivery orders
-  const [invoiceSummary, setInvoiceSummary] = useState({ // Financial summary of the invoice
-    vat: 0,
-    discount: 0,
-    paid: 0,
-  });
-  const [print, setPrint] = useState(null); // Data to be passed to receipt components for printing
-  const [isProcessing, setIsProcessing] = useState(false); // State to prevent multiple submissions
+  const [deliveryProvider, setDeliveryProvider] = useState(""); // Selected delivery provider
+  
+  // CORRECTED: State for user inputs like discount and paid amount. VAT is calculated, not stored here.
+  const [invoiceSummary, setInvoiceSummary] = useState({ discount: 0, paid: 0 });
+  
+  const [print, setPrint] = useState(null); // Data for receipt components
+  const [isProcessing, setIsProcessing] = useState(false); // Prevent multiple submissions
+  const [currentInvoiceId, setCurrentInvoiceId] = useState(null); // Hold current invoice ID for updates
 
   // State for managing modals
   const [isOrderTypeModalOpen, setIsOrderTypeModalOpen] = useState(true);
   const [isTableSelectionModalOpen, setIsTableSelectionModalOpen] = useState(false);
   const [isDeliveryProviderModalOpen, setIsDeliveryProviderModalOpen] = useState(false);
-  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false); // State for customer receipt modal
-  const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false); // State for kitchen receipt modal
+  const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+  const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
-  // State to hold the ID of the current invoice (for updates)
-  const [currentInvoiceId, setCurrentInvoiceId] = useState(null);
 
   // Refs for printing components
   const receiptRef = useRef();
   const kitchenReceiptRef = useRef();
 
-  // Company data hook (for receipt header)
+  // Company data hook
   const { companies } = useCompanyHook();
 
   /**
    * Handles customer search by mobile number.
-   * Displays validation errors if mobile number is invalid.
    */
   const handleCustomerSearch = () => {
     if (!mobile) {
@@ -92,120 +89,118 @@ const CollectOrder = () => {
   };
 
   /**
-   * Handles the initial selection of order type from the modal.
-   * Opens subsequent modals based on the selected type.
-   * @param {string} type - The selected order type ('dine-in', 'takeaway', 'delivery').
+   * Handles the initial selection of order type.
+   * @param {string} type - The selected order type.
    */
   const handleOrderTypeSelect = (type) => {
     setOrderType(type);
-    setIsOrderTypeModalOpen(false); // Close order type modal
+    setIsOrderTypeModalOpen(false);
 
     if (type === "dine-in") {
-      setIsTableSelectionModalOpen(true); // Open table selection for dine-in
+      setIsTableSelectionModalOpen(true);
     } else if (type === "delivery") {
-      setIsDeliveryProviderModalOpen(true); // Open delivery provider selection for delivery
+      setIsDeliveryProviderModalOpen(true);
     } else {
-      // For 'takeaway', ensure no table/delivery provider is selected
       setTableName("");
       setSelectedTable("");
       setDeliveryProvider("");
     }
   };
+
+  /**
+   * Handles payment method selection.
+   * @param {string} method - The selected payment method.
+   */
   const handlePaymentMethodSelect = (method) => {
     setSelectedPaymentMethod(method);
-        Swal.fire({
-      icon: 'success',
-      title: 'Payment Method Selected!',
-      text: `You have selected ${method} as the payment method.`,
-      toast: true,
-      position: 'top-end',
-      showConfirmButton: false,
-      timer: 3000,
-      timerProgressBar: true,
+    toast.success(`Payment method set to ${method}.`, {
+        position: "top-center",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+        progress: undefined,
     });
   };
+
   /**
-   * Handles changing the order type from the dropdown in the main UI.
-   * Resets related states and opens relevant modals.
+   * Handles changing the order type from the main UI.
    * @param {string} type - The new order type.
    */
   const handleOrderTypeChange = (type) => {
     setOrderType(type);
-    // Reset table/delivery info when changing type
     setSelectedTable("");
     setTableName("");
     setDeliveryProvider("");
 
-    // Open the relevant modal based on the new type
     if (type === "dine-in") {
       setIsTableSelectionModalOpen(true);
     } else if (type === 'delivery') {
       setIsDeliveryProviderModalOpen(true);
     } else {
-      // For "takeaway", close any other modals that might be open
       setIsTableSelectionModalOpen(false);
       setIsDeliveryProviderModalOpen(false);
     }
   };
 
   /**
-   * Handles the selection of a delivery provider from the modal.
+   * Handles the selection of a delivery provider.
    * @param {string} provider - The selected delivery provider.
    */
   const handleDeliveryProviderSelect = (provider) => {
     setDeliveryProvider(provider);
-    setIsDeliveryProviderModalOpen(false); // Close delivery provider modal
+    setIsDeliveryProviderModalOpen(false);
   };
 
   /**
-   * Rounds a given amount to the nearest whole number.
+   * Rounds a number to the nearest whole number.
    * @param {number} amount - The amount to round.
    * @returns {number} The rounded amount.
    */
   const roundAmount = (amount) => Math.round(amount);
 
   /**
-   * Adds a product to the current order.
-   * If the product already exists, increments its quantity.
-   * @param {object} product - The product object to add.
+   * Adds a product to the order with a default 'PENDING' cookStatus.
+   * @param {object} product - The product to add.
    */
   const addProduct = (product) => {
     const existingProduct = addedProducts.find((p) => p._id === product._id);
     if (existingProduct) {
       setAddedProducts(addedProducts.map((p) => (p._id === product._id ? { ...p, quantity: p.quantity + 1 } : p)));
     } else {
-      setAddedProducts([...addedProducts, { ...product, quantity: 1 }]);
+      setAddedProducts([...addedProducts, { ...product, quantity: 1, cookStatus: 'PENDING' }]);
     }
   };
 
   /**
-   * Increments the quantity of a product in the order.
-   * @param {string} id - The ID of the product to increment.
+   * Updates the cooking status of a product in the order.
+   * @param {string} productId - The ID of the product to update.
+   * @param {string} status - The new cooking status ('PENDING', 'COOKING', 'SERVED').
    */
+  const updateCookStatus = (productId, status) => {
+    setAddedProducts(currentProducts =>
+      currentProducts.map(p =>
+        p._id === productId ? { ...p, cookStatus: status } : p
+      )
+    );
+    toast.info(`Product status updated to ${status}`);
+  };
+
   const incrementQuantity = (id) => {
     setAddedProducts(addedProducts.map((p) => (p._id === id ? { ...p, quantity: p.quantity + 1 } : p)));
   };
 
-  /**
-   * Decrements the quantity of a product in the order.
-   * Removes the product if quantity becomes 0.
-   * @param {string} id - The ID of the product to decrement.
-   */
   const decrementQuantity = (id) => {
     setAddedProducts(addedProducts.map((p) => (p._id === id && p.quantity > 1 ? { ...p, quantity: p.quantity - 1 } : p)));
   };
 
-  /**
-   * Removes a product entirely from the order.
-   * @param {string} id - The ID of the product to remove.
-   */
   const removeProduct = (id) => {
     setAddedProducts(addedProducts.filter((p) => p._id !== id));
   };
 
   /**
-   * Handles the selection of a table from the table selection modal.
-   * Updates the selected table ID and its name.
+   * Handles table selection from the modal.
    * @param {string} tableId - The ID of the selected table.
    */
   const handleTableSelect = (tableId) => {
@@ -215,8 +210,7 @@ const CollectOrder = () => {
   };
 
   /**
-   * Confirms the table selection and closes the modal.
-   * Displays an error if no table is selected.
+   * Confirms table selection and closes the modal.
    */
   const handleTableSelectionConfirm = () => {
     if (selectedTable) {
@@ -228,14 +222,12 @@ const CollectOrder = () => {
 
   /**
    * Prepares and displays the Kitchen Order Ticket (KOT) modal.
-   * Shows a warning if no products are added.
    */
   const handleKitchenClick = () => {
     if (addedProducts.length === 0) {
       toast.warn("Please add products before sending to kitchen.");
       return;
     }
-    // Prepare data for the kitchen receipt
     const kitchenInvoiceDetails = {
       orderType,
       tableName: TableName,
@@ -243,35 +235,36 @@ const CollectOrder = () => {
       products: addedProducts.map((p) => ({
         productName: p.productName,
         qty: p.quantity,
+        cookStatus: p.cookStatus || 'PENDING',
       })),
-      loginUserName, // Include login user for "Prepared by"
-      invoiceSerial: print?.invoiceSerial || "N/A", // Use the invoice serial if available from a prior save/print
+      loginUserName,
+      invoiceSerial: print?.invoiceSerial || "N/A",
     };
-    setPrint(kitchenInvoiceDetails); // Set 'print' state with kitchen-specific data
-    setIsKitchenModalOpen(true); // Open the kitchen modal
+    setPrint(kitchenInvoiceDetails);
+    setIsKitchenModalOpen(true);
     toast.info("KOT Ready for Kitchen!");
   };
 
   /**
-   * Resets all states related to the current order, preparing for a new one.
-   * Re-opens the order type selection modal.
+   * Resets the order state for a new transaction.
    */
   const resetOrder = () => {
     setAddedProducts([]);
-    setInvoiceSummary({ vat: 0, discount: 0, paid: 0 });
+    // CORRECTED: Reset only the user-input fields.
+    setInvoiceSummary({ discount: 0, paid: 0 });
     setMobile("");
     setSelectedTable("");
     setTableName("");
     setOrderType(null);
     setDeliveryProvider("");
-    setCurrentInvoiceId(null); // Clear the current invoice ID
-    setIsOrderTypeModalOpen(true); // Re-open order type modal for next order
+    setCurrentInvoiceId(null);
+    setIsOrderTypeModalOpen(true);
     toast.error("Order Reset!");
   };
 
   /**
-   * Validates inputs before attempting to save or print an invoice.
-   * @returns {boolean} True if all inputs are valid, false otherwise.
+   * Validates inputs before saving or printing.
+   * @returns {boolean} True if valid, false otherwise.
    */
   const validateInputs = () => {
     if (addedProducts.length === 0) {
@@ -294,13 +287,14 @@ const CollectOrder = () => {
   };
 
   /**
-   * Calculates the subtotal, VAT, discount, and payable amount for the current order.
-   * @returns {object} An object containing subtotal, vat, discount, and payable.
+   * Calculates totals for the current order. This is the single source of truth for calculations.
+   * @returns {object} An object with subtotal, vat, discount, and payable amounts.
    */
   const calculateTotal = () => {
     const subtotal = addedProducts.reduce((total, p) => total + p.price * p.quantity, 0);
-    // Calculate total VAT based on product-level VAT percentages
-    const vat = addedProducts.reduce((total, p) => total + (p.vat * p.price * p.quantity) / 100, 0);
+    // VAT is calculated based on the VAT percentage of each product.
+  const vat = addedProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
+
     const discount = parseFloat(invoiceSummary.discount || 0);
     const payable = subtotal + vat - discount;
     return {
@@ -312,15 +306,14 @@ const CollectOrder = () => {
   };
 
   /**
-   * Handles saving and/or printing the invoice.
-   * Makes a POST request for a new invoice or a PUT request for an existing one.
-   * @param {boolean} isPrintAction - True if the action also involves printing the customer receipt.
+   * Saves or updates the invoice and optionally prints a receipt.
+   * @param {boolean} isPrintAction - True to trigger printing the customer receipt.
    */
   const printInvoice = async (isPrintAction) => {
     if (!validateInputs()) return;
-    setIsProcessing(true); // Disable buttons during processing
+    setIsProcessing(true);
 
-    const { vat, discount, payable } = calculateTotal(); // Destructure payable here
+    const { subtotal, vat, discount, payable } = calculateTotal();
     const invoiceDetails = {
       orderType,
       products: addedProducts.map((p) => ({
@@ -328,104 +321,70 @@ const CollectOrder = () => {
         qty: p.quantity,
         rate: p.price,
         subtotal: roundAmount(p.price * p.quantity),
-        vat: p.vat, // Include product-level VAT for calculation accuracy
+        vat: p.vat || 0, // Sending the VAT percentage for each item
+        cookStatus: p.cookStatus || 'PENDING',
       })),
+      subtotal: roundAmount(subtotal),
       discount: roundAmount(discount),
-      vat: roundAmount(vat),
+      vat: roundAmount(vat), // Sending the total calculated VAT amount
       loginUserEmail,
       loginUserName,
-      customerName: customer?.name || "Guest", // Use customer name from state
-      customerMobile: customer?.mobile || "n/a", // Use customer mobile from state
-      counter: "Counter 1", // Hardcoded counter, consider making dynamic if needed
+      customerName: customer?.name || "Guest",
+      customerMobile: customer?.mobile || "n/a",
+      counter: "Counter 1",
       branch: branch,
-      totalAmount: payable, // <--- ENSURE THIS IS THE CALCULATED PAYABLE
-      paymentMethod: selectedPaymentMethod, // Include the selected payment method
+      totalAmount: payable,
+      paymentMethod: selectedPaymentMethod,
     };
 
-    // Add order type specific details
-    if (orderType === "dine-in") {
-      invoiceDetails.tableName = TableName;
-    }
-    if (orderType === "delivery") {
-      invoiceDetails.deliveryProvider = deliveryProvider;
-    }
+    if (orderType === "dine-in") invoiceDetails.tableName = TableName;
+    if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
 
     try {
       let response;
       if (currentInvoiceId) {
-        // If an invoice ID exists, update the existing invoice
         response = await axiosSecure.put(`/invoice/update/${currentInvoiceId}`, invoiceDetails);
         toast.success("Invoice updated successfully!");
       } else {
-        // Otherwise, create a new invoice
         response = await axiosSecure.post("/invoice/post", invoiceDetails);
         toast.success("Invoice saved successfully!");
       }
 
       const data = response.data;
-
-      // Create a comprehensive print data object
-      // This ensures `print` state always contains the correct calculated total and other details needed for the receipt,
-      // regardless of what the backend's `response.data` might contain for `totalAmount` if it differs.
       const dataForPrint = {
-        ...data, // Start with data from backend response
-        products: invoiceDetails.products, // Use the client-side calculated products for precise subtotals
-        vat: invoiceDetails.vat, // Use client-side calculated VAT
-        discount: invoiceDetails.discount, // Use client-side calculated discount
-        totalAmount: invoiceDetails.totalAmount, // IMPORTANT: Use the client-side calculated payable
-        orderType: invoiceDetails.orderType,
-        tableName: invoiceDetails.tableName,
-        deliveryProvider: invoiceDetails.deliveryProvider,
-        customerName: invoiceDetails.customerName,
-        customerMobile: invoiceDetails.customerMobile,
-        loginUserName: invoiceDetails.loginUserName,
-        paymentMethod: invoiceDetails.paymentMethod, // Include payment method in print data
-        // dateTime will come from backend, or can be set here if backend doesn't return it
-        dateTime: data.dateTime || new Date().toISOString(), // Use backend dateTime or current time
-        invoiceSerial: data.invoiceSerial || data._id, // Ensure invoiceSerial is present
+        ...data,
+        ...invoiceDetails, // Pass all calculated details to the receipt
+        dateTime: data.dateTime || new Date().toISOString(),
+        invoiceSerial: data.invoiceSerial || data._id,
       };
 
-      setPrint(dataForPrint); // Set the explicitly constructed invoice data for receipt generation
-
-      // If the backend returns an invoiceId, store it for subsequent updates
-      if (data.invoiceId) {
-        setCurrentInvoiceId(data.invoiceId);
-      } else if (data._id) { // Fallback if backend uses _id for the invoice
-        setCurrentInvoiceId(data._id);
-      }
-
+      setPrint(dataForPrint);
+      setCurrentInvoiceId(data.invoiceId || data._id);
 
       if (isPrintAction && companies[0] && data) {
-        setIsReceiptModalOpen(true); // Open the customer receipt modal
-      } else {
-        // If not printing, or if print action is complete, reset the order
-        // This ensures the UI is cleared for a new transaction after a save or print
-        // resetOrder(); // Removed immediate reset to allow user to view saved invoice before new order
+        setIsReceiptModalOpen(true);
       }
     } catch (error) {
       console.error("Error saving/updating invoice:", error);
       const errorMessage = error.response?.data?.error || "Failed to process the invoice.";
       Swal.fire("Error", errorMessage, "error");
     } finally {
-      setIsProcessing(false); // Re-enable buttons
+      setIsProcessing(false);
     }
   };
 
-  // Calculate final amounts for display
+  // Calculate totals for rendering
   const { subtotal, vat, payable } = calculateTotal();
   const paid = roundAmount(parseFloat(invoiceSummary.paid || 0));
-  const change = paid - payable;
+  const change = paid > 0 ? paid - payable : 0;
 
   return (
     <div className="font-sans antialiased bg-gray-100 min-h-screen">
-      {/* Order Type Selection Modal */}
       <OrderTypeSelectionModal
         isOpen={isOrderTypeModalOpen}
         onSelect={handleOrderTypeSelect}
-        onClose={() => !orderType && setIsOrderTypeModalOpen(true)} // Prevent closing if no type selected initially
+        onClose={() => !orderType && setIsOrderTypeModalOpen(true)}
       />
-
-      {/* Table Selection Modal (for Dine-in) */}
       <TableSelectionModal
         isOpen={isTableSelectionModalOpen}
         tables={tables}
@@ -434,35 +393,29 @@ const CollectOrder = () => {
         onConfirm={handleTableSelectionConfirm}
         onClose={() => setIsTableSelectionModalOpen(false)}
       />
-
-      {/* Delivery Provider Selection Modal (for Delivery) */}
       <DeliveryProviderSelectionModal
         isOpen={isDeliveryProviderModalOpen}
         onSelect={handleDeliveryProviderSelect}
         onClose={() => setIsDeliveryProviderModalOpen(false)}
       />
 
-      {/* Main Order Screen will only render when all preliminary modals are closed */}
       {!isOrderTypeModalOpen && !isTableSelectionModalOpen && !isDeliveryProviderModalOpen && (
         <div className="flex flex-col lg:flex-row p-1 gap-1">
-          {/* New Customer Modal */}
           <NewCustomerModal
             isOpen={isCustomerModalOpen}
             onClose={() => setCustomerModalOpen(false)}
             mobile={mobile}
           />
 
-          {/* Left Section: Categories and Products (ProductSelection Component) */}
           <ProductSelection
             products={products}
             categories={categories}
             selectedCategory={selectedCategory}
             setSelectedCategory={setSelectedCategory}
             addProduct={addProduct}
-            loading={loadingProducts} // Pass the renamed loading state
+            loading={loadingProducts}
           />
 
-          {/* Right Section: Customer Info, Invoice Summary, Actions (OrderSummary Component) */}
           <OrderSummary
             customer={customer}
             mobile={mobile}
@@ -491,30 +444,28 @@ const CollectOrder = () => {
             isProcessing={isProcessing}
             selectedPaymentMethod={selectedPaymentMethod}
             handlePaymentMethodSelect={handlePaymentMethodSelect}
+            updateCookStatus={updateCookStatus}
           />
-
-
         </div>
       )}
 
-      {/* Customer Receipt Modal */}
       {isReceiptModalOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={() => {
             setIsReceiptModalOpen(false);
-            resetOrder(); // Reset order after closing customer receipt modal
+            resetOrder();
           }}
         >
           <div
-            className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm transform transition-all duration-300 scale-95 hover:scale-100"
+            className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700 transition-colors duration-200"
+              className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700"
               onClick={() => {
                 setIsReceiptModalOpen(false);
-                resetOrder(); // Reset order after closing customer receipt modal
+                resetOrder();
               }}
             >
               Close
@@ -523,7 +474,7 @@ const CollectOrder = () => {
               ref={receiptRef}
               onPrintComplete={() => {
                 setIsReceiptModalOpen(false);
-                resetOrder(); // Reset order after print completes
+                resetOrder();
               }}
               profileData={companies[0]}
               invoiceData={print}
@@ -532,26 +483,25 @@ const CollectOrder = () => {
         </div>
       )}
 
-      {/* NEW: Kitchen Receipt Modal */}
       {isKitchenModalOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           onClick={() => setIsKitchenModalOpen(false)}
         >
           <div
-            className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm transform transition-all duration-300 scale-95 hover:scale-100"
+            className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm"
             onClick={(e) => e.stopPropagation()}
           >
             <button
-              className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700 transition-colors duration-200"
+              className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700"
               onClick={() => setIsKitchenModalOpen(false)}
             >
               Close
             </button>
             <KitchenReceiptTemplate
-              ref={kitchenReceiptRef} // Use the new ref for kitchen receipt
+              ref={kitchenReceiptRef}
               profileData={companies[0]}
-              invoiceData={print} // 'print' state now holds kitchen-specific data when this modal is open
+              invoiceData={print}
             />
           </div>
         </div>

@@ -47,6 +47,11 @@ const menuItems = () => {
       path: "/dashboard/UpdateOrdersHistory",
       icon: <MdPendingActions className="text-lg" />,
     },
+        {
+      title: "Kitchen Display",
+      path: "/dashboard/kitchendisplay",
+      icon: <MdPendingActions className="text-lg" />,
+    },
 
 
     
