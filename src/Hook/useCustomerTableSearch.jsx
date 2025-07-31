@@ -1,5 +1,4 @@
-import { useState, useEffect, useContext } from "react";
-
+import { useState, useEffect, useContext, useCallback } from "react";
 import UseAxiosSecure from "./UseAxioSecure";
 import { AuthContext } from "../providers/AuthProvider";
 
@@ -9,43 +8,39 @@ const useCustomerTableSearch = () => {
   const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
   const axiosSecure = UseAxiosSecure();
-  const [error, setError] = useState(null); // New state to hold error message
+  const [error, setError] = useState(null);
   const { branch } = useContext(AuthContext);
-  // Fetch tables from the database
-  const fetchTables = async () => {
+
+  // ✅ Wrap in useCallback to avoid useEffect dependency warning
+  const fetchTables = useCallback(async () => {
     try {
-      const response = await axiosSecure.get(`/table/branch/${branch}`);
+      const response = await axiosSecure.get(`/tablecombine/tables/status/${branch}`);
       setTables(response.data);
     } catch (error) {
       console.error("Error fetching tables:", error);
     }
-  };
+  }, [axiosSecure, branch]);
 
   useEffect(() => {
     fetchTables();
-  }, []);
+  }, [fetchTables]);
 
-  // Search customer by mobile number
   const searchCustomer = async (mobile) => {
     try {
-  
       const response = await axiosSecure.get(`/customer/branch/${branch}/search?mobile=${mobile}`);
       setCustomerModalOpen(false);
-  
-  
+
       if (Array.isArray(response.data) && response.data.length > 0) {
-        setCustomer(response.data[0]); // Assume first match is correct
+        setCustomer(response.data[0]);
       } else {
- 
         setCustomer(null);
-        setCustomerModalOpen(true); // Open modal to add new customer
+        setCustomerModalOpen(true);
       }
     } catch (error) {
       console.error("Error searching customer:", error);
     }
   };
 
-  // Add a new customer
   const addNewCustomer = async (customerData) => {
     try {
       const response = await axiosSecure.post("/customer/post", customerData);
@@ -56,10 +51,7 @@ const useCustomerTableSearch = () => {
 
       if (error.response) {
         const { status, data } = error.response;
-
-        if (status === 401) {
-          setError(data.error);
-        } else if (status === 402) {
+        if (status === 401 || status === 402) {
           setError(data.error);
         } else {
           setError("Failed to add customer. Please try again.");
@@ -70,8 +62,6 @@ const useCustomerTableSearch = () => {
     }
   };
 
-
-
   return {
     customer,
     tables,
@@ -81,7 +71,6 @@ const useCustomerTableSearch = () => {
     addNewCustomer,
     setSelectedTable,
     error,
-
     setCustomerModalOpen,
   };
 };

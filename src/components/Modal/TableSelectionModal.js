@@ -1,7 +1,31 @@
-import React from "react";
-import { TfiClose } from "react-icons/tfi"; // Close Icon
-import { LuArmchair } from "react-icons/lu"; // A nice icon for a table/seat
-import { BsFillCheckCircleFill } from "react-icons/bs"; // Checkmark for selection
+import React, { useState } from "react";
+
+// --- SVG Icons (Replaced react-icons for a self-contained component) ---
+
+const CloseIcon = ({ size = 20, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <line x1="18" y1="6" x2="6" y2="18"></line>
+    <line x1="6" y1="6" x2="18" y2="18"></line>
+  </svg>
+);
+
+const CheckCircleIcon = ({ size = 20, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="currentColor" className={className}>
+    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+  </svg>
+);
+
+const ArmchairIcon = ({ size = 40, className = "" }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M19 9V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v3" />
+    <path d="M3 11v5a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5a2 2 0 0 0-4 0v2H7v-2a2 2 0 0 0-4 0Z" />
+    <path d="M5 18v2" />
+    <path d="M19 18v2" />
+  </svg>
+);
+
+
+// --- The Updated Table Selection Modal Component ---
 
 const TableSelectionModal = ({
   isOpen,
@@ -28,7 +52,7 @@ const TableSelectionModal = ({
             className="text-gray-400 hover:text-gray-600 transition-colors"
             aria-label="Close modal"
           >
-            <TfiClose size={20} />
+            <CloseIcon size={20} />
           </button>
         </div>
 
@@ -37,28 +61,50 @@ const TableSelectionModal = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {tables.map((table) => {
               const isSelected = selectedTable === table._id;
+              const isPending = table.status === 'pending';
+              const isReserved = table.status === 'reserved';
+              const isDisabled = isPending || isReserved;
+
+              // Helper to determine button classes based on status and selection
+              const getButtonClasses = () => {
+                if (isPending) return 'border-red-400 bg-red-50 text-red-700 cursor-not-allowed shadow-inner';
+                if (isReserved) return 'border-yellow-400 bg-yellow-50 text-yellow-800 cursor-not-allowed shadow-inner';
+                if (isSelected) return 'border-blue-600 bg-blue-50 shadow-md';
+                return 'border-gray-200 hover:border-blue-400 hover:shadow-sm';
+              };
+              
+              // Helper to determine icon and text colors
+              const getDynamicColor = (type) => {
+                if (isPending) return type === 'icon' ? 'text-red-400' : 'text-red-700';
+                if (isReserved) return type === 'icon' ? 'text-yellow-500' : 'text-yellow-800';
+                if (isSelected) return type === 'icon' ? 'text-blue-600' : 'text-blue-800';
+                return type === 'icon' ? 'text-gray-400' : 'text-gray-700';
+              };
+
               return (
                 <button
                   key={table._id}
-                  onClick={() => handleTableSelect(table._id)} // Pass ID directly
+                  onClick={() => handleTableSelect(table._id)}
+                  disabled={isDisabled}
                   className={`relative flex flex-col items-center justify-center p-4 border-2 rounded-lg aspect-square
-                              cursor-pointer transition-all duration-200 focus:outline-none focus:ring-2 
+                              transition-all duration-200 focus:outline-none focus:ring-2 
                               focus:ring-offset-2 focus:ring-blue-500
-                              ${isSelected
-                                ? 'border-blue-600 bg-blue-50 shadow-md'
-                                : 'border-gray-200 hover:border-blue-400 hover:shadow-sm'
-                              }`}
+                              ${getButtonClasses()}`}
                 >
-                  {/* Selected Checkmark Icon */}
-                  {isSelected && (
-                    <BsFillCheckCircleFill className="absolute top-2 right-2 text-blue-600" size={20} />
+                  {/* Selected Checkmark for 'free' tables */}
+                  {isSelected && !isDisabled && (
+                    <CheckCircleIcon className="absolute top-2 right-2 text-blue-600" size={24} />
                   )}
                   
-                  <LuArmchair
+                  {/* Status Indicator for unavailable tables */}
+                  {isPending && <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">Occupied</div>}
+                  {isReserved && <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-yellow-500 text-white text-[10px] font-bold rounded-full">Reserved</div>}
+                  
+                  <ArmchairIcon
                     size={40}
-                    className={`mb-2 transition-colors ${isSelected ? 'text-blue-600' : 'text-gray-400'}`}
+                    className={`mb-2 transition-colors ${getDynamicColor('icon')}`}
                   />
-                  <span className={`font-semibold text-center ${isSelected ? 'text-blue-800' : 'text-gray-700'}`}>
+                  <span className={`font-semibold text-center text-sm ${getDynamicColor('text')}`}>
                     {table.tableName}
                   </span>
                 </button>
