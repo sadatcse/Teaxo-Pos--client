@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  // --- Icons from the new structure ---
+  // --- Icons from the previous structure ---
   MdHome,
   MdPendingActions,
   MdHistory,
@@ -20,9 +20,16 @@ import {
   MdTableRestaurant,
   MdDashboard,
   MdExtension,
-  MdStore,      
-  MdReviews,    
-  MdList,        
+  MdStore,
+  MdReviews,
+  MdList,
+  MdFoodBank,
+  MdOutlineKitchen,
+  MdFactCheck,
+  // --- New Icons Added ---
+  MdShoppingBag,      // For Purchases
+  MdInventory2,       // For Stocks
+  MdStorefront,       // For Vendor
 } from "react-icons/md";
 
 const menuItems = () => {
@@ -45,36 +52,59 @@ const menuItems = () => {
     {
       title: "Finished Order",
       path: "/dashboard/UpdateOrdersHistory",
-      icon: <MdPendingActions className="text-lg" />,
+      icon: <MdFactCheck className="text-lg" />,
     },
-        {
+    {
       title: "Kitchen Display",
       path: "/dashboard/kitchendisplay",
-      icon: <MdPendingActions className="text-lg" />,
+      icon: <MdOutlineKitchen className="text-lg" />,
     },
-
-
-    
     {
       title: "Order History",
       path: "/dashboard/order-history",
       icon: <MdHistory className="text-lg" />,
     },
     {
-
       title: "Customers",
+      path: "/dashboard/customers",
       icon: <MdContacts className="text-lg" />,
+    },
+    {
+      title: "Accounting & Expense",
+      icon: <MdAccountBalance className="text-lg" />,
       list: [
         {
-          title: "Customers List",
-          path: "/dashboard/customers/list",
-          icon: <MdList className="text-lg" />,
+          title: "Expenses",
+          path: "/dashboard/expenses",
+          icon: <MdSell className="text-lg" />,
         },
         {
-          title: "Customers Review",
-          path: "/dashboard/customers/reviews",
-          icon: <MdReviews className="text-lg" />,
+          title: "Ingredients",
+          path: "/dashboard/ingredients",
+          icon: <MdFoodBank className="text-lg" />,
         },
+        {
+          title: "Ingredients Expense",
+          path: "/dashboard/ingredientsexpense",
+          icon: <MdAnalytics className="text-lg" />,
+        },
+
+        {
+          title: "Purchases",
+          path: "/dashboard/purchases",
+          icon: <MdShoppingBag className="text-lg" />,
+        },
+        {
+          title: "Stocks",
+          path: "/dashboard/stocks",
+          icon: <MdInventory2 className="text-lg" />,
+        },
+        {
+          title: "Vendor",
+          path: "/dashboard/vendor",
+          icon: <MdStorefront className="text-lg" />,
+        },
+        
       ],
     },
     {
@@ -99,7 +129,6 @@ const menuItems = () => {
       ],
     },
     {
-
       title: "Reports",
       icon: <MdReport className="text-lg" />,
       list: [
@@ -123,11 +152,9 @@ const menuItems = () => {
           path: "/dashboard/reports/user-activity",
           icon: <MdPerson className="text-lg" />,
         },
-
       ],
     },
     {
-
       title: "Settings",
       icon: <MdSettings className="text-lg" />,
       list: [
@@ -150,12 +177,6 @@ const menuItems = () => {
           title: "Counters",
           path: "/dashboard/settings/counters",
           icon: <MdCountertops className="text-lg" />,
-        },
-        {
-
-          title: "Restaurant List",
-          path: "/dashboard/settings/restaurants",
-          icon: <MdStore className="text-lg" />,
         },
         {
           title: "Tax / VAT",

@@ -1,251 +1,339 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect, useRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ReactPaginate from "react-paginate";
+import { useReactToPrint } from "react-to-print";
+import * as XLSX from "xlsx";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
-
-import { FaEye } from "react-icons/fa";
-import moment from "moment/moment";
+import { FaEye, FaCalendarAlt, FaBoxOpen, FaChartLine, FaFileInvoiceDollar, FaTimes, FaTags, FaPercentage, FaMoneyBill, FaCreditCard, FaMobileAlt, FaFileExcel, FaPrint } from "react-icons/fa";
+import moment from "moment";
 import Preloader from "../../components/Shortarea/Preloader";
 import { AuthContext } from "../../providers/AuthProvider";
+import useCompanyHook from "../../Hook/useCompanyHook";
+
+// Individual POS Receipt (Your provided component, slightly adapted)
+const IndividualReceipt = React.forwardRef(({ profileData, invoiceData }, ref) => {
+    if (!profileData || !invoiceData) return null;
+    return (
+        <div ref={ref} className="p-2 bg-white text-black" style={{ width: '80mm', fontFamily: 'monospace' }}>
+            <div className="text-center mb-2">
+                <h2 className="text-xl font-bold">{profileData.name}</h2>
+                <p className="text-xs">{profileData.address}</p>
+                <p className="text-xs">Contact: {profileData.phone}</p>
+                {profileData.binNumber && <p className="text-xs">BIN: {profileData.binNumber}</p>}
+            </div>
+            <hr className="border-dashed border-black my-2" />
+            <div className="text-xs text-center">
+                {invoiceData.orderType === "dine-in" && <p className="text-sm font-bold">Table: {invoiceData.tableName}</p>}
+                <p>Invoice: {invoiceData.invoiceSerial}</p>
+                <p>Date: {moment(invoiceData.dateTime).format("DD-MMM-YYYY h:mm A")}</p>
+                <p>Served By: {invoiceData.loginUserName}</p>
+            </div>
+            <hr className="border-dashed border-black my-2" />
+            <table className="w-full text-xs">
+                <thead>
+                    <tr>
+                        <th className="text-left">Item</th>
+                        <th className="text-center">Qty</th>
+                        <th className="text-right">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {invoiceData.products.map((item, index) => (
+                        <tr key={index}>
+                            <td>{item.productName}</td>
+                            <td className="text-center">{item.qty}</td>
+                            <td className="text-right">৳{item.subtotal.toFixed(2)}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            <hr className="border-dashed border-black my-2" />
+            <div className="text-xs text-right space-y-1">
+                <p>Subtotal: ৳{invoiceData.totalSale.toFixed(2)}</p>
+                {invoiceData.vat > 0 && <p>VAT: ৳{invoiceData.vat.toFixed(2)}</p>}
+                {invoiceData.discount > 0 && <p>Discount: -৳{invoiceData.discount.toFixed(2)}</p>}
+                <p className="font-bold text-sm">Total: ৳{invoiceData.totalAmount.toFixed(2)}</p>
+            </div>
+            <hr className="border-dashed border-black my-2" />
+            <div className="text-center">
+                <p className="font-bold capitalize text-sm">{invoiceData.orderType}</p>
+                <p className="text-xs mt-2">Thank you!</p>
+            </div>
+        </div>
+    );
+});
+
 
 const OrderHistory = () => {
-  const [date, setDate] = useState(new Date());
-  const [orderData, setOrderData] = useState([]);
-  const [currentPage, setCurrentPage] = useState(0);
-   const [isLoading, setIsLoading] = useState(false);
-  const ordersPerPage = 5;
-  const axiosSecure = UseAxiosSecure();
+    const [date, setDate] = useState(new Date());
+    const [orderData, setOrderData] = useState([]);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
+    const ordersPerPage = 10;
+    const axiosSecure = UseAxiosSecure();
     const { branch } = useContext(AuthContext);
-  const [showcaseData, setShowcaseData] = useState({
-    totalOrders: 0,
-    totalQuantity: 0,
-    totalAmount: 0,
-  });
+    const { companies } = useCompanyHook();
+    const companyInfo = companies[0];
 
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showModal, setShowModal] = useState(false);
+    const individualReceiptRef = useRef();
 
-  const fetchOrders = async () => {
-    setIsLoading(true);
-    try {
-      // Format the date to 'YYYY-MM-DD'
-      const formattedDate = moment(date).format('YYYY-MM-DD');
-      
-      // Make the request with the formatted date
-      const response = await axiosSecure.get(`/invoice/${branch}/date/${formattedDate}`);
-      const data = response.data;
-  
-      if (data && data.orders) {
-        const totalOrders = data.totalOrders || 0;
-        const totalQuantity = data.totalQty || 0;
-        const totalAmount = data.totalAmount || 0;
-  
-        setShowcaseData({ totalOrders, totalQuantity, totalAmount });
-        setOrderData(data.orders);
-        setIsLoading(false);
-      }
-    } catch (error) {
-      console.error("Error fetching order history:", error);
-      setIsLoading(false);
-    }
-  };
+    const [showcaseData, setShowcaseData] = useState({
+        totalOrders: 0, totalQuantity: 0, totalAmount: 0, totalVat: 0,
+        totalDiscount: 0, cashPayments: 0, cardPayments: 0, mobilePayments: 0,
+    });
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showModal, setShowModal] = useState(false);
 
-  const handlePageClick = (selectedPage) => {
-    setCurrentPage(selectedPage.selected);
-  };
+    const fetchOrders = async (selectedDate) => {
+        if (!branch) return;
+        setIsLoading(true);
+        try {
+            const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
+            const response = await axiosSecure.get(`/invoice/${branch}/date/${formattedDate}`);
+            const data = response.data;
+            if (data && data.orders) {
+                setShowcaseData({
+                    totalOrders: data.totalOrders || 0, totalQuantity: data.totalQty || 0, totalAmount: data.totalAmount || 0,
+                    totalVat: data.totalVat || 0, totalDiscount: data.totalDiscount || 0, cashPayments: data.cashPayments || 0,
+                    cardPayments: data.cardPayments || 0, mobilePayments: data.mobilePayments || 0,
+                });
+                setOrderData(data.orders);
+            } else {
+                setShowcaseData({ totalOrders: 0, totalQuantity: 0, totalAmount: 0, totalVat: 0, totalDiscount: 0, cashPayments: 0, cardPayments: 0, mobilePayments: 0 });
+                setOrderData([]);
+            }
+        } catch (error) {
+            console.error("Error fetching order history:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-  const handleViewDetails = (order) => {
-    setSelectedOrder(order);
-    setShowModal(true);
-  };
+    useEffect(() => { fetchOrders(date); }, [branch]);
 
-  const currentOrders = orderData.slice(
-    currentPage * ordersPerPage,
-    (currentPage + 1) * ordersPerPage
-  );
+    const handleDateChange = (newDate) => { setDate(newDate); fetchOrders(newDate); };
+    const handlePageClick = (selectedPage) => { setCurrentPage(selectedPage.selected); };
+    const handleViewDetails = (order) => { setSelectedOrder(order); setShowModal(true); };
 
-  return (
-    <div className="p-6 min-h-screen bg-gradient-to-r from-blue-50 to-blue-100">
-      <div className="bg-white border rounded-xl shadow-lg p-8 mb-8">
-        <h2 className="text-4xl font-bold text-blue-700 mb-6">Order History</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="flex flex-col">
-            <label className="text-lg font-semibold text-gray-700 mb-3">Select Date</label>
-            <DatePicker
-              selected={date}
-              onChange={(date) => setDate(date)}
-              className="border border-blue-300 rounded-lg px-4 py-3 w-full shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
-              dateFormat="yyyy-MM-dd"
-            />
-          </div>
-          <div className="flex items-end">
-            <button
-              onClick={fetchOrders}
-              className="bg-blue-700 text-white py-3 px-6 rounded-lg shadow-md hover:bg-blue-800 transition"
-            >
-              Search
-            </button>
-          </div>
-        </div>
-      </div>
+    const handleExcelDownload = () => {
+        const summaryData = [
+            { Category: "Total Orders", Value: showcaseData.totalOrders },
+            { Category: "Total Items Sold", Value: showcaseData.totalQuantity },
+            { Category: "Total Revenue (৳)", Value: showcaseData.totalAmount.toFixed(2) },
+            { Category: "Total VAT (৳)", Value: showcaseData.totalVat.toFixed(2) },
+            { Category: "Total Discount (৳)", Value: showcaseData.totalDiscount.toFixed(2) },
+            { Category: "Cash Payments (৳)", Value: showcaseData.cashPayments.toFixed(2) },
+            { Category: "Card Payments (৳)", Value: showcaseData.cardPayments.toFixed(2) },
+            { Category: "Mobile Payments (৳)", Value: showcaseData.mobilePayments.toFixed(2) },
+        ];
+        const ordersListData = orderData.map((order, index) => ({
+            '#': index + 1,
+            'Time': moment(order.dateTime).format('h:mm A'),
+            'Invoice ID': order.invoiceSerial,
+            'Items': order.totalQty,
+            'Amount (৳)': order.totalAmount.toFixed(2),
+            'Payment Method': order.paymentMethod,
+        }));
 
-<div>
-{isLoading ? (
-    <Preloader />
-  ) : (
+        const summarySheet = XLSX.utils.json_to_sheet(summaryData);
+        const ordersSheet = XLSX.utils.json_to_sheet(ordersListData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, summarySheet, "Daily Summary");
+        XLSX.utils.book_append_sheet(workbook, ordersSheet, "Order Details");
+        XLSX.writeFile(workbook, `Daily_Report_${moment(date).format('YYYY-MM-DD')}.xlsx`);
+    };
 
-<div>
- 
+    const handleIndividualPrint = useReactToPrint({ content: () => individualReceiptRef.current });
 
-     <div className="flex justify-center items-center  bg-gray-100 m-5">
-  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6 bg-white shadow-xl rounded-lg">
-    <div className="bg-blue-50 p-6 shadow-md rounded-lg text-center">
-      <h3 className="text-lg font-semibold text-gray-700">Total Orders</h3>
-      <p className="text-4xl font-bold text-blue-600 mt-2">{showcaseData.totalOrders}</p>
-    </div>
-    <div className="bg-blue-50 p-6 shadow-md rounded-lg text-center">
-      <h3 className="text-lg font-semibold text-gray-700">Total Quantity</h3>
-      <p className="text-4xl font-bold text-blue-600 mt-2">{showcaseData.totalQuantity}</p>
-    </div>
-    <div className="bg-blue-50 p-6 shadow-md rounded-lg text-center">
-      <h3 className="text-lg font-semibold text-gray-700">Total Amount</h3>
-      <p className="text-4xl font-bold text-blue-600 mt-2">{showcaseData.totalAmount.toFixed(2)} TK</p>
-    </div>
-  </div>
-</div>
-
-    <div className="bg-white border rounded-xl shadow-lg p-8">
-        <h3 className="text-2xl font-semibold text-gray-700 mb-6">Order Details</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm md:text-base">
-            <thead className="bg-blue-700 text-white">
-              <tr>
-                <th className="p-4 border">Serial</th>
-                <th className="p-4 border">Time</th>
-                <th className="p-4 border">Order ID</th>
-                <th className="p-4 border">Quantity</th>
-                <th className="p-4 border">Amount</th>
-                <th className="p-4 border">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentOrders.length === 0 ? (
-                <tr>
-                  <td colSpan="6" className="text-center py-6 text-gray-500">No orders found</td>
-                </tr>
-              ) : (
-                currentOrders.map((order, index) => (
-                  <tr key={order._id} className="hover:bg-blue-50">
-                    <td className="p-4 border text-center">{index + 1 + currentPage * ordersPerPage}</td>
-                    <td className="p-4 border text-center">{new Date(order.dateTime).toLocaleTimeString()}</td>
-                    <td className="p-4 border text-center">{order.invoiceSerial}</td>
-                    <td className="p-4 border text-center">{order.totalQty}</td>
-                    <td className="p-4 border text-right">{order.totalAmount.toFixed(2)}</td>
-                    <td className="p-4 border text-center">
-                      <button
-                        onClick={() => handleViewDetails(order)}
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-700 text-white rounded shadow hover:bg-blue-800 transition"
-                      >
-                        <FaEye /> View Details
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-        <div className="mt-6">
-          <ReactPaginate
-            previousLabel={"Previous"}
-            nextLabel={"Next"}
-            pageCount={Math.ceil(orderData.length / ordersPerPage)}
-            onPageChange={handlePageClick}
-            containerClassName={"flex justify-center items-center space-x-4"}
-            activeClassName={"bg-blue-700 text-white px-4 py-2 rounded"}
-            pageClassName={"px-4 py-2 border rounded hover:bg-blue-200"}
-            previousClassName={"px-4 py-2 border rounded hover:bg-blue-200"}
-            nextClassName={"px-4 py-2 border rounded hover:bg-blue-200"}
-          />
-        </div>
-      </div>
-
-
-</div>
-
- )}
-</div>
-
-  
-
-      {showModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-    <div className="bg-white rounded-lg shadow-lg w-11/12 md:w-3/4 lg:w-2/3">
-      <div className="flex justify-between items-center border-b px-6 py-4">
-        <h2 className="text-2xl font-bold text-gray-800">Order Details</h2>
-        <button
-          onClick={() => setShowModal(false)}
-          className="text-gray-500 hover:text-red-500 text-xl"
-        >
-          ✖
-        </button>
-      </div>
-      {selectedOrder && (
-        <div className="px-6 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p><strong>Order ID:</strong> {selectedOrder.invoiceSerial}</p>
-              <p><strong>Staff Name:</strong> {selectedOrder.loginUserName}</p>
-              <p><strong>Counter:</strong> {selectedOrder.counter}</p>
-              <p><strong>Status:</strong> {selectedOrder.orderStatus}</p>
+    const currentOrders = orderData.slice(currentPage * ordersPerPage, (currentPage + 1) * ordersPerPage);
+    
+    const SummaryCard = ({ icon, title, value, color }) => (
+        <div className={`bg-white p-4 rounded-lg shadow-sm flex items-center gap-4 border-l-4 border-${color}-500`}>
+            <div className={`rounded-full p-3 bg-${color}-100 text-${color}-600`}>
+                {icon}
             </div>
             <div>
-              <p><strong>Date:</strong> {new Date(selectedOrder.dateTime).toLocaleDateString()}</p>
-              <p><strong>Order Type:</strong> {selectedOrder.orderType}</p>
-              <p><strong>Total:</strong> ৳{selectedOrder.totalAmount.toFixed(2)}</p>
-              <p><strong>VAT:</strong> ৳{selectedOrder.vat.toFixed(2)}</p>
-              <p><strong>Discount:</strong> ৳{selectedOrder.discount.toFixed(2)}</p>
+                <p className="text-sm text-gray-500 font-medium">{title}</p>
+                <p className="text-xl font-bold text-gray-800">{value}</p>
             </div>
-          </div>
-          <h3 className="text-lg font-semibold text-gray-800 mt-6">Products:</h3>
-          <table className="w-full mt-4 border border-gray-200">
-            <thead className="bg-gray-100">
-              <tr>
-               
-                <th className="border px-4 py-2 text-left text-gray-700">Product Name</th>
-                <th className="border px-4 py-2 text-center text-gray-700">Quantity</th>
-                <th className="border px-4 py-2 text-center text-gray-700">Rate</th>
-                <th className="border px-4 py-2 text-center text-gray-700">Subtotal</th>
-              </tr>
-            </thead>
-            <tbody>
-              {selectedOrder.products.map((product) => (
-                <tr key={product._id} className="hover:bg-gray-50">
-                  <td className="border px-4 py-2 text-gray-800">{product.productName}</td>
-                  <td className="border px-4 py-2 text-center text-gray-800">{product.qty}</td>
-                  <td className="border px-4 py-2 text-center text-gray-800">৳{product.rate.toFixed(2)}</td>
-                  <td className="border px-4 py-2 text-center text-gray-800">৳{product.subtotal.toFixed(2)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
-      )}
-      <div className="flex justify-end px-6 py-4 border-t">
-        <button
-          onClick={() => setShowModal(false)}
-          className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+    );
+    
+    const PaymentSummaryCard = ({ title, data }) => (
+        <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-gray-500">
+             <h3 className="text-md font-semibold text-gray-700 mb-3">{title}</h3>
+             <div className="space-y-2 text-sm">
+                <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2 text-gray-600"><FaMoneyBill /> Cash</span>
+                    <span className="font-semibold text-gray-800">৳{data.cashPayments.toFixed(2)}</span>
+                </div>
+                 <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2 text-gray-600"><FaCreditCard /> Card</span>
+                    <span className="font-semibold text-gray-800">৳{data.cardPayments.toFixed(2)}</span>
+                </div>
+                 <div className="flex justify-between items-center">
+                    <span className="flex items-center gap-2 text-gray-600"><FaMobileAlt /> Mobile</span>
+                    <span className="font-semibold text-gray-800">৳{data.mobilePayments.toFixed(2)}</span>
+                </div>
+             </div>
+        </div>
+    );
 
-    </div>
-  );
+    return (
+        <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+            <div className="flex justify-between items-center mb-6">
+                <h1 className="text-2xl font-bold text-gray-800">Daily Order Report</h1>
+                <div className="flex items-center gap-2">
+                    <button onClick={handleExcelDownload} className="flex items-center gap-2 p-2 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition" title="Download Excel">
+                        <FaFileExcel />
+                        <span className="hidden md:inline">Excel</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="lg:col-span-1 space-y-4">
+                    <div className="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+                        <label className="text-sm font-semibold text-gray-600 mb-2 flex items-center gap-2"><FaCalendarAlt /> Select Report Date</label>
+                        <DatePicker selected={date} onChange={handleDateChange} className="w-full p-2 border rounded-md" dateFormat="MMMM d, yyyy" />
+                    </div>
+
+                    <SummaryCard icon={<FaFileInvoiceDollar size={20} />} title="Total Orders" value={showcaseData.totalOrders} color="blue" />
+                    <SummaryCard icon={<FaBoxOpen size={20} />} title="Total Items Sold" value={showcaseData.totalQuantity} color="purple" />
+                    <SummaryCard icon={<FaChartLine size={20} />} title="Total Revenue" value={`৳${showcaseData.totalAmount.toFixed(2)}`} color="green" />
+                    <SummaryCard icon={<FaPercentage size={20} />} title="Total VAT" value={`৳${showcaseData.totalVat.toFixed(2)}`} color="yellow" />
+                    <SummaryCard icon={<FaTags size={20} />} title="Total Discount" value={`৳${showcaseData.totalDiscount.toFixed(2)}`} color="red" />
+                    <PaymentSummaryCard title="Payment Methods" data={showcaseData} />
+                </div>
+
+                <div className="lg:col-span-3 bg-white p-5 rounded-lg shadow-sm border">
+                    <h3 className="text-xl font-semibold text-gray-700 mb-4">Order Details for {moment(date).format("MMMM Do, YYYY")}</h3>
+                    {isLoading ? (
+                        <div className="flex justify-center items-center h-full"><Preloader /></div>
+                    ) : (
+                        <>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead className="border-b-2 bg-gray-50 text-sm text-gray-600">
+                                        <tr>
+                                            <th className="p-3 font-semibold">#</th>
+                                            <th className="p-3 font-semibold">Time</th>
+                                            <th className="p-3 font-semibold">Invoice ID</th>
+                                            <th className="p-3 font-semibold">Items</th>
+                                            <th className="p-3 font-semibold text-right">Amount</th>
+                                            <th className="p-3 font-semibold text-center">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {currentOrders.length > 0 ? (
+                                            currentOrders.map((order, index) => (
+                                                <tr key={order._id} className="border-b hover:bg-gray-50">
+                                                    <td className="p-3">{index + 1 + currentPage * ordersPerPage}</td>
+                                                    <td className="p-3">{moment(order.dateTime).format('h:mm A')}</td>
+                                                    <td className="p-3 font-mono text-sm text-blue-600">{order.invoiceSerial}</td>
+                                                    <td className="p-3">{order.totalQty}</td>
+                                                    <td className="p-3 font-semibold text-right">৳{order.totalAmount.toFixed(2)}</td>
+                                                    <td className="p-3 text-center">
+                                                        <button onClick={() => handleViewDetails(order)} className="text-blue-600 hover:text-blue-800" title="View Details">
+                                                            <FaEye size={18} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))
+                                        ) : (
+                                            <tr><td colSpan="6" className="text-center py-16 text-gray-500">No orders found.</td></tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                            {orderData.length > ordersPerPage && (
+                                <div className="mt-6">
+                                    <ReactPaginate
+                                        previousLabel={"< Prev"} nextLabel={"Next >"} pageCount={Math.ceil(orderData.length / ordersPerPage)}
+                                        onPageChange={handlePageClick} containerClassName={"flex justify-center items-center gap-2 text-sm"}
+                                        pageLinkClassName={"px-3 py-2 rounded-md hover:bg-gray-200"}
+                                        previousLinkClassName={"px-3 py-2 rounded-md bg-white border hover:bg-gray-100"}
+                                        nextLinkClassName={"px-3 py-2 rounded-md bg-white border hover:bg-gray-100"}
+                                        activeLinkClassName={"bg-blue-600 text-white hover:bg-blue-700"}
+                                        disabledClassName={"opacity-50"}
+                                    />
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </div>
+
+            <div className="hidden">
+                <IndividualReceipt ref={individualReceiptRef} profileData={companyInfo} invoiceData={selectedOrder} />
+            </div>
+
+            {showModal && selectedOrder && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl transform transition-all max-h-[90vh] overflow-y-auto">
+                        <div className="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-2xl sticky top-0 z-10">
+                            <div>
+                                <h2 className="text-xl font-bold text-gray-800">Order Details</h2>
+                                <p className="text-sm text-gray-500 font-mono">Invoice: {selectedOrder.invoiceSerial}</p>
+                            </div>
+                            <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-red-500"><FaTimes size={24} /></button>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                <div className="space-y-1">
+                                    <p><strong>Staff:</strong> {selectedOrder.loginUserName}</p>
+                                    <p><strong>Order Type:</strong> <span className="capitalize">{selectedOrder.orderType}</span></p>
+                                </div>
+                                <div className="space-y-1">
+                                    <p><strong>Status:</strong> <span className="capitalize font-medium text-blue-600">{selectedOrder.orderStatus}</span></p>
+                                    <p><strong>Counter:</strong> {selectedOrder.counter}</p>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="text-md font-semibold text-gray-700 mb-2">Products</h3>
+                                <div className="overflow-x-auto border rounded-lg">
+                                    <table className="min-w-full text-sm">
+                                        <thead className="bg-gray-100">
+                                            <tr>
+                                                <th className="p-2 text-left font-medium text-gray-600">Product Name</th>
+                                                <th className="p-2 text-center font-medium text-gray-600">Qty</th>
+                                                <th className="p-2 text-right font-medium text-gray-600">Rate</th>
+                                                <th className="p-2 text-right font-medium text-gray-600">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {selectedOrder.products.map((item, index) => (
+                                                <tr key={index} className="border-t">
+                                                    <td className="p-2 font-medium text-gray-800">{item.productName}</td>
+                                                    <td className="p-2 text-center text-gray-600">{item.qty}</td>
+                                                    <td className="p-2 text-right text-gray-600">৳{item.rate.toFixed(2)}</td>
+                                                    <td className="p-2 text-right font-semibold text-gray-800">৳{item.subtotal.toFixed(2)}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div className="flex justify-end">
+                                <div className="text-sm space-y-2 w-full md:w-1/2">
+                                    <div className="flex justify-between"><span className="text-gray-600">VAT:</span><span className="font-medium text-gray-800">৳{selectedOrder.vat.toFixed(2)}</span></div>
+                                    <div className="flex justify-between"><span className="text-gray-600">Discount:</span><span className="font-medium text-red-500">- ৳{selectedOrder.discount.toFixed(2)}</span></div>
+                                    <div className="flex justify-between text-lg font-bold pt-2 border-t mt-2"><span className="text-gray-900">Grand Total:</span><span className="text-blue-600">৳{selectedOrder.totalAmount.toFixed(2)}</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div className="p-4 bg-gray-50 border-t rounded-b-2xl flex justify-end gap-3">
+                            <button onClick={() => setShowModal(false)} className="p-2 text-sm bg-gray-200 rounded-md hover:bg-gray-300">Close</button>
+                            <button onClick={handleIndividualPrint} className="flex items-center gap-2 p-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                                <FaPrint /> Print Receipt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 export default OrderHistory;

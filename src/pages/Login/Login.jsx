@@ -1,29 +1,43 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom"; 
+import { useNavigate, Link } from "react-router-dom";
+import { Helmet } from "react-helmet";
+import { motion } from "framer-motion";
+import { FaEnvelope, FaLock } from "react-icons/fa";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
-import { Helmet } from "react-helmet";
+import useAuth from "../../Hook/useAuth";
 
-import useAuth from "../../Hook/useAuth"; 
+// Images
+import slideImage1 from "../../assets/Background/Login.jpg";
+import slideImage2 from "../../assets/Background/Login.jpg";
+import slideImage3 from "../../assets/Background/Login.jpg";
+import Logo from "../../assets/Logo/login.png";
 
-// Import your assets
-import loginPanelImage from "../../assets/Background/Login.jpg"; // Example path
-import Logo from "../../assets/Logo/login.png"; // Make sure this path is correct
+const slideImages = [slideImage1, slideImage2, slideImage3];
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
   const navigate = useNavigate();
   const { loginUser } = useAuth();
 
-  // Load saved credentials from local storage
+  // Background slideshow
+  useEffect(() => {
+    const intervalId = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % slideImages.length);
+    }, 5000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Load saved credentials
   useEffect(() => {
     const savedEmail = localStorage.getItem("email");
     const savedPassword = localStorage.getItem("password");
-
     if (savedEmail && savedPassword) {
       setEmail(savedEmail);
       setPassword(savedPassword);
@@ -31,18 +45,15 @@ const Login = () => {
     }
   }, []);
 
-  // Handle login submission
   const handleLogin = async (e) => {
     e.preventDefault();
     if (password.length < 6) {
-      Swal.fire("Password Too Short!", "Password must be at least 6 characters long.", "warning");
+      Swal.fire("Password Too Short!", "Password must be at least 6 characters.", "warning");
       return;
     }
-    
     setLoading(true);
     try {
       await loginUser(email, password);
-
       if (rememberMe) {
         localStorage.setItem("email", email);
         localStorage.setItem("password", password);
@@ -50,148 +61,164 @@ const Login = () => {
         localStorage.removeItem("email");
         localStorage.removeItem("password");
       }
-      setLoading(false);
       toast.success("Login Successful! Welcome back!");
       navigate("/dashboard/home");
-
-    } catch (error) {
-      setLoading(false);
-      Swal.fire("Login Failed!", "Invalid email or password. Please try again.", "error");
+    } catch {
+      Swal.fire("Login Failed!", "Invalid email or password.", "error");
     }
-  };
-  
-  // Handle password reset submission
-  const handlePasswordReset = (e) => {
-    e.preventDefault();
-    setShowForgotModal(false); // Close modal on submit
-    // Implement your password reset API call here
-    Swal.fire("Request Sent", "If an account exists, a reset link will be sent.", "success");
+    setLoading(false);
   };
 
   return (
     <>
       <Helmet>
         <title>Login | Restaurant Management System</title>
-        <meta name="description" content="Login to your account." />
       </Helmet>
-      
-      {/* Main container */}
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="flex rounded-lg shadow-2xl overflow-hidden max-w-4xl w-full bg-white">
-          
-          {/* Left Panel (Image) */}
-          <div 
-            className="hidden md:block md:w-1/2 bg-cover bg-center"
-            style={{ backgroundImage: `url(${loginPanelImage})` }}
+
+      {/* Background Slideshow */}
+      <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {slideImages.map((img, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: currentImageIndex === index ? 1 : 0 }}
+            transition={{ duration: 1 }}
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: `url(${img})` }}
           />
+        ))}
 
-          {/* Right Panel (Form) */}
-          <div className="w-full md:w-1/2 p-8">
-            
-            {/* Logo */}
-            <div className="flex justify-center mb-6">
-              <img src={Logo} alt="Company Logo" className="w-48 h-auto" />
-            </div>
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/30" />
 
-            <h2 className="text-2xl font-bold text-gray-800 text-center">Login to Your Account</h2>
-            <p className="text-center text-gray-600 mb-8">Please enter your details to continue</p>
-            
-            <form onSubmit={handleLogin} noValidate>
-              
-              {/* Email Input */}
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="loginEmail">
-                  Email Address
-                </label>
+        {/* Login Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 40 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="relative z-10 bg-white/10 backdrop-blur-lg rounded-2xl shadow-xl p-8 w-full max-w-md"
+        >
+          <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} transition={{ duration: 0.5 }}>
+            <img src={Logo} alt="Logo" className="mx-auto w-32 mb-6" />
+          </motion.div>
+
+          <h2 className="text-3xl font-bold text-center text-white mb-2">Welcome Back</h2>
+          <p className="text-center text-gray-300 mb-6">Sign in to continue</p>
+
+          <form onSubmit={handleLogin} className="space-y-5">
+            {/* Email */}
+            <div>
+              <label className="text-sm text-gray-200">Email</label>
+              <div className="relative">
+                <FaEnvelope className="absolute left-3 top-3 text-gray-400" />
                 <input
-                  id="loginEmail"
                   type="email"
-                  placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="you@example.com"
+                  className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/20 text-white border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-300"
                   required
                 />
               </div>
+            </div>
 
-              {/* Password Input */}
-              <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="loginPassword">
-                  Password
-                </label>
+            {/* Password */}
+            <div>
+              <label className="text-sm text-gray-200">Password</label>
+              <div className="relative">
+                <FaLock className="absolute left-3 top-3 text-gray-400" />
                 <input
-                  id="loginPassword"
                   type="password"
-                  placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/20 text-white border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-300"
                   required
                 />
               </div>
+            </div>
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center">
-                  <input 
-                    id="rememberMe" 
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                  />
-                  <label htmlFor="rememberMe" className="ml-2 block text-sm text-gray-900">
-                    Remember Me
-                  </label>
-                </div>
-                
-                <button type="button" onClick={() => setShowForgotModal(true)} className="text-sm text-blue-600 hover:text-blue-800 font-medium">
-                  Forgot Password?
-                </button>
-
-              </div>
-
-              {/* Submit Button */}
+            {/* Options */}
+            <div className="flex justify-between items-center text-sm text-gray-200">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                  className="accent-blue-500"
+                />
+                Remember Me
+              </label>
               <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300 ease-in-out disabled:bg-blue-400 disabled:cursor-not-allowed"
+                type="button"
+                onClick={() => setShowForgotModal(true)}
+                className="text-blue-400 hover:underline"
               >
-                {loading ? "Logging in..." : "Sign In"}
+                Forgot?
               </button>
-              
-              <p className="text-center text-sm text-gray-600 mt-4">
-                Don't have an account?{" "}
-                <Link to="/register" className="font-medium text-blue-600 hover:text-blue-800">
-                  Create Account
-                </Link>
-              </p>
-            </form>
-          </div>
-        </div>
+            </div>
+
+            {/* Submit */}
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2 rounded-lg transition"
+            >
+              {loading ? "Logging in..." : "Sign In"}
+            </motion.button>
+
+            <p className="text-center text-gray-300 text-sm">
+              Don't have an account?{" "}
+              <Link to="/register" className="text-blue-400 hover:underline">
+                Create Account
+              </Link>
+            </p>
+          </form>
+        </motion.div>
       </div>
 
-      {/* Forgot Password Modal (Built with Tailwind CSS) */}
+      {/* Forgot Password Modal */}
       {showForgotModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex justify-center items-center p-4">
-          <div className="bg-white p-8 rounded-lg shadow-2xl text-center max-w-sm w-full relative">
-            <button onClick={() => setShowForgotModal(false)} className="absolute top-2 right-3 text-2xl font-bold text-gray-500 hover:text-gray-800">&times;</button>
-            <h3 className="text-xl font-bold mb-2">Forgot Password?</h3>
-            <p className="text-gray-600 mb-4">Enter your email to receive a reset link.</p>
-            <form onSubmit={handlePasswordReset}>
-              <div className="mb-4">
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-              <button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-md transition duration-300">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm relative"
+          >
+            <button
+              onClick={() => setShowForgotModal(false)}
+              className="absolute top-2 right-3 text-2xl text-gray-500 hover:text-gray-800"
+            >
+              &times;
+            </button>
+            <h3 className="text-lg font-bold mb-2">Forgot Password?</h3>
+            <p className="text-gray-600 mb-4 text-sm">
+              Enter your email to receive a reset link.
+            </p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                setShowForgotModal(false);
+                Swal.fire("Request Sent", "If account exists, you'll get a reset link.", "success");
+              }}
+            >
+              <input
+                type="email"
+                placeholder="Email Address"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                required
+              />
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2 rounded-lg"
+              >
                 Send Reset Link
               </button>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
     </>

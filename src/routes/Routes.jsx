@@ -46,6 +46,13 @@ import UpdateOrdersHistory from './../pages/OtherPage/update-orders-history';
 import TableReservation from "../pages/Table/TableReservation";
 import Kitchendisplay from "../pages/ExtraPage/Kitchendisplay";
 import EditOrderPage from "../pages/ExtraPage/EditOrderPage";
+import Expenses from "../pages/Accounting & Inventory/Expenses";
+import Ingredients from "../pages/Accounting & Inventory/Ingredients";
+import IngredientsExpense from "../pages/Accounting & Inventory/IngredientsExpense";
+import Purchases from "../pages/Accounting & Inventory/Purchases";
+import Stocks from "../pages/Accounting & Inventory/Stocks";
+import Vendor from "../pages/Accounting & Inventory/Vendor";
+import IngredientsCatagorie from "../pages/Accounting & Inventory/IngredientsCatagorie";
 
 
 export const router = createBrowserRouter([
@@ -102,6 +109,10 @@ export const router = createBrowserRouter([
         element: <PrivateRoot><Customer /></PrivateRoot>,
       },
       {
+        path: "ingredientscatagorie",
+        element: <PrivateRoot><IngredientsCatagorie /></PrivateRoot>,
+      },
+      {
         // Changed from "customer" to match menu
         path: "kitchendisplay",
         element: <PrivateRoot><Kitchendisplay /></PrivateRoot>,
@@ -111,13 +122,43 @@ export const router = createBrowserRouter([
         path: "kitchendisplay",
         element: <PrivateRoot><Kitchendisplay /></PrivateRoot>,
       },
-            {
-        // Changed from "customer" to match menu
+      {
         path: "edit-order/:id",
         element: <PrivateRoot><EditOrderPage /></PrivateRoot>,
       },
 
+      //Accounting And Expense 
 
+      {
+        // Changed from "lobby" to match menu
+        path: "expenses",
+        element: <PrivateRoot><Expenses></Expenses></PrivateRoot>,
+      },
+      {
+        // Changed from "lobby" to match menu
+        path: "ingredients",
+        element: <PrivateRoot><Ingredients /></PrivateRoot>,
+      },
+      {
+        // Changed from "lobby" to match menu
+        path: "ingredientsexpense",
+        element: <PrivateRoot><IngredientsExpense /></PrivateRoot>,
+      },
+      {
+        // Changed from "lobby" to match menu
+        path: "purchases",
+        element: <PrivateRoot><Purchases /></PrivateRoot>,
+      },
+      {
+        // Changed from "lobby" to match menu
+        path: "stocks",
+        element: <PrivateRoot><Stocks /></PrivateRoot>,
+      },
+      {
+        // Changed from "lobby" to match menu
+        path: "vendor",
+        element: <PrivateRoot><Vendor /></PrivateRoot>,
+      },
       
       // --- Table Management Routes ---
       {

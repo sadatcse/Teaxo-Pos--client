@@ -80,12 +80,12 @@ const RecentlyPlacedOrders = () => {
                   <td className="py-4 px-2 text-gray-600">
                     {moment(order.dateTime).format("hh:mm A")}
                   </td>
-                  <td className="py-4 px-2 font-semibold text-gray-800">
-                    {order.totalAmount.toLocaleString("en-US", {
-                      style: "currency",
-                      currency: "USD",
-                    })}
-                  </td>
+<td className="py-4 px-2 font-semibold text-gray-800">
+  {order.totalAmount.toLocaleString("en-BD", {
+    style: "currency",
+    currency: "BDT",
+  })}
+</td>
                 </tr>
               ))}
             </tbody>

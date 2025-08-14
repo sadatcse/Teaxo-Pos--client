@@ -84,7 +84,7 @@ const EditOrderPage = () => {
 
                 const initialOriginalItems = orderData.products.map(p => ({
                     ...p,
-                    _id: p.productName,
+                    _id: p.productName, // Using productName as a temporary unique ID
                     price: p.rate,
                     quantity: p.qty,
                     originalQuantity: p.qty,
@@ -189,7 +189,7 @@ const EditOrderPage = () => {
         }
         toast.info(`Product status updated to ${status}`);
     };
-
+    
     const handleCustomerSearch = () => {
         if (!mobile) {
             Swal.fire("Error", "Please enter a mobile number.", "error");
@@ -235,26 +235,21 @@ const EditOrderPage = () => {
         }
     };
 
-    const handleKitchenClick = () => {
+    const handleKitchenClick = async () => {
         if (allOrderItems.length === 0) {
-            toast.warn("Please add products before sending to kitchen.");
+            toast.warn("The order is empty.");
             return;
         }
-        const kitchenInvoiceDetails = {
-            orderType,
-            tableName: TableName,
-            deliveryProvider: deliveryProvider,
-            products: allOrderItems.map((p) => ({
-                productName: p.productName,
-                qty: p.quantity,
-                cookStatus: p.cookStatus || 'PENDING',
-            })),
-            loginUserName,
-            invoiceSerial: print?.invoiceSerial || currentInvoiceId.slice(-6),
-        };
-        setPrint(kitchenInvoiceDetails);
-        setIsKitchenModalOpen(true);
-        toast.info("KOT Ready for Kitchen!");
+        // First, save the updated invoice silently.
+        const isUpdateSuccessful = await saveOrUpdateInvoice(false);
+
+        // If the update was successful, then show the kitchen receipt.
+        if (isUpdateSuccessful) {
+            setIsKitchenModalOpen(true);
+            toast.info("Order Updated! KOT is ready for the kitchen.");
+        } else {
+            toast.error("Could not update order. KOT not printed.");
+        }
     };
 
     const resetOrder = () => {
@@ -264,7 +259,7 @@ const EditOrderPage = () => {
 
     const validateInputs = () => {
         if (allOrderItems.length === 0) {
-            Swal.fire("Validation Error", "Please add at least one product.", "error");
+            Swal.fire("Validation Error", "An order cannot be empty.", "error");
             return false;
         }
         if (orderType === "dine-in" && !TableName) {
@@ -293,10 +288,7 @@ const EditOrderPage = () => {
         };
     };
 
-    const saveOrUpdateInvoice = async (isPrintAction = false) => {
-        if (!validateInputs()) return;
-        setIsProcessing(true);
-
+    const getInvoicePayload = () => {
         const { subtotal, vat, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
@@ -320,9 +312,16 @@ const EditOrderPage = () => {
             totalAmount: payable,
             paymentMethod: selectedPaymentMethod,
         };
-
         if (orderType === "dine-in") invoiceDetails.tableName = TableName;
         if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
+        return invoiceDetails;
+    }
+
+    const saveOrUpdateInvoice = async (isPrintAction = false) => {
+        if (!validateInputs()) return false;
+        setIsProcessing(true);
+
+        const invoiceDetails = getInvoicePayload();
 
         try {
             const response = await axiosSecure.put(`/invoice/update/${currentInvoiceId}`, invoiceDetails);
@@ -341,13 +340,60 @@ const EditOrderPage = () => {
             if (isPrintAction && companies[0] && data) {
                 setIsReceiptModalOpen(true);
             }
+            return true; // Return true on success
         } catch (error) {
             console.error("Error updating invoice:", error);
             const errorMessage = error.response?.data?.error || "Failed to update the invoice.";
             Swal.fire("Error", errorMessage, "error");
+            return false; // Return false on failure
         } finally {
             setIsProcessing(false);
         }
+    };
+
+    const handleFinalizeOrder = async () => {
+        if (!validateInputs()) return;
+
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This will finalize the order and mark it as completed. This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, finalize it!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                setIsProcessing(true);
+                const invoiceDetails = getInvoicePayload();
+
+                try {
+                    const response = await axiosSecure.put(`/invoice/finalize/${currentInvoiceId}`, invoiceDetails);
+                    toast.success(response.data.message || "Order finalized successfully! 🎉");
+                    
+                    const data = response.data.invoice; // Data is nested under 'invoice' key
+                    const dataForPrint = {
+                        ...data,
+                        ...invoiceDetails,
+                        dateTime: data.dateTime || new Date().toISOString(),
+                        invoiceSerial: data.invoiceSerial || currentInvoiceId,
+                    };
+                    setPrint(dataForPrint);
+
+                    if (companies[0] && data) {
+                        setIsReceiptModalOpen(true);
+                    }
+                    // Optional: Navigate away after finalizing
+                    // setTimeout(() => navigate('/dashboard'), 2000);
+                } catch (error) {
+                    console.error("Error finalizing invoice:", error);
+                    const errorMessage = error.response?.data?.message || "Failed to finalize the invoice.";
+                    Swal.fire("Error", errorMessage, "error");
+                } finally {
+                    setIsProcessing(false);
+                }
+            }
+        });
     };
 
     if (isLoading) {
@@ -415,7 +461,8 @@ const EditOrderPage = () => {
                     payable={payable}
                     paid={paid}
                     change={change}
-                    printInvoice={saveOrUpdateInvoice}
+                    printInvoice={saveOrUpdateInvoice} 
+                    handleFinalizeOrder={handleFinalizeOrder}
                     handleKitchenClick={handleKitchenClick}
                     resetOrder={resetOrder}
                     isProcessing={isProcessing}
