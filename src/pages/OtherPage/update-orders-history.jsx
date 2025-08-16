@@ -119,36 +119,41 @@ const OrdersHistory = () => {
 
   // --- NEW: Delete Handler ---
   const handleDeleteOrder = (orderId) => {
-    Swal.fire({
-      title: 'Are you sure?',
-      text: "You won't be able to revert this!",
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
-      confirmButtonText: 'Yes, delete it!'
-    }).then(async (result) => {
-      if (result.isConfirmed) {
-        try {
-          const response = await axiosSecure.delete(`/invoice/delete/${orderId}`);
-          if (response.data.success) {
-            Swal.fire(
-              'Deleted!',
-              'The order has been successfully deleted.',
-              'success'
-            );
-            // Remove the order from the local state to update the UI instantly
-            setOrders(orders.filter(order => order._id !== orderId));
-          } else {
-            Swal.fire('Error!', response.data.message || 'Failed to delete the order.', 'error');
-          }
-        } catch (error) {
-          console.error("Error deleting order:", error);
-          Swal.fire('Error!', 'An error occurred while deleting the order.', 'error');
+  Swal.fire({
+    title: 'Are you sure?',
+    text: "You won't be able to revert this!",
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Yes, delete it!'
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        const response = await axiosSecure.delete(`/invoice/delete/${orderId}`);
+
+        // FIX: Check the HTTP status code for success instead of a 'success' property.
+        if (response.status === 200) {
+          Swal.fire(
+            'Deleted!',
+            response.data.message || 'The order has been successfully deleted.', // Use the message from the backend
+            'success'
+          );
+          // This will now run correctly, instantly updating the UI
+          setOrders(prevOrders => prevOrders.filter(order => order._id !== orderId));
+        } else {
+          // This handles non-200 responses that aren't network errors
+          Swal.fire('Error!', response.data.message || 'Failed to delete the order.', 'error');
         }
+      } catch (error) {
+        console.error("Error deleting order:", error);
+        // This catches network errors or other exceptions
+        const errorMessage = error.response?.data?.message || 'An error occurred while deleting the order.';
+        Swal.fire('Error!', errorMessage, 'error');
       }
-    });
-  };
+    }
+  });
+};
 
   const getStatusClass = (status) => {
     switch (status) {

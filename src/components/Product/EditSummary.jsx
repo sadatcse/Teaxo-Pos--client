@@ -1,9 +1,13 @@
-import React, { useState } from 'react';
+// src/components/Product/EditSummary.jsx
+import React, { useState, useEffect } from 'react';
 import {
     FaPlus, FaMinus, FaTrash, FaSearch, FaUser, FaMobileAlt, FaUtensils,
-    FaTruck, FaMoneyBillWave, FaCreditCard, FaSave,
+    FaTruck, FaMoneyBillWave, FaCreditCard, FaSave, FaGift,
     FaPrint, FaRedo, FaInfoCircle, FaCheckCircle,
 } from "react-icons/fa";
+
+import { FaCcVisa, FaCcAmex } from "react-icons/fa6";
+import { RiMastercardFill } from "react-icons/ri";
 import { MdOutlineSendToMobile } from "react-icons/md";
 
 const EditSummary = ({
@@ -12,12 +16,55 @@ const EditSummary = ({
     addedProducts, incrementQuantity, decrementQuantity, removeProduct,
     invoiceSummary, setInvoiceSummary, subtotal, vat, payable, paid, change,
     printInvoice, handleFinalizeOrder, handleKitchenClick, resetOrder, isProcessing, selectedPaymentMethod,
-    handlePaymentMethodSelect,
+    handlePaymentMethodSelect, toggleComplimentaryStatus,
 }) => {
     const [activeTab, setActiveTab] = useState('invoiceDetails');
 
-    const handlePaymentButtonClick = (method) => {
-        handlePaymentMethodSelect(method);
+    // Consolidated payment options for easier management
+    const paymentOptions = {
+        Card: [
+            { name: "Visa Card", icon: <FaCcVisa /> },
+            { name: "Master Card", icon: <RiMastercardFill /> },
+            { name: "Amex Card", icon: <FaCcAmex /> },
+        ],
+        Mobile: [
+            { name: "Bkash", icon: <FaMobileAlt /> }, // Using FaMobileAlt as a placeholder for specific mobile icons
+            { name: "Nagad", icon: <FaMobileAlt /> },
+            { name: "Rocket", icon: <FaMobileAlt /> },
+        ],
+    };
+
+    // Helper function to determine if a sub-method is part of a main category
+    const isSubMethodOf = (subMethodName, mainMethod) => {
+        return paymentOptions[mainMethod]?.some(option => option.name === subMethodName);
+    };
+
+    // Helper function to determine if a main payment button should be active
+    const isMainButtonActive = (method) => {
+        return (selectedPaymentMethod === method) || isSubMethodOf(selectedPaymentMethod, method);
+    };
+
+    // Helper function to get the correct icon for the main payment buttons
+    const getMainButtonIcon = (method) => {
+        if (isSubMethodOf(selectedPaymentMethod, 'Card')) {
+            const card = paymentOptions.Card.find(o => o.name === selectedPaymentMethod);
+            return card ? card.icon : <FaCreditCard />;
+        }
+        if (isSubMethodOf(selectedPaymentMethod, 'Mobile')) {
+            const mobile = paymentOptions.Mobile.find(o => o.name === selectedPaymentMethod);
+            return mobile ? mobile.icon : <MdOutlineSendToMobile />;
+        }
+
+        switch (method) {
+            case "Cash":
+                return <FaMoneyBillWave />;
+            case "Card":
+                return <FaCreditCard />;
+            case "Mobile":
+                return <MdOutlineSendToMobile />;
+            default:
+                return null;
+        }
     };
 
     return (
@@ -67,33 +114,58 @@ const EditSummary = ({
                                                 key={product._id}
                                                 className={product.isOriginal ? 'bg-gray-50' : 'bg-white'}
                                             >
-                                                <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm font-medium text-gray-900">{product.productName}</td>
+                                                <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm font-medium text-gray-900">
+                                                    {product.productName}
+                                                    {product.isComplimentary && (
+                                                        <span className="ml-2 px-2 py-1 text-[10px] font-bold text-white bg-green-500 rounded-full">
+                                                            FREE
+                                                        </span>
+                                                    )}
+                                                </td>
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm text-gray-700">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
                                                             onClick={() => decrementQuantity(product.productName)}
                                                             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                            disabled={product.isOriginal && product.quantity <= product.originalQuantity}
+                                                            disabled={product.isOriginal && product.quantity <= product.originalQuantity || product.isComplimentary}
                                                         >
                                                             <FaMinus className="text-xs" />
                                                         </button>
                                                         <span className="font-extrabold text-sm text-gray-900">{product.quantity}</span>
-                                                        <button onClick={() => incrementQuantity(product.productName)} className="p-2 bg-gray-200 rounded-full hover:bg-gray-300">
+                                                        <button
+                                                            onClick={() => incrementQuantity(product.productName)}
+                                                            className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                            disabled={product.isComplimentary}
+                                                        >
                                                             <FaPlus className="text-xs" />
                                                         </button>
                                                     </div>
                                                 </td>
-                                                <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm text-right font-bold">{product.price * product.quantity} TK</td>
-                                                <td className="px-4 py-3 md:px-6 md:py-4 text-center">
-                                                    {product.isOriginal ? (
-                                                        <span title="Original items cannot be removed" className="p-2.5 text-gray-400 cursor-help">
-                                                            <FaInfoCircle />
-                                                        </span>
+                                                <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm text-right font-bold">
+                                                    {product.isComplimentary ? (
+                                                        <span className="text-red-500">FREE</span>
                                                     ) : (
-                                                        <button onClick={() => removeProduct(product.productName)} className="p-2.5 bg-red-600 text-white rounded-full hover:bg-red-700">
-                                                            <FaTrash className="text-xs" />
-                                                        </button>
+                                                        `${product.price * product.quantity} TK`
                                                     )}
+                                                </td>
+                                                <td className="px-4 py-3 md:px-6 md:py-4 text-center">
+                                                    <div className="flex items-center justify-center gap-2">
+                                                        <button
+                                                            onClick={() => toggleComplimentaryStatus(product.productName)}
+                                                            className={`p-2.5 rounded-full text-white ${product.isComplimentary ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-400 hover:bg-gray-500'}`}
+                                                        >
+                                                            <FaGift className="text-xs" />
+                                                        </button>
+                                                        {product.isOriginal ? (
+                                                            <span title="Original items cannot be removed" className="p-2.5 text-gray-400 cursor-help">
+                                                                <FaInfoCircle />
+                                                            </span>
+                                                        ) : (
+                                                            <button onClick={() => removeProduct(product.productName)} className="p-2.5 bg-red-600 text-white rounded-full hover:bg-red-700">
+                                                                <FaTrash className="text-xs" />
+                                                            </button>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))
@@ -154,22 +226,53 @@ const EditSummary = ({
                                     {["Cash", "Card", "Mobile"].map((method) => (
                                         <button
                                             key={method}
-                                            onClick={() => handlePaymentButtonClick(method)}
+                                            onClick={() => handlePaymentMethodSelect(method)}
                                             className={`min-w-[100px] px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm
-                                                ${selectedPaymentMethod === method ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                                                ${isMainButtonActive(method) ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
                                             disabled={isProcessing}
                                         >
-                                            {method === "Cash" && <FaMoneyBillWave />}
-                                            {method === "Card" && <FaCreditCard />}
-                                            {method === "Mobile" && <MdOutlineSendToMobile />}
+                                            {getMainButtonIcon(method)}
                                             {method}
                                         </button>
                                     ))}
                                 </div>
+
+                                {isMainButtonActive('Card') && (
+                                    <div className="mt-4 flex flex-wrap justify-center gap-3">
+                                        {paymentOptions.Card.map((card) => (
+                                            <button
+                                                key={card.name}
+                                                onClick={() => handlePaymentMethodSelect(card.name)}
+                                                className={`min-w-[100px] px-4 py-2 rounded-xl font-bold flex flex-col items-center justify-center gap-1 text-xs
+                                                    ${selectedPaymentMethod === card.name ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                                                disabled={isProcessing}
+                                            >
+                                                {card.icon}
+                                                <span>{card.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {isMainButtonActive('Mobile') && (
+                                    <div className="mt-4 flex flex-wrap justify-center gap-3">
+                                        {paymentOptions.Mobile.map((mobileOption) => (
+                                            <button
+                                                key={mobileOption.name}
+                                                onClick={() => handlePaymentMethodSelect(mobileOption.name)}
+                                                className={`min-w-[100px] px-4 py-2 rounded-xl font-bold flex flex-col items-center justify-center gap-1 text-xs
+                                                    ${selectedPaymentMethod === mobileOption.name ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
+                                                disabled={isProcessing}
+                                            >
+                                                {mobileOption.icon}
+                                                <span>{mobileOption.name}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="grid grid-cols-2 gap-4 mt-6">
-                    
                                 <button
                                     onClick={() => printInvoice(false)}
                                     className="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold flex items-center justify-center gap-2"
@@ -198,7 +301,7 @@ const EditSummary = ({
                                 >
                                     <FaRedo /> Exit
                                 </button>
-                                            <button
+                                <button
                                     onClick={handleFinalizeOrder}
                                     className="col-span-2 bg-purple-600 text-white py-3.5 rounded-lg hover:bg-purple-700 font-bold flex items-center justify-center gap-2 text-lg shadow-lg"
                                     disabled={isProcessing}

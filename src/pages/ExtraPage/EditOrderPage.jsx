@@ -89,6 +89,7 @@ const EditOrderPage = () => {
                     quantity: p.qty,
                     originalQuantity: p.qty,
                     isOriginal: true,
+                    isComplimentary: p.isComplimentary || false, // Add isComplimentary status
                 }));
                 setOriginalOrderItems(initialOriginalItems);
                 setNewOrderItems([]);
@@ -120,21 +121,35 @@ const EditOrderPage = () => {
 
     // --- Core Logic Functions ---
     const addProduct = (product) => {
-        const originalItem = originalOrderItems.find(p => p.productName === product.productName);
-        if (originalItem) {
-            incrementQuantity(product.productName);
-            return;
-        }
+        const existingItem = allOrderItems.find(p => p.productName === product.productName);
 
-        const newItem = newOrderItems.find(p => p.productName === product.productName);
-        if (newItem) {
-            incrementQuantity(product.productName);
+        if (existingItem) {
+            if (existingItem.isOriginal) {
+                setOriginalOrderItems(items =>
+                    items.map(p =>
+                        p.productName === product.productName
+                            ? { ...p, quantity: p.quantity + 1, isComplimentary: false }
+                            : p
+                    )
+                );
+            } else {
+                setNewOrderItems(items =>
+                    items.map(p =>
+                        p.productName === product.productName
+                            ? { ...p, quantity: p.quantity + 1, isComplimentary: false }
+                            : p
+                    )
+                );
+            }
+            toast.info(`Quantity for ${product.productName} incremented.`);
         } else {
             const itemToAdd = {
                 ...product,
+                _id: product.productName,
                 quantity: 1,
                 cookStatus: 'PENDING',
                 isOriginal: false,
+                isComplimentary: false, // New items are not complimentary by default
             };
             setNewOrderItems(current => [...current, itemToAdd]);
             toast.success(`${product.productName} added to order!`);
@@ -189,7 +204,24 @@ const EditOrderPage = () => {
         }
         toast.info(`Product status updated to ${status}`);
     };
-    
+
+    const toggleComplimentaryStatus = (productName) => {
+        const isOriginal = originalOrderItems.some(p => p.productName === productName);
+        const updater = items =>
+            items.map(p =>
+                p.productName === productName
+                    ? { ...p, isComplimentary: !p.isComplimentary, quantity: !p.isComplimentary ? 1 : p.quantity }
+                    : p
+            );
+
+        if (isOriginal) {
+            setOriginalOrderItems(updater);
+        } else {
+            setNewOrderItems(updater);
+        }
+        toast.info("Product complimentary status updated.");
+    };
+
     const handleCustomerSearch = () => {
         if (!mobile) {
             Swal.fire("Error", "Please enter a mobile number.", "error");
@@ -204,7 +236,7 @@ const EditOrderPage = () => {
 
     const handlePaymentMethodSelect = (method) => {
         setSelectedPaymentMethod(method);
-        toast.success(`Payment method set to ${method}.`);
+    
     };
 
     const handleOrderTypeChange = (type) => {
@@ -276,8 +308,9 @@ const EditOrderPage = () => {
     const roundAmount = (amount) => Math.round(amount);
 
     const calculateTotal = () => {
-        const subtotal = allOrderItems.reduce((total, p) => total + p.price * p.quantity, 0);
-        const vat = allOrderItems.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
+        const nonComplimentaryProducts = allOrderItems.filter(p => !p.isComplimentary);
+        const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
+        const vat = nonComplimentaryProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
         const discount = parseFloat(invoiceSummary.discount || 0);
         const payable = subtotal + vat - discount;
         return {
@@ -299,6 +332,7 @@ const EditOrderPage = () => {
                 subtotal: roundAmount(p.price * p.quantity),
                 vat: p.vat || 0,
                 cookStatus: p.cookStatus || 'PENDING',
+                isComplimentary: p.isComplimentary || false, // Ensure this field is always included
             })),
             subtotal,
             discount,
@@ -469,6 +503,7 @@ const EditOrderPage = () => {
                     selectedPaymentMethod={selectedPaymentMethod}
                     handlePaymentMethodSelect={handlePaymentMethodSelect}
                     updateCookStatus={updateCookStatus}
+                    toggleComplimentaryStatus={toggleComplimentaryStatus} // Pass the new function
                 />
             </main>
 

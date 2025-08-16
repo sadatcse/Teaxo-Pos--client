@@ -1,3 +1,4 @@
+// src/pages/CollectOrder.jsx
 import { useState, useContext, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
@@ -113,7 +114,7 @@ const CollectOrder = () => {
 
     const handlePaymentMethodSelect = (method) => {
         setSelectedPaymentMethod(method);
-        toast.success(`Payment method set to ${method}.`, { position: "top-center", autoClose: 2000 });
+    
     };
 
     const handleOrderTypeChange = (type) => {
@@ -139,11 +140,11 @@ const CollectOrder = () => {
     const roundAmount = (amount) => Math.round(amount);
 
     const addProduct = (product) => {
-        const existingProduct = addedProducts.find((p) => p._id === product._id);
+        const existingProduct = addedProducts.find((p) => p._id === product._id && !p.isComplimentary);
         if (existingProduct) {
             setAddedProducts(addedProducts.map((p) => (p._id === product._id ? { ...p, quantity: p.quantity + 1 } : p)));
         } else {
-            setAddedProducts([...addedProducts, { ...product, quantity: 1, cookStatus: 'PENDING' }]);
+            setAddedProducts([...addedProducts, { ...product, quantity: 1, cookStatus: 'PENDING', isComplimentary: false }]);
         }
     };
 
@@ -168,6 +169,17 @@ const CollectOrder = () => {
         setAddedProducts(addedProducts.filter((p) => p._id !== id));
     };
 
+    const toggleComplimentaryStatus = (id) => {
+        setAddedProducts(
+            addedProducts.map((p) =>
+                p._id === id
+                    ? { ...p, isComplimentary: !p.isComplimentary, quantity: p.isComplimentary ? p.quantity : 1 }
+                    : p
+            )
+        );
+        toast.info("Product complimentary status updated.");
+    };
+
     const handleTableSelect = (tableId) => {
         setSelectedTable(tableId);
         const selectedTableObj = tables.find((table) => table._id === tableId);
@@ -187,17 +199,11 @@ const CollectOrder = () => {
             toast.warn("Please add products before sending to kitchen.");
             return;
         }
-
-        // Call printInvoice to save the order, but pass 'false' to prevent opening the customer receipt.
         const isSaveSuccessful = await printInvoice(false);
-
-        // Only open the kitchen modal if the order was saved successfully.
         if (isSaveSuccessful) {
-            // The 'print' state is now updated by printInvoice with the correct invoiceSerial.
             setIsKitchenModalOpen(true);
             toast.info("Order Saved! KOT is ready for the kitchen.");
         } else {
-            // An error message will have already been shown by printInvoice.
             toast.error("Could not save order. Please check for errors.");
         }
     };
@@ -236,8 +242,10 @@ const CollectOrder = () => {
     };
 
     const calculateTotal = () => {
-        const subtotal = addedProducts.reduce((total, p) => total + p.price * p.quantity, 0);
-        const vat = addedProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
+        // Calculate totals based only on non-complimentary products
+        const nonComplimentaryProducts = addedProducts.filter(p => !p.isComplimentary);
+        const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
+        const vat = nonComplimentaryProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
         const discount = parseFloat(invoiceSummary.discount || 0);
         const payable = subtotal + vat - discount;
         return {
@@ -254,7 +262,15 @@ const CollectOrder = () => {
         const { subtotal, vat, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
-            products: addedProducts.map((p) => ({ productName: p.productName, qty: p.quantity, rate: p.price, subtotal: roundAmount(p.price * p.quantity), vat: p.vat || 0, cookStatus: p.cookStatus || 'PENDING' })),
+            products: addedProducts.map((p) => ({
+                productName: p.productName,
+                qty: p.quantity,
+                rate: p.price,
+                subtotal: roundAmount(p.price * p.quantity),
+                vat: p.vat || 0,
+                cookStatus: p.cookStatus || 'PENDING',
+                isComplimentary: p.isComplimentary,
+            })),
             subtotal: roundAmount(subtotal),
             discount: roundAmount(discount),
             vat: roundAmount(vat),
@@ -366,6 +382,7 @@ const CollectOrder = () => {
                         selectedPaymentMethod={selectedPaymentMethod}
                         handlePaymentMethodSelect={handlePaymentMethodSelect}
                         updateCookStatus={updateCookStatus}
+                        toggleComplimentaryStatus={toggleComplimentaryStatus}
                     />
                 </div>
             )}
