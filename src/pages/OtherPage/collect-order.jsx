@@ -1,4 +1,3 @@
-// src/pages/CollectOrder.jsx
 import { useState, useContext, useRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
@@ -19,37 +18,18 @@ import useCategoriesWithProducts from "../../Hook/useCategoriesWithProducts";
 
 const CollectOrder = () => {
     const { state: routeState } = useLocation();
-
-    // Authentication and Branch Context
     const { user, branch } = useContext(AuthContext);
     const loginUserEmail = user?.email || "info@leavesoft.com";
     const loginUserName = user?.name || "leavesoft";
-
-    // State for customer search and selection
     const [mobile, setMobile] = useState("");
     const {
-        customer,
-        tables,
-        searchCustomer,
-        selectedTable,
-        isCustomerModalOpen,
-        setSelectedTable,
-        setCustomerModalOpen,
+        customer, tables, searchCustomer, selectedTable,
+        isCustomerModalOpen, setSelectedTable, setCustomerModalOpen,
     } = useCustomerTableSearch();
-
-    // Axios instance for secure API calls
     const axiosSecure = UseAxiosSecure();
-
-    // Product and Category States
     const {
-        products,
-        categories,
-        selectedCategory,
-        setSelectedCategory,
-        loadingProducts,
+        products, categories, selectedCategory, setSelectedCategory, loadingProducts,
     } = useCategoriesWithProducts(branch);
-
-    // Order Details States
     const [addedProducts, setAddedProducts] = useState([]);
     const [orderType, setOrderType] = useState(null);
     const [TableName, setTableName] = useState("");
@@ -58,23 +38,16 @@ const CollectOrder = () => {
     const [print, setPrint] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentInvoiceId, setCurrentInvoiceId] = useState(null);
-
-    // State for managing modals
     const [isOrderTypeModalOpen, setIsOrderTypeModalOpen] = useState(true);
     const [isTableSelectionModalOpen, setIsTableSelectionModalOpen] = useState(false);
     const [isDeliveryProviderModalOpen, setIsDeliveryProviderModalOpen] = useState(false);
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
     const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
-
-    // Refs for printing components
     const receiptRef = useRef();
     const kitchenReceiptRef = useRef();
-
-    // Company data hook
     const { companies } = useCompanyHook();
 
-    // --- useEffect to handle incoming table from Lobby ---
     useEffect(() => {
         const tableFromLobby = routeState?.selectedTable;
         if (tableFromLobby) {
@@ -87,55 +60,49 @@ const CollectOrder = () => {
     }, [routeState, setSelectedTable]);
 
     const handleCustomerSearch = () => {
-        if (!mobile) {
-            Swal.fire("Error", "Please enter a mobile number.", "error");
-            return;
-        }
-        if (!/^\d{11}$/.test(mobile)) {
-            Swal.fire("Invalid Number", "Mobile number must be exactly 11 digits.", "warning");
-            return;
-        }
+        if (!mobile) return Swal.fire("Error", "Please enter a mobile number.", "error");
+        if (!/^\d{11}$/.test(mobile)) return Swal.fire("Invalid Number", "Mobile number must be exactly 11 digits.", "warning");
         searchCustomer(mobile);
     };
 
     const handleOrderTypeSelect = (type) => {
         setOrderType(type);
         setIsOrderTypeModalOpen(false);
-        if (type === "dine-in") {
-            setIsTableSelectionModalOpen(true);
-        } else if (type === "delivery") {
-            setIsDeliveryProviderModalOpen(true);
-        } else {
+        if (type === "dine-in") setIsTableSelectionModalOpen(true);
+        else if (type === "delivery") setIsDeliveryProviderModalOpen(true);
+        else {
             setTableName("");
             setSelectedTable("");
             setDeliveryProvider("");
         }
     };
 
-    const handlePaymentMethodSelect = (method) => {
-        setSelectedPaymentMethod(method);
-    
-    };
+    const handlePaymentMethodSelect = (method) => setSelectedPaymentMethod(method);
 
     const handleOrderTypeChange = (type) => {
         setOrderType(type);
         setSelectedTable("");
         setTableName("");
         setDeliveryProvider("");
-        if (type === "dine-in") {
-            setIsTableSelectionModalOpen(true);
-        } else if (type === 'delivery') {
-            setIsDeliveryProviderModalOpen(true);
-        } else {
+        if (type === "dine-in") setIsTableSelectionModalOpen(true);
+        else if (type === 'delivery') setIsDeliveryProviderModalOpen(true);
+        else {
             setIsTableSelectionModalOpen(false);
             setIsDeliveryProviderModalOpen(false);
         }
     };
 
-    const handleDeliveryProviderSelect = (provider) => {
-        setDeliveryProvider(provider);
-        setIsDeliveryProviderModalOpen(false);
-    };
+const handleDeliveryProviderSelect = (provider) => {
+    setDeliveryProvider(provider);
+    setIsDeliveryProviderModalOpen(false);
+    // Add this new logic
+    if (provider === "Foodpanda") {
+        setSelectedPaymentMethod("Bank");
+    } else {
+        // You might want to reset the payment method for other providers
+        setSelectedPaymentMethod("Cash");
+    }
+};
 
     const roundAmount = (amount) => Math.round(amount);
 
@@ -150,31 +117,19 @@ const CollectOrder = () => {
 
     const updateCookStatus = (productId, status) => {
         setAddedProducts(currentProducts =>
-            currentProducts.map(p =>
-                p._id === productId ? { ...p, cookStatus: status } : p
-            )
+            currentProducts.map(p => p._id === productId ? { ...p, cookStatus: status } : p)
         );
         toast.info(`Product status updated to ${status}`);
     };
 
-    const incrementQuantity = (id) => {
-        setAddedProducts(addedProducts.map((p) => (p._id === id ? { ...p, quantity: p.quantity + 1 } : p)));
-    };
-
-    const decrementQuantity = (id) => {
-        setAddedProducts(addedProducts.map((p) => (p._id === id && p.quantity > 1 ? { ...p, quantity: p.quantity - 1 } : p)));
-    };
-
-    const removeProduct = (id) => {
-        setAddedProducts(addedProducts.filter((p) => p._id !== id));
-    };
+    const incrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id ? { ...p, quantity: p.quantity + 1 } : p)));
+    const decrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id && p.quantity > 1 ? { ...p, quantity: p.quantity - 1 } : p)));
+    const removeProduct = (id) => setAddedProducts(addedProducts.filter((p) => p._id !== id));
 
     const toggleComplimentaryStatus = (id) => {
         setAddedProducts(
             addedProducts.map((p) =>
-                p._id === id
-                    ? { ...p, isComplimentary: !p.isComplimentary, quantity: p.isComplimentary ? p.quantity : 1 }
-                    : p
+                p._id === id ? { ...p, isComplimentary: !p.isComplimentary, quantity: p.isComplimentary ? p.quantity : 1 } : p
             )
         );
         toast.info("Product complimentary status updated.");
@@ -187,18 +142,12 @@ const CollectOrder = () => {
     };
 
     const handleTableSelectionConfirm = () => {
-        if (selectedTable) {
-            setIsTableSelectionModalOpen(false);
-        } else {
-            Swal.fire("Error", "Please select a table to continue.", "error");
-        }
+        if (selectedTable) setIsTableSelectionModalOpen(false);
+        else Swal.fire("Error", "Please select a table to continue.", "error");
     };
 
     const handleKitchenClick = async () => {
-        if (addedProducts.length === 0) {
-            toast.warn("Please add products before sending to kitchen.");
-            return;
-        }
+        if (addedProducts.length === 0) return toast.warn("Please add products before sending to kitchen.");
         const isSaveSuccessful = await printInvoice(false);
         if (isSaveSuccessful) {
             setIsKitchenModalOpen(true);
@@ -242,15 +191,18 @@ const CollectOrder = () => {
     };
 
     const calculateTotal = () => {
-        // Calculate totals based only on non-complimentary products
         const nonComplimentaryProducts = addedProducts.filter(p => !p.isComplimentary);
         const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
         const vat = nonComplimentaryProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
+        // UPDATED: Calculate SD
+        const sd = nonComplimentaryProducts.reduce((total, p) => total + ((p.sd || 0) * p.quantity), 0);
         const discount = parseFloat(invoiceSummary.discount || 0);
-        const payable = subtotal + vat - discount;
+        // UPDATED: Payable now includes SD
+        const payable = subtotal + vat + sd - discount;
         return {
             subtotal: roundAmount(subtotal),
             vat: roundAmount(vat),
+            sd: roundAmount(sd), // Return SD
             discount: roundAmount(discount),
             payable: roundAmount(payable),
         };
@@ -259,7 +211,8 @@ const CollectOrder = () => {
     const printInvoice = async (isPrintAction) => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
-        const { subtotal, vat, discount, payable } = calculateTotal();
+        // UPDATED: Destructure sd from calculateTotal
+        const { subtotal, vat, sd, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
             products: addedProducts.map((p) => ({
@@ -268,12 +221,16 @@ const CollectOrder = () => {
                 rate: p.price,
                 subtotal: roundAmount(p.price * p.quantity),
                 vat: p.vat || 0,
+                // UPDATED: Include SD for each product
+                sd: p.sd || 0,
                 cookStatus: p.cookStatus || 'PENDING',
                 isComplimentary: p.isComplimentary,
             })),
             subtotal: roundAmount(subtotal),
             discount: roundAmount(discount),
             vat: roundAmount(vat),
+            // UPDATED: Include total SD in the invoice payload
+            sd: roundAmount(sd),
             loginUserEmail,
             loginUserName,
             customerName: customer?.name || "Guest",
@@ -302,18 +259,19 @@ const CollectOrder = () => {
             if (isPrintAction && companies[0] && data) {
                 setIsReceiptModalOpen(true);
             }
-            return true; // Return true on success
+            return true;
         } catch (error) {
             console.error("Error saving/updating invoice:", error);
             const errorMessage = error.response?.data?.error || "Failed to process the invoice.";
             Swal.fire("Error", errorMessage, "error");
-            return false; // Return false on error
+            return false;
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const { subtotal, vat, payable } = calculateTotal();
+    // UPDATED: Get SD from calculateTotal
+    const { subtotal, vat, sd, payable } = calculateTotal();
     const paid = roundAmount(parseFloat(invoiceSummary.paid || 0));
     const change = paid > 0 ? paid - payable : 0;
 
@@ -372,6 +330,7 @@ const CollectOrder = () => {
                         setInvoiceSummary={setInvoiceSummary}
                         subtotal={subtotal}
                         vat={vat}
+                        sd={sd} // Pass sd as a prop
                         payable={payable}
                         paid={paid}
                         change={change}

@@ -1,26 +1,24 @@
-// src/components/Product/EditSummary.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-    FaPlus, FaMinus, FaTrash, FaSearch, FaUser, FaMobileAlt, FaUtensils,
+    FaPlus, FaMinus, FaTrash, FaSearch, FaUser, FaUtensils,
     FaTruck, FaMoneyBillWave, FaCreditCard, FaSave, FaGift,
     FaPrint, FaRedo, FaInfoCircle, FaCheckCircle,
+    FaUniversity, 
+    FaMobile 
 } from "react-icons/fa";
-
 import { FaCcVisa, FaCcAmex } from "react-icons/fa6";
 import { RiMastercardFill } from "react-icons/ri";
-import { MdOutlineSendToMobile } from "react-icons/md";
 
 const EditSummary = ({
     customer, mobile, setMobile, handleCustomerSearch,
     orderType, handleOrderTypeChange, TableName, deliveryProvider,
     addedProducts, incrementQuantity, decrementQuantity, removeProduct,
-    invoiceSummary, setInvoiceSummary, subtotal, vat, payable, paid, change,
+    invoiceSummary, setInvoiceSummary, subtotal, vat, sd, payable, paid, change,
     printInvoice, handleFinalizeOrder, handleKitchenClick, resetOrder, isProcessing, selectedPaymentMethod,
     handlePaymentMethodSelect, toggleComplimentaryStatus,
 }) => {
     const [activeTab, setActiveTab] = useState('invoiceDetails');
 
-    // Consolidated payment options for easier management
     const paymentOptions = {
         Card: [
             { name: "Visa Card", icon: <FaCcVisa /> },
@@ -28,23 +26,23 @@ const EditSummary = ({
             { name: "Amex Card", icon: <FaCcAmex /> },
         ],
         Mobile: [
-            { name: "Bkash", icon: <FaMobileAlt /> }, // Using FaMobileAlt as a placeholder for specific mobile icons
-            { name: "Nagad", icon: <FaMobileAlt /> },
-            { name: "Rocket", icon: <FaMobileAlt /> },
+            { name: "Bkash", icon: <FaMobile /> },
+            { name: "Nagad", icon: <FaMobile /> },
+            { name: "Rocket", icon: <FaMobile /> },
+        ],
+        Bank: [
+            { name: "Bank", icon: <FaUniversity /> },
         ],
     };
 
-    // Helper function to determine if a sub-method is part of a main category
     const isSubMethodOf = (subMethodName, mainMethod) => {
         return paymentOptions[mainMethod]?.some(option => option.name === subMethodName);
     };
 
-    // Helper function to determine if a main payment button should be active
     const isMainButtonActive = (method) => {
-        return (selectedPaymentMethod === method) || isSubMethodOf(selectedPaymentMethod, method);
+        return (selectedPaymentMethod === method) || (isSubMethodOf(selectedPaymentMethod, method));
     };
 
-    // Helper function to get the correct icon for the main payment buttons
     const getMainButtonIcon = (method) => {
         if (isSubMethodOf(selectedPaymentMethod, 'Card')) {
             const card = paymentOptions.Card.find(o => o.name === selectedPaymentMethod);
@@ -52,18 +50,19 @@ const EditSummary = ({
         }
         if (isSubMethodOf(selectedPaymentMethod, 'Mobile')) {
             const mobile = paymentOptions.Mobile.find(o => o.name === selectedPaymentMethod);
-            return mobile ? mobile.icon : <MdOutlineSendToMobile />;
+            return mobile ? mobile.icon : <FaMobile />;
+        }
+        if (isSubMethodOf(selectedPaymentMethod, 'Bank')) {
+            const bank = paymentOptions.Bank.find(o => o.name === selectedPaymentMethod);
+            return bank ? bank.icon : <FaUniversity />;
         }
 
         switch (method) {
-            case "Cash":
-                return <FaMoneyBillWave />;
-            case "Card":
-                return <FaCreditCard />;
-            case "Mobile":
-                return <MdOutlineSendToMobile />;
-            default:
-                return null;
+            case "Cash": return <FaMoneyBillWave />;
+            case "Card": return <FaCreditCard />;
+            case "Mobile": return <FaMobile />;
+            case "Bank": return <FaUniversity />;
+            default: return null;
         }
     };
 
@@ -143,9 +142,9 @@ const EditSummary = ({
                                                 </td>
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm text-right font-bold">
                                                     {product.isComplimentary ? (
-                                                        <span className="text-red-500">FREE</span>
+                                                        <span className="text-green-500 font-bold">FREE</span>
                                                     ) : (
-                                                        `${product.price * product.quantity} TK`
+                                                        `${(product.price * product.quantity).toFixed(2)} TK`
                                                     )}
                                                 </td>
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-center">
@@ -179,11 +178,15 @@ const EditSummary = ({
                                 <tbody>
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">Sub Total (TK):</td>
-                                        <td className="px-4 py-2 text-right font-bold">{subtotal}</td>
+                                        <td className="px-4 py-2 text-right font-bold">{subtotal.toFixed(2)}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">VAT (TK):</td>
-                                        <td className="px-4 py-2 text-right font-bold">{vat}</td>
+                                        <td className="px-4 py-2 text-right font-bold">{vat.toFixed(2)}</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-200">
+                                        <td className="px-4 py-2 text-sm text-gray-700">SD (TK):</td>
+                                        <td className="px-4 py-2 text-right font-bold">{sd.toFixed(2)}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">Discount (TK):</td>
@@ -199,7 +202,7 @@ const EditSummary = ({
                                     </tr>
                                     <tr className="border-b border-blue-300 bg-blue-50">
                                         <td className="px-4 py-3 font-extrabold text-blue-800">Total Amount (TK):</td>
-                                        <td className="px-4 py-3 text-right font-extrabold text-blue-800">{payable}</td>
+                                        <td className="px-4 py-3 text-right font-extrabold text-blue-800">{payable.toFixed(2)}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">Paid Amount (TK):</td>
@@ -215,19 +218,19 @@ const EditSummary = ({
                                     </tr>
                                     <tr>
                                         <td className="px-4 py-2 text-sm text-gray-700">Change Amount (TK):</td>
-                                        <td className="px-4 py-2 text-right font-bold">{change}</td>
+                                        <td className="px-4 py-2 text-right font-bold">{change.toFixed(2)}</td>
                                     </tr>
                                 </tbody>
                             </table>
 
-                            <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+                            <div className="mt-6 p-4 rounded-xl">
                                 <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">Payment Method</h3>
-                                <div className="flex flex-wrap justify-center gap-3">
-                                    {["Cash", "Card", "Mobile"].map((method) => (
+                                <div className="flex justify-center gap-3">
+                                    {["Cash", "Card", "Mobile", "Bank"].map((method) => (
                                         <button
                                             key={method}
                                             onClick={() => handlePaymentMethodSelect(method)}
-                                            className={`min-w-[100px] px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm
+                                            className={`min-w-[100px] flex-grow px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm
                                                 ${isMainButtonActive(method) ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
                                             disabled={isProcessing}
                                         >
@@ -292,11 +295,11 @@ const EditSummary = ({
                                     className=" bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 font-bold flex items-center justify-center gap-2"
                                     disabled={isProcessing}
                                 >
-                                    <FaSearch /> Kitchen
+                                    <FaUtensils /> Kitchen
                                 </button>
                                 <button
                                     onClick={resetOrder}
-                                    className=" bg-red-600 text-white py-3 rounded-lg hover:bg-red-700 font-bold flex items-center justify-center gap-2"
+                                    className=" bg-gray-500 text-white py-3 rounded-lg hover:bg-gray-600 font-bold flex items-center justify-center gap-2"
                                     disabled={isProcessing}
                                 >
                                     <FaRedo /> Exit
@@ -306,7 +309,7 @@ const EditSummary = ({
                                     className="col-span-2 bg-purple-600 text-white py-3.5 rounded-lg hover:bg-purple-700 font-bold flex items-center justify-center gap-2 text-lg shadow-lg"
                                     disabled={isProcessing}
                                 >
-                                    <FaCheckCircle /> {isProcessing ? "Processing..." : "Finalize Order"}
+                                    <FaCheckCircle /> {isProcessing ? "Processing..." : "Finalize & Print"}
                                 </button>
                             </div>
                         </div>
@@ -349,7 +352,7 @@ const EditSummary = ({
                         </div>
                         <div className="flex flex-col mb-2 md:mb-4">
                             <label htmlFor="mobileInput" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                <FaMobileAlt className="text-base text-blue-500" /> Enter Customer Mobile Number:
+                                <FaMobile className="text-base text-blue-500" /> Enter Customer Mobile Number:
                             </label>
                             <div className="flex gap-2 md:gap-3">
                                 <input
@@ -376,7 +379,7 @@ const EditSummary = ({
                                     <FaUser className="text-blue-600" /> Customer Name: <span className="font-normal">{customer.name}</span>
                                 </p>
                                 <p className="font-semibold text-sm md:text-base flex items-center gap-2">
-                                    <FaMobileAlt className="text-blue-600" /> Customer Mobile: <span className="font-normal">{customer.mobile}</span>
+                                    <FaMobile className="text-blue-600" /> Customer Mobile: <span className="font-normal">{customer.mobile}</span>
                                 </p>
                             </div>
                         )}

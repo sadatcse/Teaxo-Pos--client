@@ -60,10 +60,18 @@ const menuItems = () => {
       icon: <MdOutlineKitchen className="text-lg" />,
     },
     {
-      title: "Order History",
+      title: "Daily Order Report",
       path: "/dashboard/order-history",
       icon: <MdHistory className="text-lg" />,
     },
+
+
+    {
+      title: "Custom Order Report",
+      path: "/dashboard/customorder",
+      icon: <MdHistory className="text-lg" />,
+    },
+
     {
       title: "Customers",
       path: "/dashboard/customers",

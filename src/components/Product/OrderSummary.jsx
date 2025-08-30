@@ -1,4 +1,3 @@
-// src/components/Product/OrderSummary.jsx
 import React, { useState } from 'react';
 import {
     FaPlus, FaMinus, FaTrash, FaSearch, FaUser, FaMobileAlt, FaUtensils,
@@ -7,30 +6,30 @@ import {
 } from "react-icons/fa";
 import { FaCcVisa, FaCcAmex } from "react-icons/fa6";
 import { RiMastercardFill } from "react-icons/ri";
-
 import { MdOutlineSendToMobile } from "react-icons/md";
+import { FaUniversity } from "react-icons/fa"; 
 
 const OrderSummary = ({
     customer, mobile, setMobile, handleCustomerSearch,
     orderType, handleOrderTypeChange, TableName, deliveryProvider,
     addedProducts, incrementQuantity, decrementQuantity, removeProduct,
-    invoiceSummary, setInvoiceSummary, subtotal, vat, payable, paid, change,
+    invoiceSummary, setInvoiceSummary, subtotal, vat, sd, payable, paid, change,
     printInvoice, handleKitchenClick, resetOrder, isProcessing, selectedPaymentMethod,
     handlePaymentMethodSelect, toggleComplimentaryStatus,
 }) => {
     const [activeTab, setActiveTab] = useState('invoiceDetails');
     const [selectedSubMethod, setSelectedSubMethod] = useState('');
-    const [selectedCardIcon, setSelectedCardIcon] = useState(null); // New state for card icon
+    const [selectedCardIcon, setSelectedCardIcon] = useState(null);
 
     const handleMainPaymentButtonClick = (method) => {
         if (selectedPaymentMethod === method) {
             handlePaymentMethodSelect('');
             setSelectedSubMethod('');
-            setSelectedCardIcon(null); // Reset card icon when main category is deselected
+            setSelectedCardIcon(null);
         } else {
             handlePaymentMethodSelect(method);
             setSelectedSubMethod('');
-            if (method !== 'Card') { // Reset card icon if a different method is chosen
+            if (method !== 'Card') {
                 setSelectedCardIcon(null);
             }
         }
@@ -57,10 +56,12 @@ const OrderSummary = ({
         { name: "Nagad", icon: "NagadLogo" },
         { name: "Rocket", icon: "RocketLogo" },
     ];
+    const bankOptions = [
+        { name: "Bank", icon: <FaUniversity /> },
+    ];
 
     return (
         <div className="w-full lg:w-2/6 p-1 md:p-6 font-inter">
-            {/* Tab Navigation for Invoice Details / Other Info */}
             <div className="bg-white rounded-2xl shadow-xl p-1 md:p-8 mb-6 border border-gray-100">
                 <div className="flex border-b border-gray-200 mb-4">
                     <button
@@ -79,16 +80,14 @@ const OrderSummary = ({
                     </button>
                 </div>
 
-                {/* Conditional Rendering based on activeTab */}
                 {activeTab === 'invoiceDetails' && (
-                    <div className="">
+                    <div>
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-4 md:mb-6 gap-4 border-b border-gray-200 pb-4">
                             <div className="flex-1">
                                 <h2 className="text-xl md:text-2xl font-extrabold text-gray-900 mb-3">Invoice Summary</h2>
                             </div>
                         </div>
 
-                        {/* Added Products Table */}
                         <div className="overflow-x-auto max-h-96 mb-4 md:mb-6 border border-gray-200 rounded-xl shadow-inner custom-scrollbar">
                             <table className="min-w-full divide-y divide-gray-200">
                                 <thead className="bg-gray-100 sticky top-0 shadow-sm">
@@ -129,7 +128,7 @@ const OrderSummary = ({
                                                     </div>
                                                 </td>
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm text-right font-bold">
-                                                    {product.isComplimentary ? '0.00' : product.price * product.quantity} TK
+                                                    {product.isComplimentary ? '0.00' : (product.price * product.quantity).toFixed(2)} TK
                                                 </td>
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-center">
                                                     <div className="flex items-center justify-center gap-2">
@@ -148,17 +147,20 @@ const OrderSummary = ({
                             </table>
                         </div>
 
-                        {/* Invoice Summary Details */}
                         <div className="mt-6">
                             <table className="w-full border-collapse">
                                 <tbody>
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">Sub Total (TK):</td>
-                                        <td className="px-4 py-2 text-right font-bold">{subtotal}</td>
+                                        <td className="px-4 py-2 text-right font-bold">{subtotal.toFixed(2)}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">VAT (TK):</td>
-                                        <td className="px-4 py-2 text-right font-bold">{vat}</td>
+                                        <td className="px-4 py-2 text-right font-bold">{vat.toFixed(2)}</td>
+                                    </tr>
+                                    <tr className="border-b border-gray-200">
+                                        <td className="px-4 py-2 text-sm text-gray-700">SD (TK):</td>
+                                        <td className="px-4 py-2 text-right font-bold">{sd.toFixed(2)}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">Discount (TK):</td>
@@ -173,8 +175,8 @@ const OrderSummary = ({
                                         </td>
                                     </tr>
                                     <tr className="border-b border-blue-300 bg-blue-50">
-                                        <td className="px-4 py-3 font-extrabold text-blue-800">Total Amount (TK):</td>
-                                        <td className="px-4 py-3 text-right font-extrabold text-blue-800">{payable}</td>
+                                        <td className="px-4 py-3 font-extrabold text-blue-800">Total Payable (TK):</td>
+                                        <td className="px-4 py-3 text-right font-extrabold text-blue-800">{payable.toFixed(2)}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">Paid Amount (TK):</td>
@@ -189,33 +191,31 @@ const OrderSummary = ({
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td className="px-4 py-2 text-sm text-gray-700">Change Amount (TK):</td>
-                                        <td className="px-4 py-2 text-right font-bold">{change}</td>
+                                        <td className="px-4 py-2 text-sm text-gray-700">Change (TK):</td>
+                                        <td className="px-4 py-2 text-right font-bold">{change.toFixed(2)}</td>
                                     </tr>
                                 </tbody>
                             </table>
 
-                            {/* Payment Method */}
-                            <div className="mt-6 p-4 bg-gray-50 rounded-xl">
+                            <div className="mt-6 p-4  rounded-xl">
                                 <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">Payment Method</h3>
-                                <div className="flex flex-wrap justify-center gap-3">
-                                    {["Cash", "Card", "Mobile"].map((method) => (
+                                <div className="flex justify-center gap-3"> {/* Changed from flex-wrap to a simple flex with justify-center */}
+                                    {["Cash", "Card", "Mobile", "Bank"].map((method) => (
                                         <button
                                             key={method}
                                             onClick={() => handleMainPaymentButtonClick(method)}
                                             className={`min-w-[100px] px-4 py-3 rounded-xl font-bold flex items-center justify-center gap-2 text-sm
-                                                ${selectedPaymentMethod === method || (selectedPaymentMethod && cardOptions.map(o => o.name).includes(selectedPaymentMethod) && method === 'Card') || (selectedPaymentMethod && mobileOptions.map(o => o.name).includes(selectedPaymentMethod) && method === 'Mobile') ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
+                                                ${selectedPaymentMethod === method || (selectedPaymentMethod && cardOptions.map(o => o.name).includes(selectedPaymentMethod) && method === 'Card') || (selectedPaymentMethod && mobileOptions.map(o => o.name).includes(selectedPaymentMethod) && method === 'Mobile') || (selectedPaymentMethod === 'Bank' && method === 'Bank') ? "bg-blue-600 text-white shadow-lg" : "bg-gray-200 text-gray-700 hover:bg-gray-300"}`}
                                             disabled={isProcessing}
                                         >
                                             {method === "Cash" && <FaMoneyBillWave />}
-                                            {method === "Card" && (selectedCardIcon || <FaCreditCard />)} {/* Use selected icon or default */}
+                                            {method === "Card" && (selectedCardIcon || <FaCreditCard />)}
                                             {method === "Mobile" && <MdOutlineSendToMobile />}
+                                            {method === "Bank" && <FaUniversity />}
                                             {method}
                                         </button>
                                     ))}
                                 </div>
-
-                                {/* Conditionally render sub-payment methods for Card */}
                                 {selectedPaymentMethod === 'Card' && (
                                     <div className="mt-4 flex flex-wrap justify-center gap-3">
                                         {cardOptions.map((card) => (
@@ -232,15 +232,9 @@ const OrderSummary = ({
                                         ))}
                                     </div>
                                 )}
-                                
-                                {/* Conditionally render sub-payment methods for Mobile */}
                                 {selectedPaymentMethod === 'Mobile' && (
                                     <div className="mt-4 flex flex-wrap justify-center gap-3">
-                                        {[
-                                            { name: "Bkash", icon: "BkashLogo" },
-                                            { name: "Nagad", icon: "NagadLogo" },
-                                            { name: "Rocket", icon: "RocketLogo" },
-                                        ].map((mobile) => (
+                                        {mobileOptions.map((mobile) => (
                                             <button
                                                 key={mobile.name}
                                                 onClick={() => handleSubPaymentButtonClick(mobile.name)}
@@ -248,36 +242,33 @@ const OrderSummary = ({
                                                     ${selectedSubMethod === mobile.name ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}
                                                 disabled={isProcessing}
                                             >
-                                                {/* You would use an icon component here */}
                                                 <span>{mobile.name}</span>
                                             </button>
                                         ))}
                                     </div>
                                 )}
                             </div>
-
-                            {/* Action Buttons */}
                             <div className="grid grid-cols-2 gap-4 mt-6">
                                 <button
                                     onClick={() => printInvoice(false)}
                                     className="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold flex items-center justify-center gap-2"
                                     disabled={isProcessing}
                                 >
-                                    <FaSave /> {isProcessing ? "Processing..." : "Save"}
+                                    <FaSave /> {isProcessing ? "Saving..." : "Save"}
                                 </button>
                                 <button
                                     onClick={() => printInvoice(true)}
                                     className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold flex items-center justify-center gap-2"
                                     disabled={isProcessing}
                                 >
-                                    <FaPrint /> Print
+                                    <FaPrint /> {isProcessing ? "Printing..." : "Print"}
                                 </button>
                                 <button
                                     onClick={handleKitchenClick}
                                     className=" bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 font-bold flex items-center justify-center gap-2"
                                     disabled={isProcessing}
                                 >
-                                    <FaSearch /> Kitchen
+                                    <FaUtensils /> Kitchen
                                 </button>
                                 <button
                                     onClick={resetOrder}
@@ -290,7 +281,6 @@ const OrderSummary = ({
                         </div>
                     </div>
                 )}
-
                 {activeTab === 'customerInfo' && (
                     <div>
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-4 md:mb-6 gap-4">
@@ -314,13 +304,9 @@ const OrderSummary = ({
                                 <div className="min-w-[160px] w-full md:w-auto">
                                     <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
                                         {orderType === 'dine-in' ? (
-                                            <>
-                                                <FaUtensils className="text-green-500" /> Selected Table:
-                                            </>
+                                            <><FaUtensils className="text-green-500" /> Selected Table:</>
                                         ) : (
-                                            <>
-                                                <FaTruck className="text-purple-500" /> Provider:
-                                            </>
+                                            <><FaTruck className="text-purple-500" /> Provider:</>
                                         )}
                                     </label>
                                     <div className="px-4 py-2 border border-gray-300 rounded-xl bg-gray-100 font-bold text-center text-gray-800 h-10 md:h-12 flex items-center justify-center text-sm md:text-base">
@@ -329,10 +315,9 @@ const OrderSummary = ({
                                 </div>
                             )}
                         </div>
-                        {/* Mobile Number Input and Search */}
                         <div className="flex flex-col mb-2 md:mb-4">
                             <label htmlFor="mobileInput" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                <FaMobileAlt className="text-base text-blue-500" /> Enter Customer Mobile Number:
+                                <FaMobileAlt className="text-base text-blue-500" /> Customer Mobile:
                             </label>
                             <div className="flex gap-2 md:gap-3">
                                 <input
@@ -352,15 +337,13 @@ const OrderSummary = ({
                                 </button>
                             </div>
                         </div>
-
-                        {/* Customer Info */}
                         {customer && (
                             <div className="mb-4 md:mb-6 p-4 border border-blue-400 rounded-xl bg-blue-50 text-blue-800 shadow-md">
                                 <p className="font-semibold text-sm md:text-base flex items-center gap-2">
-                                    <FaUser className="text-blue-600" /> Customer Name: <span className="font-normal">{customer.name}</span>
+                                    <FaUser className="text-blue-600" /> Name: <span className="font-normal">{customer.name}</span>
                                 </p>
                                 <p className="font-semibold text-sm md:text-base flex items-center gap-2">
-                                    <FaMobileAlt className="text-blue-600" /> Customer Mobile: <span className="font-normal">{customer.mobile}</span>
+                                    <FaMobileAlt className="text-blue-600" /> Mobile: <span className="font-normal">{customer.mobile}</span>
                                 </p>
                             </div>
                         )}

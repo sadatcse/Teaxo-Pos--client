@@ -82,14 +82,18 @@ const EditOrderPage = () => {
                 const response = await axiosSecure.get(`/invoice/get-id/${orderId}`);
                 const orderData = response.data;
 
+                // --- UPDATED MAPPING ---
+                // Now correctly captures vat and sd for each original product.
                 const initialOriginalItems = orderData.products.map(p => ({
                     ...p,
                     _id: p.productName, // Using productName as a temporary unique ID
                     price: p.rate,
                     quantity: p.qty,
                     originalQuantity: p.qty,
+                    vat: p.vat || 0,         // Get original VAT
+                    sd: p.sd || 0,           // Get original SD
                     isOriginal: true,
-                    isComplimentary: p.isComplimentary || false, // Add isComplimentary status
+                    isComplimentary: p.isComplimentary || false,
                 }));
                 setOriginalOrderItems(initialOriginalItems);
                 setNewOrderItems([]);
@@ -121,14 +125,15 @@ const EditOrderPage = () => {
 
     // --- Core Logic Functions ---
     const addProduct = (product) => {
-        const existingItem = allOrderItems.find(p => p.productName === product.productName);
+        // This function assumes 'product' from ProductSelection includes vat and sd fields
+        const existingItem = allOrderItems.find(p => p.productName === product.productName && !p.isComplimentary);
 
         if (existingItem) {
             if (existingItem.isOriginal) {
                 setOriginalOrderItems(items =>
                     items.map(p =>
                         p.productName === product.productName
-                            ? { ...p, quantity: p.quantity + 1, isComplimentary: false }
+                            ? { ...p, quantity: p.quantity + 1 }
                             : p
                     )
                 );
@@ -136,7 +141,7 @@ const EditOrderPage = () => {
                 setNewOrderItems(items =>
                     items.map(p =>
                         p.productName === product.productName
-                            ? { ...p, quantity: p.quantity + 1, isComplimentary: false }
+                            ? { ...p, quantity: p.quantity + 1 }
                             : p
                     )
                 );
@@ -144,12 +149,12 @@ const EditOrderPage = () => {
             toast.info(`Quantity for ${product.productName} incremented.`);
         } else {
             const itemToAdd = {
-                ...product,
+                ...product, // Spreads all product properties, including vat and sd
                 _id: product.productName,
                 quantity: 1,
                 cookStatus: 'PENDING',
                 isOriginal: false,
-                isComplimentary: false, // New items are not complimentary by default
+                isComplimentary: false,
             };
             setNewOrderItems(current => [...current, itemToAdd]);
             toast.success(`${product.productName} added to order!`);
@@ -223,21 +228,12 @@ const EditOrderPage = () => {
     };
 
     const handleCustomerSearch = () => {
-        if (!mobile) {
-            Swal.fire("Error", "Please enter a mobile number.", "error");
-            return;
-        }
-        if (!/^\d{11}$/.test(mobile)) {
-            Swal.fire("Invalid Number", "Mobile number must be exactly 11 digits.", "warning");
-            return;
-        }
+        if (!mobile) return Swal.fire("Error", "Please enter a mobile number.", "error");
+        if (!/^\d{11}$/.test(mobile)) return Swal.fire("Invalid Number", "Mobile number must be exactly 11 digits.", "warning");
         searchCustomer(mobile);
     };
 
-    const handlePaymentMethodSelect = (method) => {
-        setSelectedPaymentMethod(method);
-    
-    };
+    const handlePaymentMethodSelect = (method) => setSelectedPaymentMethod(method);
 
     const handleOrderTypeChange = (type) => {
         setOrderType(type);
@@ -260,22 +256,13 @@ const EditOrderPage = () => {
     };
 
     const handleTableSelectionConfirm = () => {
-        if (selectedTable) {
-            setIsTableSelectionModalOpen(false);
-        } else {
-            Swal.fire("Error", "Please select a table to continue.", "error");
-        }
+        if (selectedTable) setIsTableSelectionModalOpen(false);
+        else Swal.fire("Error", "Please select a table to continue.", "error");
     };
 
     const handleKitchenClick = async () => {
-        if (allOrderItems.length === 0) {
-            toast.warn("The order is empty.");
-            return;
-        }
-        // First, save the updated invoice silently.
+        if (allOrderItems.length === 0) return toast.warn("The order is empty.");
         const isUpdateSuccessful = await saveOrUpdateInvoice(false);
-
-        // If the update was successful, then show the kitchen receipt.
         if (isUpdateSuccessful) {
             setIsKitchenModalOpen(true);
             toast.info("Order Updated! KOT is ready for the kitchen.");
@@ -311,18 +298,21 @@ const EditOrderPage = () => {
         const nonComplimentaryProducts = allOrderItems.filter(p => !p.isComplimentary);
         const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
         const vat = nonComplimentaryProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
+        const sd = nonComplimentaryProducts.reduce((total, p) => total + ((p.sd || 0) * p.quantity), 0);
         const discount = parseFloat(invoiceSummary.discount || 0);
-        const payable = subtotal + vat - discount;
+        const payable = subtotal + vat + sd - discount;
+        
         return {
             subtotal: roundAmount(subtotal),
             vat: roundAmount(vat),
+            sd: roundAmount(sd),
             discount: roundAmount(discount),
             payable: roundAmount(payable),
         };
     };
 
     const getInvoicePayload = () => {
-        const { subtotal, vat, discount, payable } = calculateTotal();
+        const { subtotal, vat, sd, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
             products: allOrderItems.map((p) => ({
@@ -331,12 +321,14 @@ const EditOrderPage = () => {
                 rate: p.price,
                 subtotal: roundAmount(p.price * p.quantity),
                 vat: p.vat || 0,
+                sd: p.sd || 0,
                 cookStatus: p.cookStatus || 'PENDING',
-                isComplimentary: p.isComplimentary || false, // Ensure this field is always included
+                isComplimentary: p.isComplimentary || false,
             })),
             subtotal,
             discount,
             vat,
+            sd,
             loginUserEmail,
             loginUserName,
             customerName: customer?.name || "Guest",
@@ -374,12 +366,12 @@ const EditOrderPage = () => {
             if (isPrintAction && companies[0] && data) {
                 setIsReceiptModalOpen(true);
             }
-            return true; // Return true on success
+            return true;
         } catch (error) {
             console.error("Error updating invoice:", error);
             const errorMessage = error.response?.data?.error || "Failed to update the invoice.";
             Swal.fire("Error", errorMessage, "error");
-            return false; // Return false on failure
+            return false;
         } finally {
             setIsProcessing(false);
         }
@@ -405,7 +397,7 @@ const EditOrderPage = () => {
                     const response = await axiosSecure.put(`/invoice/finalize/${currentInvoiceId}`, invoiceDetails);
                     toast.success(response.data.message || "Order finalized successfully! 🎉");
                     
-                    const data = response.data.invoice; // Data is nested under 'invoice' key
+                    const data = response.data.invoice;
                     const dataForPrint = {
                         ...data,
                         ...invoiceDetails,
@@ -417,8 +409,6 @@ const EditOrderPage = () => {
                     if (companies[0] && data) {
                         setIsReceiptModalOpen(true);
                     }
-                    // Optional: Navigate away after finalizing
-                    // setTimeout(() => navigate('/dashboard'), 2000);
                 } catch (error) {
                     console.error("Error finalizing invoice:", error);
                     const errorMessage = error.response?.data?.message || "Failed to finalize the invoice.";
@@ -438,7 +428,7 @@ const EditOrderPage = () => {
         );
     }
 
-    const { subtotal, vat, payable } = calculateTotal();
+    const { subtotal, vat, sd, payable } = calculateTotal();
     const paid = roundAmount(parseFloat(invoiceSummary.paid || 0));
     const change = paid > 0 ? paid - payable : 0;
 
@@ -492,6 +482,7 @@ const EditOrderPage = () => {
                     setInvoiceSummary={setInvoiceSummary}
                     subtotal={subtotal}
                     vat={vat}
+                    sd={sd}
                     payable={payable}
                     paid={paid}
                     change={change}
@@ -503,19 +494,19 @@ const EditOrderPage = () => {
                     selectedPaymentMethod={selectedPaymentMethod}
                     handlePaymentMethodSelect={handlePaymentMethodSelect}
                     updateCookStatus={updateCookStatus}
-                    toggleComplimentaryStatus={toggleComplimentaryStatus} // Pass the new function
+                    toggleComplimentaryStatus={toggleComplimentaryStatus}
                 />
             </main>
 
             {isReceiptModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setIsReceiptModalOpen(false)}>
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => navigate('/dashboard/order-list')}>
                     <div className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-                        <button className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700" onClick={() => setIsReceiptModalOpen(false)}>
+                        <button className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700" onClick={() => navigate('/dashboard/order-list')}>
                             Close
                         </button>
                         <ReceiptTemplate
                             ref={receiptRef}
-                            onPrintComplete={() => setIsReceiptModalOpen(false)}
+                            onPrintComplete={() => navigate('/dashboard/order-list')}
                             profileData={companies[0]}
                             invoiceData={print}
                         />

@@ -45,29 +45,41 @@ const Login = () => {
     }
   }, []);
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    if (password.length < 6) {
-      Swal.fire("Password Too Short!", "Password must be at least 6 characters.", "warning");
-      return;
+const handleLogin = async (e) => {
+  e.preventDefault();
+  if (password.length < 6) {
+    Swal.fire("Password Too Short!", "Password must be at least 6 characters.", "warning");
+    return;
+  }
+  setLoading(true);
+  try {
+    await loginUser(email, password);
+    if (rememberMe) {
+      localStorage.setItem("email", email);
+      localStorage.setItem("password", password);
+    } else {
+      localStorage.removeItem("email");
+      localStorage.removeItem("password");
     }
-    setLoading(true);
-    try {
-      await loginUser(email, password);
-      if (rememberMe) {
-        localStorage.setItem("email", email);
-        localStorage.setItem("password", password);
+    toast.success("Login Successful! Welcome back!");
+    navigate("/dashboard/home");
+  } catch (error) { // The error object is now accessible
+    if (error.response) { // Check if the error has a response from the server
+      if (error.response.status === 404) {
+        Swal.fire("User Not Found!", "The email you entered is not registered.", "error");
+      } else if (error.response.status === 500) {
+        Swal.fire("Server Error!", "Something went wrong on our end. Please try again later.", "error");
       } else {
-        localStorage.removeItem("email");
-        localStorage.removeItem("password");
+        // Fallback for other status codes
+        Swal.fire("Login Failed!", "Invalid email or password.", "error");
       }
-      toast.success("Login Successful! Welcome back!");
-      navigate("/dashboard/home");
-    } catch {
-      Swal.fire("Login Failed!", "Invalid email or password.", "error");
+    } else {
+      // Fallback for network errors or other issues
+      Swal.fire("Network Error!", "Please check your internet connection and try again.", "error");
     }
-    setLoading(false);
-  };
+  }
+  setLoading(false);
+};
 
   return (
     <>

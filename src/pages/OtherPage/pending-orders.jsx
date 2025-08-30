@@ -59,7 +59,7 @@ const PendingOrders = () => {
     }
   };
 
-  // *** NEW: Function to show confirmation before completing order ***
+  // Function to show confirmation before completing order
   const handleCompleteClick = (id) => {
     Swal.fire({
       title: 'Confirm Payment',
@@ -77,7 +77,6 @@ const PendingOrders = () => {
       }
     });
   };
-
 
   // Handle opening the view modal
   const handleViewOrder = (order) => {
@@ -201,7 +200,6 @@ const PendingOrders = () => {
                           >
                             Edit
                           </button>
-                          {/* *** UPDATED: OnClick handler for the Complete button *** */}
                           <button
                             onClick={() => handleCompleteClick(order._id)}
                             className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-300 ease-in-out"
@@ -227,76 +225,78 @@ const PendingOrders = () => {
             </table>
           </section>
 
-          {/* View Order Modal (no changes) */}
+          {/* View Order Modal */}
           {isModalOpen && viewOrder && companies[0] && (
                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm md:max-w-3xl lg:max-w-4xl p-6 relative transform transition-all duration-300 scale-95 md:scale-100">
-                        <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl font-bold transition-colors duration-200">&times;</button>
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b pb-4">
-                            <div>
-                                <h2 className="text-3xl font-extrabold text-gray-900 mb-1">{companies[0].name}</h2>
-                                <p className="text-sm text-gray-600">{companies[0].address}</p>
-                                <p className="text-sm text-gray-600">Cell: {companies[0].phone}</p>
-                            </div>
-                            <div className="mt-4 md:mt-0 text-right">
-                                <p className="text-lg font-semibold text-gray-800">Order ID: {viewOrder.invoiceSerial}</p>
-                                <p className="text-sm text-gray-600">Date: {new Date(viewOrder.dateTime).toLocaleString()}</p>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-gray-700">
-                            <p><strong>Order Type:</strong> <span className="font-medium">{viewOrder.orderType}</span></p>
-                            <p><strong>Counter:</strong> <span className="font-medium">{viewOrder.counter}</span></p>
-                            <p><strong>Served By:</strong> <span className="font-medium">{viewOrder.loginUserName}</span></p>
-                            {viewOrder.orderType === "dine-in" && (<p><strong>Table Name:</strong> <span className="font-medium">{viewOrder.tableName}</span></p>)}
-                            {viewOrder.orderType === "delivery" && (<>
-                                     <p><strong>Delivery Provider:</strong> <span className="font-medium">{viewOrder.deliveryProvider}</span></p>
-                                     <p><strong>Customer Name:</strong> <span className="font-medium">{viewOrder.customerName || 'N/A'}</span></p>
-                                     <p><strong>Customer Mobile:</strong> <span className="font-medium">{viewOrder.customerMobile || 'N/A'}</span></p>
-                                 </>)}
-                        </div>
-                        <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm mb-6">
-                            <table className="min-w-full divide-y divide-gray-200">
-                                <thead className="bg-gray-100">
-                                    <tr>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">SL. NO</th>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</th>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Qty</th>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Rate</th>
-                                        <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="bg-white divide-y divide-gray-200">
-                                    {viewOrder.products.map((product, index) => (
-                                        <tr key={index} className="hover:bg-gray-50">
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{index + 1}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{product.productName}</td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800"><span className="p-1 text-center font-semibold">{product.qty}</span></td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{product.rate?.toFixed(2)} Taka</td>
-                                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{product.subtotal?.toFixed(2)} Taka</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="flex flex-col items-end space-y-2 mb-6 text-gray-800">
-                            <p className="text-lg font-semibold">Total Qty: <span className="font-bold">{viewOrder.totalQty}</span></p>
-                            <p className="text-lg font-semibold">Total Amount: <span className="font-bold">{viewOrder.totalSale?.toFixed(2)} Taka</span></p>
-                            <div className="flex items-center gap-2">
-                                <label htmlFor="discount" className="text-lg font-semibold">Discount:</label>
-                                <span className="w-28 p-2 text-right font-bold">{discountDisplay?.toFixed(2)}</span>
-                                <span className="text-lg font-semibold">Taka</span>
-                            </div>
-                            {viewOrder.vat > 0 && (<p className="text-lg font-semibold">VAT: <span className="font-bold">{viewOrder.vat?.toFixed(2)} Taka</span></p>)}
-                            <p className="text-xl font-extrabold text-blue-700">Grand Total: <span className="font-bold">{viewOrder.totalAmount?.toFixed(2)} Taka</span></p>
-                        </div>
-                        <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
-                            <button onClick={() => setIsModalOpen(false)} className="bg-gray-500 text-white py-2.5 px-6 rounded-md hover:bg-gray-600 transition duration-300 ease-in-out shadow-md font-semibold text-base">Close</button>
-                        </div>
-                    </div>
+                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm md:max-w-3xl lg:max-w-4xl p-6 relative transform transition-all duration-300 scale-95 md:scale-100">
+                         <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-800 text-3xl font-bold transition-colors duration-200">&times;</button>
+                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 border-b pb-4">
+                             <div>
+                                 <h2 className="text-3xl font-extrabold text-gray-900 mb-1">{companies[0].name}</h2>
+                                 <p className="text-sm text-gray-600">{companies[0].address}</p>
+                                 <p className="text-sm text-gray-600">Cell: {companies[0].phone}</p>
+                             </div>
+                             <div className="mt-4 md:mt-0 text-right">
+                                 <p className="text-lg font-semibold text-gray-800">Order ID: {viewOrder.invoiceSerial}</p>
+                                 <p className="text-sm text-gray-600">Date: {new Date(viewOrder.dateTime).toLocaleString()}</p>
+                             </div>
+                         </div>
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 text-gray-700">
+                             <p><strong>Order Type:</strong> <span className="font-medium">{viewOrder.orderType}</span></p>
+                             <p><strong>Counter:</strong> <span className="font-medium">{viewOrder.counter}</span></p>
+                             <p><strong>Served By:</strong> <span className="font-medium">{viewOrder.loginUserName}</span></p>
+                             {viewOrder.orderType === "dine-in" && (<p><strong>Table Name:</strong> <span className="font-medium">{viewOrder.tableName}</span></p>)}
+                             {viewOrder.orderType === "delivery" && (<>
+                                       <p><strong>Delivery Provider:</strong> <span className="font-medium">{viewOrder.deliveryProvider}</span></p>
+                                       <p><strong>Customer Name:</strong> <span className="font-medium">{viewOrder.customerName || 'N/A'}</span></p>
+                                       <p><strong>Customer Mobile:</strong> <span className="font-medium">{viewOrder.customerMobile || 'N/A'}</span></p>
+                                   </>)}
+                         </div>
+                         <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm mb-6">
+                             <table className="min-w-full divide-y divide-gray-200">
+                                 <thead className="bg-gray-100">
+                                     <tr>
+                                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">SL. NO</th>
+                                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Product</th>
+                                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Qty</th>
+                                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Rate</th>
+                                         <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">Subtotal</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody className="bg-white divide-y divide-gray-200">
+                                     {viewOrder.products.map((product, index) => (
+                                         <tr key={index} className="hover:bg-gray-50">
+                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{index + 1}</td>
+                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{product.productName}</td>
+                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800"><span className="p-1 text-center font-semibold">{product.qty}</span></td>
+                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{product.rate?.toFixed(2)} Taka</td>
+                                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-800">{product.subtotal?.toFixed(2)} Taka</td>
+                                         </tr>
+                                     ))}
+                                 </tbody>
+                             </table>
+                         </div>
+                         <div className="flex flex-col items-end space-y-2 mb-6 text-gray-800">
+                             <p className="text-lg font-semibold">Total Qty: <span className="font-bold">{viewOrder.totalQty}</span></p>
+                             <p className="text-lg font-semibold">Total Amount: <span className="font-bold">{viewOrder.totalSale?.toFixed(2)} Taka</span></p>
+                             <div className="flex items-center gap-2">
+                                 <label htmlFor="discount" className="text-lg font-semibold">Discount:</label>
+                                 <span className="w-28 p-2 text-right font-bold">{discountDisplay?.toFixed(2)}</span>
+                                 <span className="text-lg font-semibold">Taka</span>
+                             </div>
+                             {viewOrder.vat > 0 && (<p className="text-lg font-semibold">VAT: <span className="font-bold">{viewOrder.vat?.toFixed(2)} Taka</span></p>)}
+                             {/* *** THIS IS THE UPDATED PART *** */}
+                             {viewOrder.sd > 0 && (<p className="text-lg font-semibold">SD: <span className="font-bold">{viewOrder.sd?.toFixed(2)} Taka</span></p>)}
+                             <p className="text-xl font-extrabold text-blue-700">Grand Total: <span className="font-bold">{viewOrder.totalAmount?.toFixed(2)} Taka</span></p>
+                         </div>
+                         <div className="flex justify-end gap-4 pt-4 border-t border-gray-200">
+                             <button onClick={() => setIsModalOpen(false)} className="bg-gray-500 text-white py-2.5 px-6 rounded-md hover:bg-gray-600 transition duration-300 ease-in-out shadow-md font-semibold text-base">Close</button>
+                         </div>
+                     </div>
                </div>
           )}
 
-          {/* Print Modal (no changes) */}
+          {/* Print Modal */}
           {isPrintModalOpen && printData && companies[0] && (
                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm md:max-w-md p-6 relative">

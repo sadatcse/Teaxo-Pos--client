@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FiEdit, FiTrash2, FiX } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { TfiSearch } from "react-icons/tfi";
 import { GoPlus } from "react-icons/go";
@@ -11,398 +11,416 @@ import CategroieHook from "../../Hook/Categroie";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import Preloader from "../../components/Shortarea/Preloader";
+import { useDebounce } from 'use-debounce'; // Use this new hook
 
 const Product = () => {
-  const { categoryNames, loading: categoriesLoading, error: categoriesError } = CategroieHook();
-  const axiosSecure = UseAxiosSecure();
-   const { branch } = useContext(AuthContext);
+    const { categoryNames, loading: categoriesLoading, error: categoriesError } = CategroieHook();
+    const axiosSecure = UseAxiosSecure();
+    const { branch } = useContext(AuthContext);
 
-  const [products, setProducts] = useState([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    category: "",
-    productName: "",
-    flavour: false,
-    cFlavor: false,
-    addOns: false,
-    vat: 0,
-    price: "",
-    vatType: "amount",
-    status: "available",
-    productDetails: "",
-    branch: branch ,
-    photo: "",
-
-  });
-  const [editId, setEditId] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filteredProducts, setFilteredProducts] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [Loading, setLoading] = useState(false);
-  const [vatInput, setVatInput] = useState(""); // Temporary state for VAT input
-  const [debounceTimeout, setDebounceTimeout] = useState(null); // Timeout for debounce
-
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axiosSecure.get(`/product/branch/${branch}/get-all`);
-      setProducts(response.data);
-      setFilteredProducts(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setLoading(false);
-    }
-  }, [axiosSecure, branch]);
-  
-  useEffect(() => {
-    fetchProducts();
-  }, [fetchProducts]);
-
-  const handleAddOrEditProduct = async () => {
-    setIsLoading(true);
-
-    try {
-      if (editId) {
-        // Update product
-        await axiosSecure.put(`/product/update/${editId}`, formData);
-      } else {
-        // Add new product
-        await axiosSecure.post("/product/post", formData);
-      }
-      fetchProducts();
-      setIsModalOpen(false);
-      setFormData({
+    const initialFormData = {
         category: "",
         productName: "",
         flavour: false,
         cFlavor: false,
         addOns: false,
         vat: 0,
+        sd: 0,
         price: "",
         vatType: "amount",
+        sdType: "amount",
         status: "available",
         productDetails: "",
-        branch: branch ,
+        branch: branch,
         photo: "",
-      });
-      setVatInput("");
-      setEditId(null);
-    } catch (error) {
-      console.error("Error saving product:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: "Failed to save product. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
 
-  const handleVatInputChange = (value) => {
-    setVatInput(value); // Update the VAT input immediately
-    clearTimeout(debounceTimeout); // Clear the previous timeout
+    const [products, setProducts] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formData, setFormData] = useState(initialFormData);
+    const [editId, setEditId] = useState(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [vatInput, setVatInput] = useState("");
+    const [sdInput, setSdInput] = useState("");
+    
+    // Debounce the search term to improve performance
+    const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
 
-    const timeout = setTimeout(() => {
-      // Perform the VAT calculation after 2 seconds of no input
-      const numericValue = parseFloat(value) || 0;
-      if (formData.vatType === "percentage") {
-        const calculatedVAT = (numericValue / 100) * formData.price;
+    const fetchProducts = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await axiosSecure.get(`/product/branch/${branch}/get-all`);
+            setProducts(response.data);
+        } catch (error) {
+            console.error("Error fetching products:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [axiosSecure, branch]);
+
+    useEffect(() => {
+        fetchProducts();
+    }, [fetchProducts]);
+
+    useEffect(() => {
+        // This useEffect handles filtering when products or debouncedSearchTerm change
+        const filtered = products.filter((product) =>
+            product.productName.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
+        );
+        setFilteredProducts(filtered);
+    }, [products, debouncedSearchTerm]);
+
+    // Simplified state and useEffect for filtered products
+    const [filteredProducts, setFilteredProducts] = useState([]);
+    
+    // Debounce the vat and sd inputs to avoid rapid state updates
+    const [debouncedVatInput] = useDebounce(vatInput, 500);
+    const [debouncedSdInput] = useDebounce(sdInput, 500);
+
+    // Effect for calculating VAT
+    useEffect(() => {
+        const numericValue = parseFloat(debouncedVatInput) || 0;
+        const calculatedVAT = formData.vatType === "percentage"
+            ? (numericValue / 100) * (parseFloat(formData.price) || 0)
+            : numericValue;
         setFormData((prev) => ({ ...prev, vat: calculatedVAT }));
-      } else {
-        setFormData((prev) => ({ ...prev, vat: numericValue }));
-      }
-    }, 2000);
+    }, [debouncedVatInput, formData.vatType, formData.price]);
 
-    setDebounceTimeout(timeout); // Set the new timeout
-  };
+    // Effect for calculating SD
+    useEffect(() => {
+        const numericValue = parseFloat(debouncedSdInput) || 0;
+        const calculatedSD = formData.sdType === "percentage"
+            ? (numericValue / 100) * (parseFloat(formData.price) || 0)
+            : numericValue;
+        setFormData((prev) => ({ ...prev, sd: calculatedSD }));
+    }, [debouncedSdInput, formData.sdType, formData.price]);
 
-  const handleEdit = (id) => {
-    const product = products.find((p) => p._id === id);
-    setEditId(id);
-    setFormData(product);
-    setVatInput(product.vatType === "percentage" ? product.vat : "");
-    setIsModalOpen(true);
-  };
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setFormData(initialFormData);
+        setVatInput("");
+        setSdInput("");
+        setEditId(null);
+    };
 
-  const handleRemove = (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        axiosSecure.delete(`/product/delete/${id}`)
-          .then(() => {
+    const handleAddOrEditProduct = async () => {
+        setIsLoading(true);
+        try {
+            if (editId) {
+                await axiosSecure.put(`/product/update/${editId}`, formData);
+            } else {
+                await axiosSecure.post("/product/post", formData);
+            }
             fetchProducts();
-            Swal.fire("Deleted!", "The product has been deleted.", "success");
-          })
-          .catch((error) => {
-            console.error("Error deleting product:", error);
-            Swal.fire("Error!", "Failed to delete product.", "error");
-          });
-      }
-    });
-  };
+            closeModal();
+            Swal.fire({
+                icon: "success",
+                title: `Product ${editId ? 'Updated' : 'Created'}!`,
+                text: `The product has been successfully ${editId ? 'updated' : 'created'}.`,
+                timer: 2000,
+                showConfirmButton: false
+            });
+        } catch (error) {
+            console.error("Error saving product:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error!",
+                text: "Failed to save product. Please try again.",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-  const handleSearchChange = (event) => {
-    const value = event.target.value;
-    setSearchTerm(value);
-    const filtered = products.filter((product) =>
-      product.productName.toLowerCase().includes(value.toLowerCase())
+    const handleEdit = (id) => {
+        const product = products.find((p) => p._id === id);
+        setEditId(id);
+        setFormData(product);
+        setVatInput(product.vatType === 'percentage' ? (((product.vat || 0) / (product.price || 1)) * 100).toFixed(2) : product.vat);
+        setSdInput(product.sdType === 'percentage' ? (((product.sd || 0) / (product.price || 1)) * 100).toFixed(2) : (product.sd || ""));
+        setIsModalOpen(true);
+    };
+
+    const handleRemove = (id) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axiosSecure.delete(`/product/delete/${id}`)
+                    .then(() => {
+                        fetchProducts();
+                        Swal.fire("Deleted!", "The product has been deleted.", "success");
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting product:", error);
+                        Swal.fire("Error!", "Failed to delete product.", "error");
+                    });
+            }
+        });
+    };
+
+    const handleImageUpload = (url) => {
+        if (url) {
+            setFormData((prev) => ({ ...prev, photo: url }));
+        } else {
+            console.error("Image URL is undefined!");
+        }
+    };
+
+    const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: filteredProducts });
+
+    return (
+        <div className="p-4 min-h-screen bg-gray-50">
+           <Mtitle title="Product Management" rightcontent={
+               <div className="flex justify-end gap-4 items-center flex-wrap sm:flex-nowrap">
+                   {/* Search Bar */}
+                   <div className="flex items-center w-full sm:w-64 border shadow-sm py-2 px-3 bg-white rounded-xl">
+                       <TfiSearch className="text-xl font-bold text-gray-500" />
+                       <input
+                           type="text"
+                           className="outline-none w-full ml-2 text-sm"
+                           placeholder="Search by name..."
+                           value={searchTerm}
+                           onChange={(e) => setSearchTerm(e.target.value)}
+                       />
+                   </div>
+
+                   {/* Create Product Button */}
+                   <button
+                       onClick={() => setIsModalOpen(true)}
+                       className="flex items-center justify-center w-full sm:w-auto gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-700 transition duration-300 transform hover:scale-105"
+                   >
+                       <span className="font-semibold text-sm">Create Product</span>
+                       <GoPlus className="text-xl text-white" />
+                   </button>
+               </div>
+           } />
+
+           <div className="mt-4 text-sm md:text-base text-gray-700">
+               {rowsPerPageAndTotal}
+           </div>
+
+           {loading ? (
+               <Preloader />
+           ) : (
+               <section className="overflow-x-auto border shadow-sm rounded-xl p-4 mt-5 bg-white">
+                   <table className="min-w-full table-auto">
+                       <thead className="bg-blue-600">
+                           <tr className="text-sm font-medium text-white text-left">
+                               <th className="p-3 rounded-l-xl">Product Name</th>
+                               <th className="p-3">Category</th>
+                               <th className="p-3">Price</th>
+                               <th className="p-3">Status</th>
+                               <th className="p-3 rounded-r-xl text-right px-8">Action</th>
+                           </tr>
+                       </thead>
+                       <tbody>
+                           {paginatedData.length === 0 ? (
+                               <tr>
+                                   <td colSpan="5" className="text-center py-8 text-gray-500">No products found</td>
+                               </tr>
+                           ) : (
+                               paginatedData.map((product) => (
+                                   <tr key={product._id} className="border-b last:border-0 hover:bg-slate-100 transition-colors duration-200">
+                                       <td className="px-4 py-4 text-gray-800 font-medium">{product.productName}</td>
+                                       <td className="px-4 py-4 text-gray-600">{product.category}</td>
+                                       <td className="px-4 py-4 text-gray-600">৳{product.price}</td>
+                                       <td className="px-4 py-4">
+                                           <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${product.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                               {product.status}
+                                           </span>
+                                       </td>
+                                       <td className="py-4 px-6 text-lg flex justify-end items-center space-x-4">
+                                           <button onClick={() => handleEdit(product._id)} className="text-blue-500 hover:text-yellow-700 transition duration-150 transform hover:scale-110">
+                                               <FiEdit />
+                                           </button>
+                                           <button onClick={() => handleRemove(product._id)} className="text-red-500 hover:text-red-700 transition duration-150 transform hover:scale-110">
+                                               <FiTrash2 />
+                                           </button>
+                                       </td>
+                                   </tr>
+                               ))
+                           )}
+                       </tbody>
+                   </table>
+                   <MtableLoading data={products}></MtableLoading>
+                   {paginationControls}
+               </section>
+           )}
+
+           {isModalOpen && (
+               <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                   <div className="bg-white rounded-2xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col animate-fadeInUp">
+                       {/* Modal Header */}
+                       <div className="flex justify-between items-center p-4 border-b">
+                           <h2 className="text-xl font-semibold text-gray-800">{editId ? "Edit Product" : "Add New Product"}</h2>
+                           <button onClick={closeModal} className="text-gray-500 hover:text-gray-800 transition duration-300">
+                               <FiX size={24} />
+                           </button>
+                       </div>
+
+                       {/* Modal Body */}
+                       <div className="p-6 overflow-y-auto custom-scrollbar">
+                           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                               {/* Product Name */}
+                               <div>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
+                                   <input
+                                       type="text"
+                                       value={formData.productName}
+                                       onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
+                                       className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none"
+                                       placeholder="Enter product name"
+                                   />
+                               </div>
+
+                               {/* Category */}
+                               <div>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                                   <select
+                                       value={formData.category}
+                                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                       className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none"
+                                   >
+                                       <option value="">Select Category</option>
+                                       {categoriesLoading ? <option disabled>Loading...</option> :
+                                           categoriesError ? <option disabled>Error</option> :
+                                           categoryNames.map((cat) => (
+                                               <option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>
+                                           ))}
+                                   </select>
+                               </div>
+
+                               {/* Price */}
+                               <div>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
+                                   <input
+                                       type="number"
+                                       value={formData.price}
+                                       onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || "" })}
+                                       className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none"
+                                       placeholder="Enter price"
+                                   />
+                               </div>
+
+                               {/* Status */}
+                               <div>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                                   <select
+                                       value={formData.status}
+                                       onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                       className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none"
+                                   >
+                                       <option value="available">Available</option>
+                                       <option value="unavailable">Unavailable</option>
+                                   </select>
+                               </div>
+
+                               {/* VAT Section */}
+                               <div className="md:col-span-2">
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">VAT</label>
+                                   <div className="flex gap-2">
+                                       <input
+                                           type="number"
+                                           value={vatInput}
+                                           onChange={(e) => setVatInput(e.target.value)}
+                                           className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none"
+                                           placeholder={formData.vatType === "percentage" ? "e.g., 15" : "e.g., 25.50"}
+                                       />
+                                       <select
+                                           value={formData.vatType}
+                                           onChange={(e) => {
+                                               setFormData({ ...formData, vatType: e.target.value, vat: 0 });
+                                               setVatInput("");
+                                           }}
+                                           className="focus:border-blue-500 w-40 text-gray-700 border shadow-sm rounded-xl py-2 px-3 focus:outline-none"
+                                       >
+                                           <option value="amount">Amount (৳)</option>
+                                           <option value="percentage">Percent (%)</option>
+                                       </select>
+                                   </div>
+                                   {formData.vatType === "percentage" && (
+                                       <p className="text-gray-500 text-xs mt-1">Calculated VAT: {formData.vat.toFixed(2)} Taka</p>
+                                   )}
+                               </div>
+
+                               {/* SD Section */}
+                               <div className="md:col-span-2">
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">SD (Supplementary Duty)</label>
+                                   <div className="flex gap-2">
+                                       <input
+                                           type="number"
+                                           value={sdInput}
+                                           onChange={(e) => setSdInput(e.target.value)}
+                                           className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none"
+                                           placeholder={formData.sdType === "percentage" ? "e.g., 10" : "e.g., 10.00"}
+                                       />
+                                       <select
+                                           value={formData.sdType}
+                                           onChange={(e) => {
+                                               setFormData({ ...formData, sdType: e.target.value, sd: 0 });
+                                               setSdInput("");
+                                           }}
+                                           className="focus:border-blue-500 w-40 text-gray-700 border shadow-sm rounded-xl py-2 px-3 focus:outline-none"
+                                       >
+                                           <option value="amount">Amount (৳)</option>
+                                           <option value="percentage">Percent (%)</option>
+                                       </select>
+                                   </div>
+                                   {formData.sdType === "percentage" && (
+                                       <p className="text-gray-500 text-xs mt-1">Calculated SD: {formData.sd.toFixed(2)} Taka</p>
+                                   )}
+                               </div>
+
+                               {/* Product Details */}
+                               <div className="md:col-span-2">
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Product Details</label>
+                                   <textarea
+                                       value={formData.productDetails}
+                                       onChange={(e) => setFormData({ ...formData, productDetails: e.target.value })}
+                                       className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none"
+                                       placeholder="Add a short description..."
+                                       rows={3}
+                                   ></textarea>
+                               </div>
+                               
+                               {/* Image Upload */}
+                               <div className="md:col-span-2">
+                                   <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
+                                   <ImageUpload setImageUrl={handleImageUpload} />
+                               </div>
+                           </div>
+                       </div>
+
+                       {/* Modal Footer */}
+                       <div className="flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-2xl">
+                           <button
+                               onClick={closeModal}
+                               className="bg-gray-200 text-gray-800 py-2 px-5 font-semibold hover:bg-gray-300 rounded-xl transition duration-300"
+                           >
+                               Cancel
+                           </button>
+                           <button
+                               onClick={handleAddOrEditProduct}
+                               className={`bg-blue-600 text-white py-2 px-5 font-semibold hover:bg-blue-700 rounded-xl transition duration-300 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                               disabled={isLoading}
+                           >
+                               {isLoading ? "Saving..." : editId ? "Save Changes" : "Add Product"}
+                           </button>
+                       </div>
+                   </div>
+               </div>
+           )}
+       </div>
     );
-    setFilteredProducts(filtered);
-  };
-
-  const handleImageUpload = (url) => {
-    if (url) {
-      setFormData((prev) => ({ ...prev, photo: url }));
-    } else {
-      console.error("Image URL is undefined!");
-    }
-  };
-
-  const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: filteredProducts });
-
-  return (
-    <div className="p-4 min-h-screen">
-      <Mtitle title="Product Management" rightcontent={
-        <div className="flex md:mt-0 mt-3 justify-between">
-          <div className="flex justify-end gap-4 items-center mb-4">
-            {/* Search bar */}
-            <div className="md:w-64 border shadow-sm py-2 px-3 bg-white rounded-xl">
-              <div className="flex items-center gap-2">
-                <TfiSearch className="text-2xl font-bold text-gray-500" />
-                <input
-                  type="text"
-                  className="outline-none w-full"
-                  placeholder="Search here"
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                />
-              </div>
-            </div>
-            {/* Add new button */}
-            <div className="flex gap-2 cursor-pointer items-center bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-600 transition duration-300">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="font-semibold"
-              >
-                New
-              </button>
-              <GoPlus className="text-xl text-white" />
-            </div>
-          </div>
-        </div>
-      } ></Mtitle>
-
-      <div className="text-sm md:text-base">
-        {rowsPerPageAndTotal}
-      </div>
-
-      {Loading ? (
-    <Preloader />
-  ) : (
-
-     <section className="overflow-x-auto border shadow-sm rounded-xl p-4 pb- mt-5">
-        <table className="table w-full">
-          <thead className="bg-blue-600">
-            <tr className="text-sm font-medium text-white text-left">
-              <td className="p-3 rounded-l-xl">Product Name</td>
-              <td className="p-3">Category</td>
-              <td className="p-3">Price</td>
-              <td className="p-3">Status</td>
-              <td className="p-3 rounded-r-xl text-right px-8">Action</td>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="text-center py-4">No products found</td>
-              </tr>
-            ) : (
-              paginatedData.map((product, index) => (
-                <tr key={index} className="hover:bg-slate-100 hover:rounded-xl">
-                  <td className="px-4 py-5">{product.productName}</td>
-                  <td className="px-4 py-5">{product.category}</td>
-                  <td className="px-4 py-5">৳{product.price}</td>
-                  <td className="px-4 py-5">{product.status}</td>
-                  <td className="py-5 px-6 text-lg flex justify-end space-x-4">
-                    <button
-                      onClick={() => handleEdit(product._id)}
-                      className="text-blue-500 hover:text-yellow-700 transition duration-150"
-                    >
-                      <FiEdit />
-                    </button>
-                    <button
-                      onClick={() => handleRemove(product._id)}
-                      className="text-red-500 hover:text-red-700 transition duration-150"
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        <MtableLoading data={products}></MtableLoading>
-        {paginationControls}
-      </section>
- )}
-
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl mb-4">{editId !== null ? "Edit Product" : "Add New Product"}</h2>
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-5"
-            >
-              <option value="">Select Category</option>
-              {categoriesLoading ? (
-                <option disabled>Loading...</option>
-              ) : categoriesError ? (
-                <option disabled>Error loading categories</option>
-              ) : (
-                categoryNames.map((category) => (
-                  <option key={category._id} value={category.categoryName}>
-                    {category.categoryName}
-                  </option>
-                ))
-              )}
-            </select>
-            <input
-              type="text"
-              value={formData.productName}
-              onChange={(e) => setFormData({ ...formData, productName: e.target.value })}
-              className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-5"
-              placeholder="Product Name"
-            />
-            <input
-              type="number"
-              value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || 0 })}
-              className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-5"
-              placeholder="Price"
-            />
-            {/* <div className="flex gap-4 items-center mb-5">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.flavour}
-                  onChange={(e) => setFormData({ ...formData, flavour: e.target.checked })}
-                />
-                Flavour
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.cFlavor}
-                  onChange={(e) => setFormData({ ...formData, cFlavor: e.target.checked })}
-                />
-                cFlavor
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={formData.addOns}
-                  onChange={(e) => setFormData({ ...formData, addOns: e.target.checked })}
-                />
-                Add-Ons
-              </label>
-            </div> */}
-            <div className="mb-5">
-              <label className="block mb-2">VAT</label>
-              <select
-                onChange={(e) => {
-                  const type = e.target.value;
-                  if (type === "amount") {
-                    setFormData({ ...formData, vatType: "amount", vat: 0 });
-                    setVatInput("");
-                  } else if (type === "percentage") {
-                    setFormData({ ...formData, vatType: "percentage", vat: 0 });
-                    setVatInput("");
-                  }
-                }}
-                className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-3"
-              >
-                <option value="amount">Amount</option>
-                <option value="percentage">Percentage</option>
-              </select>
-              <input
-                type="number"
-                value={vatInput}
-                onChange={(e) => handleVatInputChange(e.target.value)}
-                className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline"
-                placeholder={formData.vatType === "percentage" ? "Enter VAT (%)" : "Enter VAT (Amount)"}
-              />
-              {formData.vatType === "percentage" && (
-                <p className="text-gray-500 text-sm mt-1">
-                  VAT calculated from price: {formData.vat.toFixed(2)} Taka
-                </p>
-              )}
-            </div>
-            <select
-              value={formData.status}
-              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-5"
-            >
-              <option value="available">Available</option>
-              <option value="unavailable">Unavailable</option>
-            </select>
-            <ImageUpload setImageUrl={(url) => handleImageUpload(url)} />
-            <textarea
-              value={formData.productDetails}
-              onChange={(e) => setFormData({ ...formData, productDetails: e.target.value })}
-              className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-5"
-              placeholder="Product Details"
-            ></textarea>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setFormData({
-                    category: "",
-                    productName: "",
-                    flavour: false,
-                    cFlavor: false,
-                    addOns: false,
-                    vat: 0,
-                    price: "",
-                    vatType: "amount",
-                    status: "available",
-                    productDetails: "",
-                    photo: "",
-                  });
-                  setVatInput("");
-                  setEditId(null);
-                }}
-                className="bg-gray-500 text-white py-2 px-4 font-semibold hover:bg-gray-600 rounded-xl transition duration-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddOrEditProduct}
-                className={`bg-blue-500 text-white py-2 px-4 font-semibold hover:bg-blue-700 rounded-xl transition duration-300 ${
-                  isLoading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={isLoading}
-              >
-                {isLoading ? "Loading..." : editId !== null ? "Save" : "Add"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 };
 
 export default Product;

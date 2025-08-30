@@ -1,14 +1,16 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useRef } from 'react';
 import moment from 'moment';
 import { AuthContext } from '../../providers/AuthProvider';
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
+import io from 'socket.io-client';
 
 // --- React Icons ---
-import { IoRestaurant, IoTimeOutline } from "react-icons/io5";
+import { IoRestaurant, IoTimeOutline, IoVolumeMuteOutline, IoVolumeHighOutline } from "react-icons/io5"; // Added IoVolumeMuteOutline and IoVolumeHighOutline
 import { MdDeliveryDining, MdOutlineFoodBank, MdOutlinePendingActions, MdSoupKitchen } from "react-icons/md";
 import { BsHandbagFill } from "react-icons/bs";
 import { FaCheckCircle, FaUtensils } from "react-icons/fa";
 import Mtitle from '../../components library/Mtitle';
+import ding from "../../assets/ding.mp3"; // Correctly import the mp3 file
 
 // --- Helper Hook for Live Timer (Unchanged) ---
 const useTimeAgo = (startTime) => {
@@ -163,6 +165,10 @@ const Kitchendisplay = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isAlertEnabled, setIsAlertEnabled] = useState(true); // New state for alert toggle
+    const [showAlert, setShowAlert] = useState(false); // New state for visual alert
+    const audioRef = useRef(new Audio(ding)); // Reference to the audio element
+
     const axiosSecure = UseAxiosSecure();
     const { branch } = useContext(AuthContext);
     const branchName = branch;
@@ -186,31 +192,93 @@ const Kitchendisplay = () => {
             setLoading(false);
         }
     };
+    
+    // Function to handle the new order alert
+    const handleNewOrderAlert = () => {
+        if (isAlertEnabled) {
+            audioRef.current.play(); // Play the sound
+            setShowAlert(true); // Show the visual alert
+            setTimeout(() => {
+                setShowAlert(false); // Hide the visual alert after a few seconds
+            }, 5000); // Alert disappears after 5 seconds
+        }
+    };
 
     useEffect(() => {
+        // Initialize socket connection
+        const socket = io(process.env.REACT_APP_UPLOAD_URL);
+        let previousOrderCount = 0;
+
+        // Join the branch-specific room
+        socket.emit('join-branch', branchName);
+
+        // Listen for updates from the server
+        socket.on('kitchen-update', async () => {
+            console.log('Received real-time update. Fetching new orders...');
+            const newOrders = await fetchAndReturnOrders();
+            if (newOrders.length > previousOrderCount) {
+                 handleNewOrderAlert();
+            }
+            previousOrderCount = newOrders.length;
+            fetchOrders();
+        });
+
+        const fetchAndReturnOrders = async () => {
+            try {
+                const response = await axiosSecure.get(`/invoice/${branchName}/kitchen`);
+                return response.data;
+            } catch (err) {
+                console.error("Failed to fetch orders for check:", err);
+                return [];
+            }
+        };
+
         fetchOrders();
-        const pollInterval = setInterval(fetchOrders, 10000);
-        return () => clearInterval(pollInterval);
-    }, [branchName]); // Added branchName to dependency array
+
+        // Cleanup on component unmount
+        return () => {
+            socket.off('kitchen-update');
+            socket.disconnect(); 
+        };
+    }, [branchName, isAlertEnabled]);
 
     const handleUpdateOrder = async (updatedOrder) => {
         try {
             await axiosSecure.put(`/invoice/update/${updatedOrder._id}`, updatedOrder);
-            fetchOrders(); // Refetch to ensure data consistency
         } catch (err) {
             console.error("Failed to update order:", err);
             setError("Failed to update order status. Please try again.");
         }
     };
     
+    const toggleAlerts = () => {
+        setIsAlertEnabled(prev => !prev);
+    };
+
     return (
         <div className="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8" >
             <div className="container mx-auto">
-                <header className="text-center mb-8">
-               
-                     <Mtitle title="Kitchen Orders" />
-                    <p className=" text-start text-base-content/70">{moment().format("dddd, MMMM Do YYYY")}</p>
+                <header className="text-center mb-8 flex justify-between items-center">
+                    <div>
+                        <Mtitle title="Kitchen Orders" />
+                        <p className="text-start text-base-content/70">{moment().format("dddd, MMMM Do YYYY")}</p>
+                    </div>
+                    <button 
+                        onClick={toggleAlerts}
+                        className={`btn btn-sm ${isAlertEnabled ? 'btn-success' : 'btn-error'} text-white`}>
+                        {isAlertEnabled ? <IoVolumeHighOutline size={20} /> : <IoVolumeMuteOutline size={20} />}
+                        {isAlertEnabled ? 'Alerts On' : 'Alerts Off'}
+                    </button>
                 </header>
+
+                {/* --- Visual Alert UI --- */}
+                {showAlert && (
+                    <div className="fixed top-0 left-0 w-full h-full z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm animate-pulse">
+                        <div className="text-center p-8 bg-red-600 text-white font-extrabold text-4xl sm:text-6xl md:text-7xl lg:text-8xl rounded-xl shadow-2xl transform scale-105">
+                            NEW ORDER RECEIVED!
+                        </div>
+                    </div>
+                )}
 
                 {loading && (
                     <div className="text-center mt-20">
@@ -220,7 +288,7 @@ const Kitchendisplay = () => {
                 )}
                 
                 {error && (
-                     <div role="alert" className="alert alert-error max-w-xl mx-auto">
+                    <div role="alert" className="alert alert-error max-w-xl mx-auto">
                         <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         <span>Error! {error}</span>
                     </div>

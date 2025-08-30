@@ -53,6 +53,7 @@ import Purchases from "../pages/Accounting & Inventory/Purchases";
 import Stocks from "../pages/Accounting & Inventory/Stocks";
 import Vendor from "../pages/Accounting & Inventory/Vendor";
 import IngredientsCatagorie from "../pages/Accounting & Inventory/IngredientsCatagorie";
+import CustomOrder from "../pages/ExtraPage/CustomOrder";
 
 
 export const router = createBrowserRouter([
@@ -102,6 +103,12 @@ export const router = createBrowserRouter([
         // Changed from "order-orders" to match menu
         path: "order-history",
         element: <PrivateRoot><OrderHistory /></PrivateRoot>,
+      },
+   
+            {
+        // Changed from "order-orders" to match menu
+        path: "customorder",
+        element: <PrivateRoot><CustomOrder /></PrivateRoot>,
       },
       {
         // Changed from "customer" to match menu
