@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  // --- Icons from the previous structure ---
   MdHome,
   MdPendingActions,
   MdHistory,
@@ -26,11 +25,12 @@ import {
   MdFoodBank,
   MdOutlineKitchen,
   MdFactCheck,
-  // --- New Icons Added ---
-  MdShoppingBag,      // For Purchases
-  MdInventory2,       // For Stocks
-  MdStorefront,       // For Vendor
+  MdShoppingBag, 
+  MdInventory2, 
+  MdStorefront,
 } from "react-icons/md";
+import { AiOutlineDollarCircle } from "react-icons/ai";
+import { IoDocumentsOutline } from "react-icons/io5";
 
 const menuItems = () => {
   return [
@@ -64,14 +64,11 @@ const menuItems = () => {
       path: "/dashboard/order-history",
       icon: <MdHistory className="text-lg" />,
     },
-
-
     {
       title: "Custom Order Report",
       path: "/dashboard/customorder",
-      icon: <MdHistory className="text-lg" />,
+      icon: <IoDocumentsOutline className="text-lg" />,
     },
-
     {
       title: "Customers",
       path: "/dashboard/customers",
@@ -84,7 +81,7 @@ const menuItems = () => {
         {
           title: "Expenses",
           path: "/dashboard/expenses",
-          icon: <MdSell className="text-lg" />,
+          icon: <AiOutlineDollarCircle className="text-lg" />,
         },
         {
           title: "Ingredients",
@@ -96,7 +93,6 @@ const menuItems = () => {
           path: "/dashboard/ingredientsexpense",
           icon: <MdAnalytics className="text-lg" />,
         },
-
         {
           title: "Purchases",
           path: "/dashboard/purchases",
@@ -112,7 +108,6 @@ const menuItems = () => {
           path: "/dashboard/vendor",
           icon: <MdStorefront className="text-lg" />,
         },
-        
       ],
     },
     {
@@ -132,7 +127,38 @@ const menuItems = () => {
         {
           title: "Table Reservation",
           path: "/dashboard/tables/reservation",
-          icon: <MdTableView className="text-lg" />,
+          icon: <MdReviews className="text-lg" />,
+        },
+      ],
+    },
+    {
+      title: "Ingredients",
+      icon: <MdFoodBank className="text-lg" />,
+      list: [
+        {
+          title: "Ingredients Master",
+          path: "/dashboard/ingredients/ingredientsmaster",
+          icon: <MdList className="text-lg" />,
+        },
+        {
+          title: "Avg Ingredient Costs",
+          path: "/dashboard/ingredients/averageingredientcost",
+          icon: <MdAnalytics className="text-lg" />,
+        },
+        {
+          title: "Recipe Ingredients",
+          path: "/dashboard/ingredients/recipeingredients",
+          icon: <MdFoodBank className="text-lg" />,
+        },
+        {
+          title: "Menu Costing",
+          path: "/dashboard/ingredients/menucosting",
+          icon: <MdSell className="text-lg" />,
+        },
+        {
+          title: "Ingredient Expenses",
+          path: "/dashboard/ingredients/ingredientexpenses",
+          icon: <MdSell className="text-lg" />,
         },
       ],
     },

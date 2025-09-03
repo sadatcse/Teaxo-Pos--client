@@ -54,6 +54,11 @@ import Stocks from "../pages/Accounting & Inventory/Stocks";
 import Vendor from "../pages/Accounting & Inventory/Vendor";
 import IngredientsCatagorie from "../pages/Accounting & Inventory/IngredientsCatagorie";
 import CustomOrder from "../pages/ExtraPage/CustomOrder";
+import IngredientExpenses from "../pages/Ingredients/IngredientExpenses";
+import MenuCosting from "../pages/Ingredients/MenuCosting";
+import AverageIngredientCost from "../pages/Ingredients/AverageIngredientCost";
+import RecipeIngredients from "../pages/Ingredients/RecipeIngredients";
+import IngredientsMaster from "../pages/Ingredients/IngredientsMaster";
 
 
 export const router = createBrowserRouter([
@@ -86,6 +91,27 @@ export const router = createBrowserRouter([
         path: "home",
         element: <PrivateRoot><DashboardHome /></PrivateRoot>,
       },
+           {
+        path: "ingredients/ingredientsmaster",
+        element: <PrivateRoot><IngredientsMaster /></PrivateRoot>,
+      },
+           {
+        path: "ingredients/recipeingredients",
+        element: <PrivateRoot><RecipeIngredients /></PrivateRoot>,
+      },
+           {
+        path: "ingredients/averageingredientcost",
+        element: <PrivateRoot><AverageIngredientCost /></PrivateRoot>,
+      },
+           {
+        path: "ingredients/menucosting",
+        element: <PrivateRoot><MenuCosting /></PrivateRoot>,
+      },
+           {
+        path: "ingredients/ingredientexpenses",
+        element: <PrivateRoot><IngredientExpenses /></PrivateRoot>,
+      },
+
             {
         path: "UpdateOrdersHistory",
         element: <PrivateRoot><UpdateOrdersHistory /></PrivateRoot>,
