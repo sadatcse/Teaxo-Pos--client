@@ -59,6 +59,8 @@ import MenuCosting from "../pages/Ingredients/MenuCosting";
 import AverageIngredientCost from "../pages/Ingredients/AverageIngredientCost";
 import RecipeIngredients from "../pages/Ingredients/RecipeIngredients";
 import IngredientsMaster from "../pages/Ingredients/IngredientsMaster";
+import ReviewCustomer from "../pages/Review/ReviewCustomer";
+import ViewReview from "../pages/Review/ViewReview";
 
 
 export const router = createBrowserRouter([
@@ -70,6 +72,10 @@ export const router = createBrowserRouter([
       {
         path: "/",
         element: <Login />,
+      },
+      {
+        path: 'review/:route/:tableId',
+        element:<ReviewCustomer />,
       },
     ],
   },
@@ -244,39 +250,41 @@ export const router = createBrowserRouter([
         element: <PrivateRoot><Product /></PrivateRoot>,
       },
       {
-        // Path updated for consistency
         path: "settings/add-ons",
         element: <PrivateRoot><AddOns /></PrivateRoot>,
       },
       {
-        // Path updated for consistency
         path: "settings/counters",
         element: <PrivateRoot><Counter /></PrivateRoot>,
       },
       {
-        // Path updated for consistency
+
         path: "settings/tax",
         element: <PrivateRoot><VatBin /></PrivateRoot>,
       },
       {
-        // Path updated for consistency
         path: "settings/system",
         element: <PrivateRoot><SystemSettings /></PrivateRoot>,
       },
       
-      // --- User Management Route ---
       {
         path: "users",
         element: <PrivateRoot><Users /></PrivateRoot>,
       },
 
-      // --- Non-Menu Routes (kept for functionality) ---
       {
         path: "print-preview",
         element: <PrivateRoot><PrintPreview /></PrivateRoot>,
       },
-      // Note: Other non-menu report routes like "delivery-time-report"
-      // could also be nested under "/reports/*" for full consistency.
+
+      // {
+      //   path: 'review/:route/:tableId',
+      //   element:<ReviewCustomer />,
+      // },
+      {
+        path: 'view-review',
+        element:<PrivateRoot><ViewReview /></PrivateRoot>,
+      },
     ],
   },
   {

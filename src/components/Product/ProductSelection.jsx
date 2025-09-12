@@ -1,77 +1,119 @@
-
+import { motion, AnimatePresence } from "framer-motion";
+import { FaPlus, FaUtensils } from "react-icons/fa";
 import CookingAnimation from "../CookingAnimation";
-import Food from "../../assets/Raw-Image/Food.jpg"; 
-const ProductSelection = ({ products, categories, selectedCategory, setSelectedCategory, addProduct, loading }) => {
-  return (
-    // Responsive width: full width on small screens, 7/12 on large screens
-    <div className="w-full lg:w-4/6 p-1 md:p-6 font-inter">
-      {/* Categories */}
-<div className="flex flex-wrap gap-2 sm:gap-3 mb-8 p-4 bg-gradient-to-br from-white to-gray-50 rounded-2xl shadow-xl border border-gray-100">
-  {categories.map((category) => (
-    <button
-      key={category}
-      onClick={() => setSelectedCategory(category)}
-      className={`
-        px-5 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ease-in-out
-        focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-400
-        ${selectedCategory === category
-          ? "bg-blue-600 text-white shadow-lg transform scale-105"
-          : "bg-gray-100 text-gray-700 hover:bg-gray-200 hover:text-gray-800 shadow-md"
-        }
-      `}
-    >
-      {category}
-    </button>
-  ))}
-</div>
+import Food from "../../assets/Raw-Image/Food.jpg";
 
-      {/* Products Display */}
-      {/* Responsive height: adjusts based on viewport, table scrolls horizontally if needed */}
-      <div className="overflow-y-auto   ">
-        {loading ? (
-          <CookingAnimation />
-        ) : (
-          <div className="overflow-x-auto"> {/* Allows horizontal scrolling for table on small screens */}
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-blue-600 text-white sticky top-0 shadow-md">
-                <tr>
-                  <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-bold uppercase tracking-wider rounded-tl-xl">Picture</th>
-                  <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-bold uppercase tracking-wider">Product</th>
-                  <th className="px-4 py-2 md:px-6 md:py-3 text-left text-xs md:text-sm font-bold uppercase tracking-wider">Rate</th>
-                  <th className="px-4 py-2 md:px-6 md:py-3 text-center text-xs md:text-sm font-bold uppercase tracking-wider rounded-tr-xl">Action</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-100">
-                {products
-                  .filter((product) => product.category === selectedCategory)
-                  .map((product) => (
-                    <tr key={product._id} className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-200">
-                      <td className="px-4 py-3 md:px-6 md:py-4">
-                        <img
-                          src={product.photo ? product.photo : Food}
-                          alt={product.productName || "Food item"}
-                          className="h-12 w-12 md:h-16 md:w-16 object-cover rounded-md shadow-sm border border-gray-200"
-                          onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/64x64/E0E0E0/666666?text=No+Image"; }}
-                        />
-                      </td>
-                      <td className="px-4 py-3 md:px-6 md:py-4 font-medium text-gray-800 text-sm md:text-base">{product.productName}</td>
-                      <td className="px-4 py-3 md:px-6 md:py-4 text-gray-700 text-sm md:text-base">{product.price} TK</td>
-                      <td className="px-4 py-3 md:px-6 md:py-4 text-center">
-                        <button
-                          onClick={() => addProduct(product)}
-                          className="bg-green-600 text-white px-4 py-2 md:px-5 md:py-2.5 rounded-full hover:bg-green-700 transition-colors duration-300 ease-in-out shadow-md text-xs md:text-sm font-semibold transform hover:scale-105"
-                        >
-                          Add
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
+
+const ProductSelection = ({ products, categories, selectedCategory, setSelectedCategory, addProduct, loading }) => {
+  // Animation variants for table rows
+  const rowVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100 } },
+    exit: { opacity: 0, x: -50 },
+  };
+
+  return (
+    // Overall Layout & Theme
+    <div className="w-full lg:w-4/6 p-4 sm:p-6 lg:p-8 bg-base-200 font-inter">
+      {/* Page Load Animation & Main Card */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        className="card bg-base-100 shadow-xl p-6"
+      >
+    
+
+        {/* Section: Categories */}
+        <div className="mb-8">
+    
+          <div className="flex flex-wrap gap-3">
+            {categories.map((category) => (
+              <motion.button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                className={`btn ${
+                  selectedCategory === category ? "btn bg-[#1A77F2]" : "btn-ghost"
+                } rounded-full`}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                transition={{ type: "spring", stiffness: 400, damping: 17 }}
+              >
+                {category}
+              </motion.button>
+            ))}
           </div>
-        )}
-      </div>
+        </div>
+
+        {/* Section: Products Display with fixed height and scroll */}
+        <div className="h-[60vh] overflow-y-auto">
+          {loading ? (
+            <div className="flex justify-center items-center h-full">
+              <CookingAnimation />
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="table min-w-full">
+                {/* Table Header */}
+                <thead className="sticky top-0 z-10">
+                  <tr className="bg-blue-600 text-white">
+                    <th className="rounded-tl-lg border border-slate-300 px-4 py-3">Picture</th>
+                    <th className="border border-slate-300 px-4 py-3">Product</th>
+                    <th className="border border-slate-300 px-4 py-3">Rate</th>
+                    <th className="rounded-tr-lg border border-slate-300 px-4 py-3 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <AnimatePresence>
+                    {products
+                      .filter((product) => product.category === selectedCategory)
+                      .map((product) => (
+                        <motion.tr
+                          key={product._id}
+                          layout
+                          variants={rowVariants}
+                          initial="hidden"
+                          animate="visible"
+                          exit="exit"
+                          className="hover"
+                        >
+                          <td className="border border-slate-300 p-2 md:p-3">
+                            <img
+                              src={product.photo || Food}
+                              alt={product.productName || "Food item"}
+                              className="h-14 w-14 object-cover rounded-md shadow-sm"
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "https://placehold.co/64x64/E0E0E0/666666?text=No+Image";
+                              }}
+                            />
+                          </td>
+                          <td className="font-medium text-slate-800 border border-slate-300">
+                            {product.productName}
+                          </td>
+                          <td className="text-slate-700 border border-slate-300">{product.price} TK</td>
+                          <td className="text-center border border-slate-300">
+                            <motion.button
+                              onClick={() => addProduct(product)}
+                              className="btn bg-[#1A77F2] text-white border-[#005fd8] hover:bg-[#005fd8] rounded-full flex items-center gap-2"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <FaPlus />
+                              <span className="hidden sm:inline">Add</span>
+                            </motion.button>
+                          </td>
+                        </motion.tr>
+                      ))}
+                  </AnimatePresence>
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      </motion.div>
     </div>
   );
 };
+
 export default ProductSelection;

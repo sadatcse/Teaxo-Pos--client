@@ -1,14 +1,12 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FaPlus, FaPencilAlt, FaTrash } from "react-icons/fa";
+import { FiX, FiSearch } from 'react-icons/fi';
+import { motion, AnimatePresence } from "framer-motion";
 import Swal from 'sweetalert2';
-import { TfiSearch } from "react-icons/tfi";
-import { GoPlus } from "react-icons/go";
 import Mpagination from "../../components library/Mpagination";
-import MtableLoading from "../../components library/MtableLoading";
 import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
-import Preloader from './../../components/Shortarea/Preloader';
 
 const Category = () => {
   const axiosSecure = UseAxiosSecure();
@@ -31,10 +29,11 @@ const Category = () => {
   const clearLocalStorage = useCallback(() => {
     localStorage.removeItem(LOCAL_STORAGE_KEY);
   }, [LOCAL_STORAGE_KEY]);
+
   const fetchCategories = useCallback(async () => {
     setLoading(true);
     try {
-      clearLocalStorage();  // Now this function won't trigger unnecessary re-renders
+      clearLocalStorage();
       const response = await axiosSecure.get(`/category/${branch}/get-all`);
       const filteredData = response.data.filter(
         (category) => category.branch === branch && category.isActive === true
@@ -60,16 +59,13 @@ const Category = () => {
     setIsLoading(true);
     try {
       if (editId) {
-        // Update category
         await axiosSecure.put(`/category/update/${editId}`, formData);
       } else {
-        // Add new category
         await axiosSecure.post('/category/post', formData);
       }
       
       fetchCategories();
       setIsModalOpen(false);
-
       setFormData({
         categoryName: "",
         serial: "",
@@ -109,7 +105,6 @@ const Category = () => {
       if (result.isConfirmed) {
         axiosSecure.delete(`/category/delete/${id}`)
           .then(() => {
-         
             fetchCategories();
             Swal.fire('Deleted!', 'The category has been deleted.', 'success');
           })
@@ -130,146 +125,166 @@ const Category = () => {
     setFilteredCategories(filtered);
   };
 
-  const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: filteredCategories });
+  const { paginatedData, paginationControls } = Mpagination({ totalData: filteredCategories });
 
   return (
-    <div className="p-4 min-h-screen">
-      <Mtitle title="Category Management" rightcontent={
-        <div className='flex md:mt-0 mt-3 justify-between'>
-          <div className="flex justify-end gap-4 items-center mb-4">
-            {/* Search bar */}
-            <div className='md:w-64 border shadow-sm py-2 px-3 bg-white rounded-xl'>
-              <div className='flex items-center gap-2'>
-                <TfiSearch className='text-2xl font-bold text-gray-500' />
-                <input
-                  type="text"
-                  className='outline-none w-full'
-                  placeholder='Search here'
-                  value={searchTerm}
-                  onChange={handleSearchChange}
-                />
-              </div>
-            </div>
-            {/* Add new button */}
-            <div className="flex gap-2 cursor-pointer items-center bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-600 transition duration-300">
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="font-semibold"
-              >
-                New
-              </button>
-              <GoPlus className="text-xl text-white" />
-            </div>
-          </div>
+    <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+
+        
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+            <motion.h1 
+                className="text-3xl font-bold text-slate-800"
+                initial={{ opacity: 0, x: -20 }} 
+                animate={{ opacity: 1, x: 0 }} 
+                transition={{ duration: 0.5 }}
+            >
+                Manage Categories
+            </motion.h1>
+            <motion.button 
+                onClick={() => setIsModalOpen(true)} 
+                className="btn bg-[#1A77F2] text-white border-[#005fd8] hover:bg-[#005fd8] rounded-full gap-2"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+            >
+                <FaPlus /> Add New Category
+            </motion.button>
         </div>
-      } ></Mtitle>
 
-      <div className="text-sm md:text-base">
-        {rowsPerPageAndTotal}
-      </div>
-
-      {Loading ? (
-    <Preloader />
-  ) : (
-
-      <section className="overflow-x-auto border shadow-sm rounded-xl p-4 pb- mt-5">
-        <table className="table w-full">
-          <thead className='bg-blue-600'>
-            <tr className="text-sm font-medium text-white text-left">
-              <td className="p-3 rounded-l-xl">Category Name</td>
-              <td className="p-3">Serial</td>
-              <td className="p-3">Status</td>
-              <td className="p-3 rounded-r-xl text-right px-8">Action</td>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.length === 0 ? (
-              <tr>
-                <td colSpan="5" className="text-center py-4">No categories found</td>
-              </tr>
-            ) : (
-              paginatedData.map((category, index) => (
-                <tr key={index} className="hover:bg-slate-100 hover:rounded-xl">
-                  <td className="px-4 py-5">{category.categoryName}</td>
-                  <td className="px-4 py-5">{category.serial}</td>
-                  <td className="px-4 py-5">{category.isActive ? 'Active' : 'Inactive'}</td>
-                  <td className="py-5 px-6 text-lg flex justify-end space-x-4">
-                    <button
-                      onClick={() => handleEdit(category._id)}
-                      className="text-blue-500 hover:text-yellow-700 transition duration-150"
-                    >
-                      <FiEdit />
-                    </button>
-                    <button
-                      onClick={() => handleRemove(category._id)}
-                      className="text-red-500 hover:text-red-700 transition duration-150"
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        <MtableLoading data={categories}></MtableLoading>
-        {paginationControls}
-      </section>
- )}
-
-{isModalOpen && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h2 className="text-2xl mb-4">{editId !== null ? 'Edit Category' : 'Add New Category'}</h2>
-      <input
-        type="text"
-        value={formData.categoryName}
-        onChange={(e) => setFormData({ ...formData, categoryName: e.target.value })}
-        className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-5"
-        placeholder="Category Name"
-      />
-      <input
-        type="number"
-        value={formData.serial}
-        onChange={(e) => setFormData({ ...formData, serial: e.target.value })}
-        className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-5"
-        placeholder="Serial Number"
-      />
-      <select
-        value={formData.isActive}
-        onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })}
-        className="focus:border-yellow-400 appearance-none text-gray-700 text-base border shadow-sm rounded-xl w-full py-3 px-3 leading-tight focus:outline-none focus:shadow-outline mb-5"
-      >
-        <option value={true}>Active</option>
-        <option value={false}>Inactive</option>
-      </select>
-      <div className="flex justify-end space-x-4">
-        <button
-          onClick={() => {
-            setIsModalOpen(false);
-            setFormData({
-              categoryName: "",
-              serial: "",
-              branch: branch || "",
-              isActive: true,
-            });
-            setEditId(null);
-          }}
-          className="bg-gray-500 text-white py-2 px-4 font-semibold hover:bg-gray-600 rounded-xl transition duration-300"
+        <motion.div 
+            className="card bg-base-100 shadow-xl"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
         >
-          Cancel
-        </button>
-        <button
-          onClick={handleAddOrEditCategory}
-          className={`bg-blue-500 text-white py-2 px-4 font-semibold hover:bg-blue-700 rounded-xl transition duration-300 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-          disabled={isLoading}
-        >
-          {isLoading ? 'Loading...' : editId !== null ? 'Save' : 'Add'}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+            <div className="card-body">
+                <div className="flex justify-end mb-4">
+                    <div className="form-control w-full max-w-xs">
+                        <div className="relative">
+                            <input type="text" placeholder="Search by name..." className="input input-bordered w-full pl-10" value={searchTerm} onChange={handleSearchChange} />
+                            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                        </div>
+                    </div>
+                </div>
+
+                {Loading ? (
+                    <div className="flex justify-center items-center h-96"><span className="loading loading-spinner loading-lg text-primary"></span></div>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="table table-zebra w-full border border-slate-300">
+                            <thead className="bg-blue-600">
+                                <tr className="rounded-t-lg">
+                                    <th className="text-white border border-slate-300">Category Name</th>
+                                    <th className="text-white border border-slate-300">Serial</th>
+                                    <th className="text-white border border-slate-300">Status</th>
+                                    <th className="text-white text-center border border-slate-300">Actions</th>
+                                </tr>
+                            </thead>
+                            <AnimatePresence>
+                                <tbody>
+                                    {paginatedData.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="4" className="text-center py-12 text-slate-500 border border-slate-300">
+                                                <div className="flex flex-col items-center gap-4">
+                                                    <FiX size={48} className="text-slate-400" />
+                                                    <span className="font-semibold">No categories found.</span>
+                                                    <span className="text-sm">Add one to get started!</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        paginatedData.map((category) => (
+                                            <motion.tr 
+                                                key={category._id}
+                                                layout
+                                                initial={{ opacity: 0, y: -10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, x: -20 }}
+                                                transition={{ duration: 0.3 }}
+                                            >
+                                                <td className="font-semibold text-slate-700 border border-slate-300">{category.categoryName}</td>
+                                                <td className="text-slate-600 border border-slate-300">{category.serial}</td>
+                                                <td className="border border-slate-300">
+                                                    <div className={`badge ${category.isActive ? 'badge-success' : 'badge-error'} badge-outline`}>
+                                                        {category.isActive ? 'Active' : 'Inactive'}
+                                                    </div>
+                                                </td>
+                                                <td className="flex justify-center items-center space-x-2 border border-slate-300">
+                                                    <div className="tooltip" data-tip="Edit Item">
+                                                        <motion.button 
+                                                            onClick={() => handleEdit(category._id)} 
+                                                            className="btn btn-success btn-circle text-white"
+                                                            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                                                        >
+                                                            <FaPencilAlt />
+                                                        </motion.button>
+                                                    </div>
+                                                    <div className="tooltip" data-tip="Delete Item">
+                                                        <motion.button 
+                                                            onClick={() => handleRemove(category._id)} 
+                                                            className="btn btn-error btn-circle text-white"
+                                                            whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                                                        >
+                                                            <FaTrash />
+                                                        </motion.button>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </AnimatePresence>
+                        </table>
+                    </div>
+                )}
+                {paginationControls}
+            </div>
+        </motion.div>
+
+        <AnimatePresence>
+        {isModalOpen && (
+             <motion.dialog 
+                className="modal modal-open"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+            >
+                <motion.div 
+                    className="modal-box"
+                    initial={{ scale: 0.9, y: -50 }}
+                    animate={{ scale: 1, y: 0 }}
+                    exit={{ scale: 0.9, y: -50 }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                >
+                    <button onClick={() => { setIsModalOpen(false); setEditId(null); setFormData({ categoryName: "", serial: "", branch: branch || "", isActive: true }); }} className="btn btn-sm btn-circle btn-ghost absolute right-4 top-4"><FiX/></button>
+                    <h3 className="text-xl font-semibold text-slate-700">{editId ? 'Edit Category' : 'Add New Category'}</h3>
+                    <div className="divider mt-2 mb-4"></div>
+                    <div className="space-y-4">
+                        <div className="form-control">
+                            <label className="label"><span className="label-text">Category Name</span></label>
+                            <input type="text" value={formData.categoryName} onChange={(e) => setFormData({ ...formData, categoryName: e.target.value })} className="input input-bordered w-full" placeholder="e.g., Appetizers" />
+                        </div>
+                        <div className="form-control">
+                            <label className="label"><span className="label-text">Serial Number</span></label>
+                            <input type="number" value={formData.serial} onChange={(e) => setFormData({ ...formData, serial: e.target.value })} className="input input-bordered w-full" placeholder="e.g., 1" />
+                        </div>
+                        <div className="form-control">
+                            <label className="label"><span className="label-text">Status</span></label>
+                            <select value={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })} className="select select-bordered w-full">
+                                <option value={true}>Active</option>
+                                <option value={false}>Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div className="modal-action">
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setIsModalOpen(false); setEditId(null); setFormData({ categoryName: "", serial: "", branch: branch || "", isActive: true }); }} className="btn btn-outline border-[#1A77F2] text-[#1A77F2] hover:bg-[#1A77F2] hover:text-white rounded-full">Cancel</motion.button>
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditCategory} className="btn bg-[#1A77F2] text-white border-[#005fd8] hover:bg-[#005fd8] rounded-full w-28" disabled={isLoading}>
+                            {isLoading ? <span className="loading loading-spinner"></span> : editId ? 'Save' : 'Add'}
+                        </motion.button>
+                    </div>
+                </motion.div>
+            </motion.dialog>
+        )}
+        </AnimatePresence>
     </div>
   );
 };

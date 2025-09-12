@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import {
     FaPlus, FaMinus, FaTrash, FaSearch, FaUser, FaMobileAlt, FaUtensils,
     FaTruck, FaMoneyBillWave, FaCreditCard, FaSave,
-    FaPrint, FaRedo, FaGift,
+    FaPrint, FaRedo, FaGift, FaClock, FaUniversity,
 } from "react-icons/fa";
 import { FaCcVisa, FaCcAmex } from "react-icons/fa6";
 import { RiMastercardFill } from "react-icons/ri";
 import { MdOutlineSendToMobile } from "react-icons/md";
-import { FaUniversity } from "react-icons/fa"; 
 
 const OrderSummary = ({
+    user, customDateTime, setCustomDateTime,
     customer, mobile, setMobile, handleCustomerSearch,
     orderType, handleOrderTypeChange, TableName, deliveryProvider,
     addedProducts, incrementQuantity, decrementQuantity, removeProduct,
@@ -197,9 +197,9 @@ const OrderSummary = ({
                                 </tbody>
                             </table>
 
-                            <div className="mt-6 p-4  rounded-xl">
+                            <div className="mt-6 p-4 rounded-xl">
                                 <h3 className="text-lg font-bold text-gray-800 mb-4 text-center">Payment Method</h3>
-                                <div className="flex justify-center gap-3"> {/* Changed from flex-wrap to a simple flex with justify-center */}
+                                <div className="flex justify-center gap-3">
                                     {["Cash", "Card", "Mobile", "Bank"].map((method) => (
                                         <button
                                             key={method}
@@ -281,6 +281,7 @@ const OrderSummary = ({
                         </div>
                     </div>
                 )}
+                
                 {activeTab === 'customerInfo' && (
                     <div>
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-start mb-4 md:mb-6 gap-4">
@@ -347,6 +348,33 @@ const OrderSummary = ({
                                 </p>
                             </div>
                         )}
+
+                        {/* ADMIN CUSTOM ORDER SECTION */}
+                        {user?.role === 'admin' && (
+                            <div className="mt-6 p-4 border-2 border-dashed border-orange-400 rounded-xl bg-orange-50 text-orange-800 shadow-sm">
+                                <h3 className="font-bold text-md mb-2 text-center text-orange-900">
+                                    Admin: Custom Order Entry
+                                </h3>
+                                <div className="flex flex-col">
+                                    <label htmlFor="customDateTime" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                        <FaClock className="text-orange-600" />
+                                        Custom Order Date & Time:
+                                    </label>
+                                    <input
+                                        id="customDateTime"
+                                        type="datetime-local"
+                                        className="border border-gray-300 px-3 py-2 rounded-xl focus:ring-orange-500 focus:border-orange-500 transition-all duration-300"
+                                        value={customDateTime}
+                                        onChange={(e) => setCustomDateTime(e.target.value)}
+                                    />
+                                    <p className="text-xs text-gray-500 mt-1">
+                                        For back-dated entries only. Leave empty to use the current time.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                        {/* END ADMIN SECTION */}
+
                     </div>
                 )}
             </div>

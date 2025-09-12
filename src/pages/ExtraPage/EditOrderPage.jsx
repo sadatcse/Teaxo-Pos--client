@@ -82,16 +82,12 @@ const EditOrderPage = () => {
                 const response = await axiosSecure.get(`/invoice/get-id/${orderId}`);
                 const orderData = response.data;
 
-                // --- UPDATED MAPPING ---
-                // Now correctly captures vat and sd for each original product.
+                // --- UPDATED MAPPING: Now captures productId for each original item ---
                 const initialOriginalItems = orderData.products.map(p => ({
-                    ...p,
-                    _id: p.productName, // Using productName as a temporary unique ID
+                    ...p, // Spreads all properties from the fetched product
                     price: p.rate,
                     quantity: p.qty,
                     originalQuantity: p.qty,
-                    vat: p.vat || 0,         // Get original VAT
-                    sd: p.sd || 0,           // Get original SD
                     isOriginal: true,
                     isComplimentary: p.isComplimentary || false,
                 }));
@@ -123,16 +119,17 @@ const EditOrderPage = () => {
 
     const allOrderItems = useMemo(() => [...originalOrderItems, ...newOrderItems], [originalOrderItems, newOrderItems]);
 
-    // --- Core Logic Functions ---
+    // --- Core Logic Functions (UPDATED to use productId) ---
+
     const addProduct = (product) => {
-        // This function assumes 'product' from ProductSelection includes vat and sd fields
-        const existingItem = allOrderItems.find(p => p.productName === product.productName && !p.isComplimentary);
+        // --- UPDATED: Uses product._id (as productId) to find existing items ---
+        const existingItem = allOrderItems.find(p => p.productId === product._id && !p.isComplimentary);
 
         if (existingItem) {
             if (existingItem.isOriginal) {
                 setOriginalOrderItems(items =>
                     items.map(p =>
-                        p.productName === product.productName
+                        p.productId === product._id
                             ? { ...p, quantity: p.quantity + 1 }
                             : p
                     )
@@ -140,7 +137,7 @@ const EditOrderPage = () => {
             } else {
                 setNewOrderItems(items =>
                     items.map(p =>
-                        p.productName === product.productName
+                        p.productId === product._id
                             ? { ...p, quantity: p.quantity + 1 }
                             : p
                     )
@@ -149,8 +146,8 @@ const EditOrderPage = () => {
             toast.info(`Quantity for ${product.productName} incremented.`);
         } else {
             const itemToAdd = {
-                ...product, // Spreads all product properties, including vat and sd
-                _id: product.productName,
+                ...product,
+                productId: product._id, // --- ADDED: Ensure productId is stored ---
                 quantity: 1,
                 cookStatus: 'PENDING',
                 isOriginal: false,
@@ -160,22 +157,23 @@ const EditOrderPage = () => {
             toast.success(`${product.productName} added to order!`);
         }
     };
-
-    const incrementQuantity = (productName) => {
+    
+    // --- UPDATED: All handler functions now accept productId ---
+    const incrementQuantity = (productId) => {
         setOriginalOrderItems(items =>
-            items.map(p => p.productName === productName ? { ...p, quantity: p.quantity + 1 } : p)
+            items.map(p => p.productId === productId ? { ...p, quantity: p.quantity + 1 } : p)
         );
         setNewOrderItems(items =>
-            items.map(p => p.productName === productName ? { ...p, quantity: p.quantity + 1 } : p)
+            items.map(p => p.productId === productId ? { ...p, quantity: p.quantity + 1 } : p)
         );
     };
 
-    const decrementQuantity = (productName) => {
-        const originalItem = originalOrderItems.find(p => p.productName === productName);
+    const decrementQuantity = (productId) => {
+        const originalItem = originalOrderItems.find(p => p.productId === productId);
         if (originalItem) {
             if (originalItem.quantity > originalItem.originalQuantity) {
                 setOriginalOrderItems(items =>
-                    items.map(p => p.productName === productName ? { ...p, quantity: p.quantity - 1 } : p)
+                    items.map(p => p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p)
                 );
             } else {
                 toast.warn("Cannot reduce quantity below the original amount.");
@@ -185,24 +183,24 @@ const EditOrderPage = () => {
 
         setNewOrderItems(items =>
             items.map(p =>
-                p.productName === productName ? { ...p, quantity: p.quantity - 1 } : p
+                p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p
             ).filter(p => p.quantity > 0)
         );
     };
 
-    const removeProduct = (productName) => {
-        const isNewItem = newOrderItems.some(p => p.productName === productName);
+    const removeProduct = (productId) => {
+        const isNewItem = newOrderItems.some(p => p.productId === productId);
         if (isNewItem) {
-            setNewOrderItems(items => items.filter(p => p.productName !== productName));
+            setNewOrderItems(items => items.filter(p => p.productId !== productId));
             toast.info("Item removed.");
         } else {
             toast.error("Original order items cannot be removed.");
         }
     };
 
-    const updateCookStatus = (productName, status) => {
-        const updater = items => items.map(p => p.productName === productName ? { ...p, cookStatus: status } : p);
-        if (originalOrderItems.some(p => p.productName === productName)) {
+    const updateCookStatus = (productId, status) => {
+        const updater = items => items.map(p => p.productId === productId ? { ...p, cookStatus: status } : p);
+        if (originalOrderItems.some(p => p.productId === productId)) {
             setOriginalOrderItems(updater);
         } else {
             setNewOrderItems(updater);
@@ -210,11 +208,11 @@ const EditOrderPage = () => {
         toast.info(`Product status updated to ${status}`);
     };
 
-    const toggleComplimentaryStatus = (productName) => {
-        const isOriginal = originalOrderItems.some(p => p.productName === productName);
+    const toggleComplimentaryStatus = (productId) => {
+        const isOriginal = originalOrderItems.some(p => p.productId === productId);
         const updater = items =>
             items.map(p =>
-                p.productName === productName
+                p.productId === productId
                     ? { ...p, isComplimentary: !p.isComplimentary, quantity: !p.isComplimentary ? 1 : p.quantity }
                     : p
             );
@@ -315,7 +313,9 @@ const EditOrderPage = () => {
         const { subtotal, vat, sd, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
+            // --- UPDATED: Payload now includes productId for each product ---
             products: allOrderItems.map((p) => ({
+                productId: p.productId, // Essential for the updated backend model
                 productName: p.productName,
                 qty: p.quantity,
                 rate: p.price,

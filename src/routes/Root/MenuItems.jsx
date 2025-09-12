@@ -28,6 +28,7 @@ import {
   MdShoppingBag, 
   MdInventory2, 
   MdStorefront,
+  MdOutlineReviews,
 } from "react-icons/md";
 import { AiOutlineDollarCircle } from "react-icons/ai";
 import { IoDocumentsOutline } from "react-icons/io5";
@@ -225,9 +226,14 @@ const menuItems = () => {
       ],
     },
     {
+      title: "Reviews",
+      path: "/dashboard/view-review",
+      icon: <MdOutlineReviews className="text-lg" />,
+    },
+    {
       title: "Staff",
       path: "/dashboard/users",
-      icon: <MdGroup className="text-lg" />,
+      icon: <MdGroup  className="text-lg" />,
     },
   ];
 };

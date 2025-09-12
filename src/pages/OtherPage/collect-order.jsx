@@ -44,6 +44,7 @@ const CollectOrder = () => {
     const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
     const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
+    const [customDateTime, setCustomDateTime] = useState(""); // State for admin's custom date/time
     const receiptRef = useRef();
     const kitchenReceiptRef = useRef();
     const { companies } = useCompanyHook();
@@ -92,17 +93,15 @@ const CollectOrder = () => {
         }
     };
 
-const handleDeliveryProviderSelect = (provider) => {
-    setDeliveryProvider(provider);
-    setIsDeliveryProviderModalOpen(false);
-    // Add this new logic
-    if (provider === "Foodpanda") {
-        setSelectedPaymentMethod("Bank");
-    } else {
-        // You might want to reset the payment method for other providers
-        setSelectedPaymentMethod("Cash");
-    }
-};
+    const handleDeliveryProviderSelect = (provider) => {
+        setDeliveryProvider(provider);
+        setIsDeliveryProviderModalOpen(false);
+        if (provider === "Foodpanda") {
+            setSelectedPaymentMethod("Bank");
+        } else {
+            setSelectedPaymentMethod("Cash");
+        }
+    };
 
     const roundAmount = (amount) => Math.round(amount);
 
@@ -166,6 +165,7 @@ const handleDeliveryProviderSelect = (provider) => {
         setOrderType(null);
         setDeliveryProvider("");
         setCurrentInvoiceId(null);
+        setCustomDateTime(""); // Reset custom date
         setIsOrderTypeModalOpen(true);
         toast.error("Order Reset!");
     };
@@ -194,15 +194,13 @@ const handleDeliveryProviderSelect = (provider) => {
         const nonComplimentaryProducts = addedProducts.filter(p => !p.isComplimentary);
         const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
         const vat = nonComplimentaryProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
-        // UPDATED: Calculate SD
         const sd = nonComplimentaryProducts.reduce((total, p) => total + ((p.sd || 0) * p.quantity), 0);
         const discount = parseFloat(invoiceSummary.discount || 0);
-        // UPDATED: Payable now includes SD
         const payable = subtotal + vat + sd - discount;
         return {
             subtotal: roundAmount(subtotal),
             vat: roundAmount(vat),
-            sd: roundAmount(sd), // Return SD
+            sd: roundAmount(sd),
             discount: roundAmount(discount),
             payable: roundAmount(payable),
         };
@@ -211,17 +209,16 @@ const handleDeliveryProviderSelect = (provider) => {
     const printInvoice = async (isPrintAction) => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
-        // UPDATED: Destructure sd from calculateTotal
         const { subtotal, vat, sd, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
             products: addedProducts.map((p) => ({
+                productId: p._id,
                 productName: p.productName,
                 qty: p.quantity,
                 rate: p.price,
                 subtotal: roundAmount(p.price * p.quantity),
                 vat: p.vat || 0,
-                // UPDATED: Include SD for each product
                 sd: p.sd || 0,
                 cookStatus: p.cookStatus || 'PENDING',
                 isComplimentary: p.isComplimentary,
@@ -229,7 +226,6 @@ const handleDeliveryProviderSelect = (provider) => {
             subtotal: roundAmount(subtotal),
             discount: roundAmount(discount),
             vat: roundAmount(vat),
-            // UPDATED: Include total SD in the invoice payload
             sd: roundAmount(sd),
             loginUserEmail,
             loginUserName,
@@ -240,6 +236,22 @@ const handleDeliveryProviderSelect = (provider) => {
             totalAmount: payable,
             paymentMethod: selectedPaymentMethod,
         };
+
+        // NEW LOGIC: Check for and handle back-dated admin entries
+        if (user?.role === 'admin' && customDateTime) {
+            invoiceDetails.dateTime = customDateTime;
+            
+            const customDate = new Date(customDateTime);
+            const now = new Date();
+
+            // If the custom date is earlier than the current time, mark order as completed
+            if (customDate < now) {
+                invoiceDetails.orderStatus = "completed";
+                // Since it's a completed back-dated order, we can also assume items were served
+                invoiceDetails.products.forEach(p => p.cookStatus = 'SERVED');
+            }
+        }
+
         if (orderType === "dine-in") invoiceDetails.tableName = TableName;
         if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
 
@@ -253,7 +265,9 @@ const handleDeliveryProviderSelect = (provider) => {
                 toast.success("Invoice saved successfully!");
             }
             const data = response.data;
-            const dataForPrint = { ...data, ...invoiceDetails, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || data._id };
+            // Ensure the print data reflects the completed status if it was set
+            const finalInvoiceDetails = { ...invoiceDetails, ...data };
+            const dataForPrint = { ...finalInvoiceDetails, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || data._id };
             setPrint(dataForPrint);
             setCurrentInvoiceId(data.invoiceId || data._id);
             if (isPrintAction && companies[0] && data) {
@@ -270,7 +284,6 @@ const handleDeliveryProviderSelect = (provider) => {
         }
     };
 
-    // UPDATED: Get SD from calculateTotal
     const { subtotal, vat, sd, payable } = calculateTotal();
     const paid = roundAmount(parseFloat(invoiceSummary.paid || 0));
     const change = paid > 0 ? paid - payable : 0;
@@ -312,12 +325,13 @@ const handleDeliveryProviderSelect = (provider) => {
                         loading={loadingProducts}
                     />
                     <OrderSummary
+                        user={user}
+                        customDateTime={customDateTime}
+                        setCustomDateTime={setCustomDateTime}
                         customer={customer}
                         mobile={mobile}
                         setMobile={setMobile}
                         handleCustomerSearch={handleCustomerSearch}
-                        isCustomerModalOpen={isCustomerModalOpen}
-                        setCustomerModalOpen={setCustomerModalOpen}
                         orderType={orderType}
                         handleOrderTypeChange={handleOrderTypeChange}
                         TableName={TableName}
@@ -330,7 +344,7 @@ const handleDeliveryProviderSelect = (provider) => {
                         setInvoiceSummary={setInvoiceSummary}
                         subtotal={subtotal}
                         vat={vat}
-                        sd={sd} // Pass sd as a prop
+                        sd={sd}
                         payable={payable}
                         paid={paid}
                         change={change}

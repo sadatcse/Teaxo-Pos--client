@@ -34,9 +34,7 @@ const RecentlyPlacedOrders = () => {
 
   return (
     <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full">
-      <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">
-        Recently Placed Orders
-      </h3>
+
       {loading ? (
         <p>Loading orders...</p>
       ) : orders.length === 0 ? (
