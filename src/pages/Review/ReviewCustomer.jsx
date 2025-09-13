@@ -98,9 +98,8 @@ const Notification = ({ message, type, onDismiss }) => {
 
 
 const ReviewCustomer = () => {
-    const axiosSecure = UseAxiosSecure();; // Use the axios instance directly
     const { tableId,route } = useParams();
-    
+    const axiosSecure = UseAxiosSecure();
     const [orderInfo, setOrderInfo] = useState(null);
     const [branchInfo, setBranchInfo] = useState(null); 
     const [branch, setBranch] = useState(null); 
@@ -116,6 +115,7 @@ const ReviewCustomer = () => {
         try {
             setLoading(true);
             setError('');
+            // Using axios directly as the custom hook is not available in this scope
             const response = await axiosSecure.get(`/review/prepare/${route}/${tableId}`);
             
             const { orderDetails, branchDetails } = response.data;
@@ -141,7 +141,7 @@ const ReviewCustomer = () => {
         } finally {
             setLoading(false);
         }
-    }, [axiosSecure, tableId]);
+    }, [tableId, route]);
 
     useEffect(() => {
         fetchOrderDetails();
@@ -150,7 +150,8 @@ const ReviewCustomer = () => {
     const handleMobileBlur = async () => {
         if (customer.mobile.length >= 10) {
             try {
-                const response = await axiosSecure.get(`review/customer/check/${customer.mobile}`);
+                // Using axios directly
+                const response = await axiosSecure.get(`/review/customer/check/${customer.mobile}`);
                 if (response.data.exists) {
                     setCustomer(response.data.customer);
                 }
@@ -177,6 +178,7 @@ const ReviewCustomer = () => {
         const reviewData = { ...customer, rating: ratings.overall, comment: ratings.comment, bestFoodName: ratings.bestFoodName, branch, tableId };
 
         try {
+            // Using axios directly
             await axiosSecure.post('/review/submit', reviewData);
             setFormSubmitted(true);
         } catch (err) {
@@ -245,9 +247,9 @@ const ReviewCustomer = () => {
                 <header className="text-center">
                     {branchInfo?.logo && (
                          <img 
-                            src={branchInfo.logo} 
-                            alt={`${branchInfo.name} Logo`} 
-                            className="mx-auto h-20 w-auto object-contain mb-4"
+                             src={branchInfo.logo} 
+                             alt={`${branchInfo.name} Logo`} 
+                             className="mx-auto h-20 w-auto object-contain mb-4"
                          />
                     )}
                     <h1 className="text-3xl font-bold text-gray-800">{branchInfo?.name || 'Review Your Order'}</h1>
@@ -256,11 +258,31 @@ const ReviewCustomer = () => {
                     <div className="mt-6">
                         <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Order Details</h2>
                         <div className="mt-3 flex justify-center bg-blue-50/50 rounded-xl p-4 shadow-inner space-x-4">
-                            <div className="text-center flex-1">
-                                <p className="text-xs text-blue-800 font-semibold">Table</p>
-                                <p className="text-lg font-bold text-blue-900">{orderInfo?.tableName || 'N/A'}</p>
-                            </div>
-                             <div className="border-l border-blue-200"></div>
+                            
+                            {/* --- CONDITIONAL RENDERING LOGIC STARTS HERE --- */}
+                            {orderInfo?.orderType === 'dine-in' && (
+                                <div className="text-center flex-1">
+                                    <p className="text-xs text-blue-800 font-semibold">Table</p>
+                                    <p className="text-lg font-bold text-blue-900">{orderInfo?.tableName || 'N/A'}</p>
+                                </div>
+                            )}
+
+                            {orderInfo?.orderType === 'delivery' && (
+                                <div className="text-center flex-1">
+                                    <p className="text-xs text-blue-800 font-semibold">Delivery Via</p>
+                                    <p className="text-lg font-bold text-blue-900">{orderInfo?.deliveryProvider || 'N/A'}</p>
+                                </div>
+                            )}
+
+                            {orderInfo?.orderType === 'takeaway' && (
+                                <div className="text-center flex-1">
+                                    <p className="text-xs text-blue-800 font-semibold">Order Type</p>
+                                    <p className="text-lg font-bold text-blue-900">Takeaway</p>
+                                </div>
+                            )}
+                            {/* --- CONDITIONAL RENDERING LOGIC ENDS HERE --- */}
+
+                            <div className="border-l border-blue-200"></div>
                             <div className="text-center flex-1">
                                 <p className="text-xs text-blue-800 font-semibold">Token</p>
                                 <p className="text-lg font-bold text-blue-900">{orderInfo?.invoiceSerial || 'N/A'}</p>
@@ -330,14 +352,14 @@ const ReviewCustomer = () => {
                          <div className="relative">
                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UtensilsIcon /></div>
                             <select
-                                value={ratings.bestFoodName}
-                                onChange={(e) => setRatings({ ...ratings, bestFoodName: e.target.value })}
-                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                                 value={ratings.bestFoodName}
+                                 onChange={(e) => setRatings({ ...ratings, bestFoodName: e.target.value })}
+                                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none"
                              >
-                                <option value="">Select an item (optional)</option>
-                                {orderInfo?.products.map(p => (
-                                    <option key={p.productId} value={p.productName}>{p.productName}</option>
-                                ))}
+                                 <option value="">Select an item (optional)</option>
+                                 {orderInfo?.products.map(p => (
+                                     <option key={p.productId} value={p.productName}>{p.productName}</option>
+                                 ))}
                              </select>
                          </div>
                     </div>
