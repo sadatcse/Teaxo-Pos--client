@@ -110,7 +110,7 @@ const EditSummary = ({
                                     ) : (
                                         addedProducts.map((product) => (
                                             <tr
-                                                key={product._id}
+                                                key={product.productId} // ✅ CORRECTED
                                                 className={product.isOriginal ? 'bg-gray-50' : 'bg-white'}
                                             >
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm font-medium text-gray-900">
@@ -124,7 +124,7 @@ const EditSummary = ({
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-xs md:text-sm text-gray-700">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
-                                                            onClick={() => decrementQuantity(product.productName)}
+                                                            onClick={() => decrementQuantity(product.productId)} // ✅ CORRECTED
                                                             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             disabled={product.isOriginal && product.quantity <= product.originalQuantity || product.isComplimentary}
                                                         >
@@ -132,7 +132,7 @@ const EditSummary = ({
                                                         </button>
                                                         <span className="font-extrabold text-sm text-gray-900">{product.quantity}</span>
                                                         <button
-                                                            onClick={() => incrementQuantity(product.productName)}
+                                                            onClick={() => incrementQuantity(product.productId)} // ✅ CORRECTED
                                                             className="p-2 bg-gray-200 rounded-full hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
                                                             disabled={product.isComplimentary}
                                                         >
@@ -150,7 +150,7 @@ const EditSummary = ({
                                                 <td className="px-4 py-3 md:px-6 md:py-4 text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <button
-                                                            onClick={() => toggleComplimentaryStatus(product.productName)}
+                                                            onClick={() => toggleComplimentaryStatus(product.productId)} // ✅ CORRECTED
                                                             className={`p-2.5 rounded-full text-white ${product.isComplimentary ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-gray-400 hover:bg-gray-500'}`}
                                                         >
                                                             <FaGift className="text-xs" />
@@ -160,7 +160,7 @@ const EditSummary = ({
                                                                 <FaInfoCircle />
                                                             </span>
                                                         ) : (
-                                                            <button onClick={() => removeProduct(product.productName)} className="p-2.5 bg-red-600 text-white rounded-full hover:bg-red-700">
+                                                            <button onClick={() => removeProduct(product.productId)} className="p-2.5 bg-red-600 text-white rounded-full hover:bg-red-700"> {/* ✅ CORRECTED */}
                                                                 <FaTrash className="text-xs" />
                                                             </button>
                                                         )}
@@ -309,7 +309,7 @@ const EditSummary = ({
                                     className="col-span-2 bg-purple-600 text-white py-3.5 rounded-lg hover:bg-purple-700 font-bold flex items-center justify-center gap-2 text-lg shadow-lg"
                                     disabled={isProcessing}
                                 >
-                                    <FaCheckCircle /> {isProcessing ? "Processing..." : "Finalize & Print"}
+                                    <FaCheckCircle /> {isProcessing ? "Processing..." : "Complete & Print"}
                                 </button>
                             </div>
                         </div>
