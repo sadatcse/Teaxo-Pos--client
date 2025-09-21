@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import { useState, useEffect, useContext, useRef, useCallback } from "react";
 import Swal from "sweetalert2";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -13,8 +13,9 @@ import {
   FaHashtag,
   FaMoneyBillWave,
   FaTrash,
-  FaChevronLeft, // Icon for 'Previous' button
-  FaChevronRight, // Icon for 'Next' button
+  FaChevronLeft,
+  FaChevronRight,
+  FaQrcode,
 } from "react-icons/fa";
 
 import Mtitle from "../../components library/Mtitle";
@@ -22,7 +23,8 @@ import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import useCompanyHook from "../../Hook/useCompanyHook";
 import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
-import CookingAnimation from "../../components/CookingAnimation";
+import MtableLoading from "../../components library/MtableLoading"; // Changed import
+import QRCodeGenerator from "../../components/QRCodeGenerator";
 
 // Custom hook for debouncing input
 const useDebounce = (value, delay) => {
@@ -47,7 +49,6 @@ const OrdersHistory = () => {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // --- NEW: PAGINATION STATE ---
   const [currentPage, setCurrentPage] = useState(1);
   const [paginationInfo, setPaginationInfo] = useState({
     totalDocs: 0,
@@ -55,47 +56,42 @@ const OrdersHistory = () => {
     hasNextPage: false,
     hasPrevPage: false,
   });
-  const itemsPerPage = 15; 
+  const itemsPerPage = 15;
 
-  // State for modals
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+  const [isQrModalOpen, setIsQrModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  // State for filters
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [dateRange, setDateRange] = useState([null, null]);
   const [startDate, endDate] = dateRange;
+  // Removed paymentStatus from filters state
   const [filters, setFilters] = useState({
     orderType: "",
-    paymentStatus: "",
     orderStatus: "",
   });
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // --- UPDATED: fetchOrders now includes pagination ---
   const fetchOrders = useCallback(async (pageToFetch) => {
     if (!branch) return;
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
-      // Add filters to params
       if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
       if (startDate) params.append("startDate", startDate.toISOString());
       if (endDate) params.append("endDate", endDate.toISOString());
       if (filters.orderType) params.append("orderType", filters.orderType);
-      if (filters.paymentStatus) params.append("paymentStatus", filters.paymentStatus);
+      // Removed paymentStatus from API params
       if (filters.orderStatus) params.append("orderStatus", filters.orderStatus);
 
-      // Add pagination params
       params.append("page", pageToFetch);
       params.append("limit", itemsPerPage);
 
       const response = await axiosSecure.get(`/invoice/${branch}/filter?${params.toString()}`);
       
-      // Set state from the structured response
       setOrders(response.data.data);
       setPaginationInfo(response.data.pagination);
 
@@ -106,18 +102,15 @@ const OrdersHistory = () => {
     setIsLoading(false);
   }, [axiosSecure, branch, debouncedSearchTerm, startDate, endDate, filters, itemsPerPage]);
 
-  // Effect to fetch data when filters or page change
   useEffect(() => {
     fetchOrders(currentPage);
   }, [fetchOrders, currentPage]);
 
-  // Effect to reset to page 1 when any filter changes
   useEffect(() => {
     if (currentPage !== 1) {
-        setCurrentPage(1);
+      setCurrentPage(1);
     }
   }, [debouncedSearchTerm, startDate, endDate, filters]);
-
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -125,11 +118,12 @@ const OrdersHistory = () => {
   };
 
   const clearFilters = () => {
-    setFilters({ orderType: "", paymentStatus: "", orderStatus: "" });
+    // Removed paymentStatus from filter reset
+    setFilters({ orderType: "", orderStatus: "" });
     setSearchTerm("");
     setDateRange([null, null]);
     setIsFilterOpen(false);
-    setCurrentPage(1); // Reset page
+    setCurrentPage(1);
   };
 
   const handleViewOrder = (order) => {
@@ -137,9 +131,14 @@ const OrdersHistory = () => {
     setIsViewModalOpen(true);
   };
 
-  const handlePrintOrder = (order) => {
-    setSelectedOrder(order);
+  const handlePrintOrder = () => {
+    setIsViewModalOpen(false);
     setIsPrintModalOpen(true);
+  };
+
+  const handleQRCodeClick = () => {
+    setIsViewModalOpen(false);
+    setIsQrModalOpen(true);
   };
 
   const handlePrintComplete = () => {
@@ -164,7 +163,6 @@ const OrdersHistory = () => {
           const response = await axiosSecure.delete(`/invoice/delete/${orderId}`);
           if (response.status === 200) {
             Swal.fire('Deleted!', response.data.message || 'The order has been deleted.', 'success');
-            // Refetch orders for the current page to reflect the deletion
             fetchOrders(currentPage); 
           } else {
             Swal.fire('Error!', response.data.message || 'Failed to delete the order.', 'error');
@@ -195,7 +193,6 @@ const OrdersHistory = () => {
     <div className="p-4 md:p-6 min-h-screen bg-gray-50">
       <Mtitle title="Orders History" />
 
-      {/* Filter and Search Controls (No logical changes here) */}
       <div className="mb-4 p-4 bg-white rounded-lg shadow-sm border">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
           <div className="w-full">
@@ -230,7 +227,36 @@ const OrdersHistory = () => {
             {isFilterOpen && (
               <div className="absolute top-full right-0 mt-2 w-72 bg-white border rounded-lg shadow-xl z-20 p-4">
                 <div className="space-y-4">
-                  {/* ... filter dropdowns ... */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Order Type</label>
+                    <select
+                      name="orderType"
+                      value={filters.orderType}
+                      onChange={handleFilterChange}
+                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">All</option>
+                      <option value="dine-in">Dine-In</option>
+                      <option value="takeaway">Takeaway</option>
+                      <option value="delivery">Delivery</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Order Status</label>
+                    <select
+                      name="orderStatus"
+                      value={filters.orderStatus}
+                      onChange={handleFilterChange}
+                      className="mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">All</option>
+                      <option value="pending">Pending</option>
+                      <option value="cooking">Cooking</option>
+                      <option value="served">Served</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
                   <button onClick={clearFilters} className="w-full p-2 mt-2 text-sm text-gray-600 bg-gray-100 rounded-md hover:bg-gray-200">
                     Clear Filters
                   </button>
@@ -241,14 +267,12 @@ const OrdersHistory = () => {
         </div>
       </div>
 
-      {/* Orders Table and Pagination Container */}
       <div className="bg-white border shadow-sm rounded-lg">
         <section className="overflow-x-auto">
           {isLoading ? (
-            <CookingAnimation />
+            <MtableLoading />
           ) : (
             <table className="table w-full">
-              {/* ... thead ... */}
               <thead className="bg-blue-600">
                 <tr className="text-sm font-semibold text-white uppercase tracking-wider text-left">
                   <th className="p-3">Date</th>
@@ -281,7 +305,6 @@ const OrdersHistory = () => {
                       <td className="p-3">
                         <div className="flex justify-center items-center gap-3">
                           <button onClick={() => handleViewOrder(order)} className="text-blue-600 hover:text-blue-800 transition" title="View Order"><FaEye size={18} /></button>
-                          <button onClick={() => handlePrintOrder(order)} className="text-green-600 hover:text-green-800 transition" title="Print Receipt"><FaPrint size={18} /></button>
                           {user && user.role === 'admin' && (
                             <button onClick={() => handleDeleteOrder(order._id)} className="text-red-600 hover:text-red-800 transition" title="Delete Order"><FaTrash size={16} /></button>
                           )}
@@ -295,7 +318,6 @@ const OrdersHistory = () => {
           )}
         </section>
 
-        {/* --- NEW: PAGINATION CONTROLS --- */}
         {paginationInfo && paginationInfo.totalPages > 1 && !isLoading && (
           <div className="flex items-center justify-between p-4 border-t">
             <span className="text-sm text-gray-600">
@@ -325,118 +347,54 @@ const OrdersHistory = () => {
         )}
       </div>
 
-    {/* View Order Modal (No changes here) */}
-      {isViewModalOpen && selectedOrder && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl transform transition-all duration-300 scale-95 hover:scale-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-2xl sticky top-0 z-10">
-              <div>
-                <h2 className="text-2xl font-bold text-gray-800">Order Details</h2>
-                <p className="text-sm text-gray-500">Invoice ID: {selectedOrder.invoiceSerial}</p>
-              </div>
-              <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-transform transform hover:rotate-90">
-                <FaTimesCircle size={28} />
-              </button>
-            </div>
-            {companyLoading ? <CookingAnimation /> : (
-              <div className="p-6 space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
-                    <FaCalendarAlt className="text-blue-500 flex-shrink-0" size={20} />
-                    <div>
-                      <p className="font-semibold text-gray-700">Order Date</p>
-                      <p className="text-gray-600">{new Date(selectedOrder.dateTime).toLocaleString()}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
-                    <FaUser className="text-green-500 flex-shrink-0" size={20} />
-                    <div>
-                      <p className="font-semibold text-gray-700">Server</p>
-                      <p className="text-gray-600">{selectedOrder.loginUserName}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
-                    <FaHashtag className="text-purple-500 flex-shrink-0" size={20} />
-                    <div>
-                      <p className="font-semibold text-gray-700">Order Type</p>
-                      <p className="text-gray-600 capitalize">{selectedOrder.orderType.replace('-', ' ')}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
-                    <FaMoneyBillWave className="text-yellow-500 flex-shrink-0" size={20} />
-                    <div>
-                      <p className="font-semibold text-gray-700">Order Status</p>
-                      <span className={`px-3 py-1 text-xs font-bold rounded-full capitalize ${getStatusClass(selectedOrder.orderStatus)}`}>
-                        {selectedOrder.orderStatus}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="border rounded-lg p-4 bg-gray-50/50">
-                   <h4 className="font-semibold text-gray-700 mb-2">Additional Info</h4>
-                   <div className="text-sm space-y-1 text-gray-600">
-                    {selectedOrder.tableName && (<p><strong>Table:</strong> {selectedOrder.tableName}</p>)}
-                    {selectedOrder.deliveryProvider && (<p><strong>Delivery Via:</strong> {selectedOrder.deliveryProvider}</p>)}
-                    {selectedOrder.customerName && (<p><strong>Customer:</strong> {selectedOrder.customerName}</p>)}
-                    {selectedOrder.customerMobile && (<p><strong>Mobile:</strong> {selectedOrder.customerMobile}</p>)}
-                    <p><strong>Payment Method:</strong> {selectedOrder.paymentMethod}</p>
-                   </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Itemized List</h3>
-                  <div className="overflow-x-auto border rounded-lg">
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="p-3 text-left font-medium text-gray-600">#</th>
-                          <th className="p-3 text-left font-medium text-gray-600">Product Name</th>
-                          <th className="p-3 text-center font-medium text-gray-600">Qty</th>
-                          <th className="p-3 text-right font-medium text-gray-600">Rate</th>
-                          <th className="p-3 text-right font-medium text-gray-600">Subtotal</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {selectedOrder.products.map((item, index) => (
-                          <tr key={index} className="border-t hover:bg-gray-50">
-                            <td className="p-3 text-gray-500">{index + 1}</td>
-                            <td className="p-3 font-medium text-gray-800">{item.productName}</td>
-                            <td className="p-3 text-center text-gray-600">{item.qty}</td>
-                            <td className="p-3 text-right text-gray-600">{item.rate.toFixed(2)}</td>
-                            <td className="p-3 text-right font-semibold text-gray-800">{item.subtotal.toFixed(2)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div></div>
-                    <div className="text-sm border rounded-lg p-4 space-y-2 bg-gray-50/50">
-                        <div className="flex justify-between">
-                            <span className="text-gray-600">Subtotal:</span>
-                            <span className="font-medium text-gray-800">{selectedOrder.totalSale.toFixed(2)}</span>
+       {isViewModalOpen && selectedOrder && (
+            <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+                <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl transform transition-all duration-300 scale-95 hover:scale-100 max-h-[90vh] flex flex-col">
+                    <div className="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-2xl sticky top-0 z-10">
+                        <div>
+                            <h2 className="text-2xl font-bold text-gray-800">Order Details</h2>
+                            <p className="text-sm text-gray-500">Invoice ID: {selectedOrder.invoiceSerial}</p>
                         </div>
-                        <div className="flex justify-between">
-                            <span className="text-gray-600">VAT (+):</span>
-                            <span className="font-medium text-gray-800">{selectedOrder.vat.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-gray-600">Discount (-):</span>
-                            <span className="font-medium text-red-500">{selectedOrder.discount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between text-base font-bold pt-2 border-t mt-2">
-                            <span className="text-gray-900">Grand Total:</span>
-                            <span className="text-blue-600">{selectedOrder.totalAmount.toFixed(2)}</span>
-                        </div>
+                        <button onClick={() => setIsViewModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-transform transform hover:rotate-90">
+                            <FaTimesCircle size={28} />
+                        </button>
                     </div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
 
-      {/* Print Modal (No changes here) */}
+                    <div className="overflow-y-auto flex-grow">
+                        {companyLoading ? <MtableLoading /> : (
+                            <div className="p-6 space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg"><FaCalendarAlt className="text-blue-500 flex-shrink-0" size={20} /><div><p className="font-semibold text-gray-700">Order Date</p><p className="text-gray-600">{new Date(selectedOrder.dateTime).toLocaleString()}</p></div></div>
+                                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg"><FaUser className="text-green-500 flex-shrink-0" size={20} /><div><p className="font-semibold text-gray-700">Server</p><p className="text-gray-600">{selectedOrder.loginUserName}</p></div></div>
+                                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg"><FaHashtag className="text-purple-500 flex-shrink-0" size={20} /><div><p className="font-semibold text-gray-700">Order Type</p><p className="text-gray-600 capitalize">{selectedOrder.orderType.replace('-', ' ')}</p></div></div>
+                                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg"><FaMoneyBillWave className="text-yellow-500 flex-shrink-0" size={20} /><div><p className="font-semibold text-gray-700">Order Status</p><span className={`px-3 py-1 text-xs font-bold rounded-full capitalize ${getStatusClass(selectedOrder.orderStatus)}`}>{selectedOrder.orderStatus}</span></div></div>
+                                </div>
+                                <div className="border rounded-lg p-4 bg-gray-50/50"><h4 className="font-semibold text-gray-700 mb-2">Additional Info</h4><div className="text-sm space-y-1 text-gray-600">{selectedOrder.tableName && (<p><strong>Table:</strong> {selectedOrder.tableName}</p>)}{selectedOrder.deliveryProvider && (<p><strong>Delivery Via:</strong> {selectedOrder.deliveryProvider}</p>)}{selectedOrder.customerName && (<p><strong>Customer:</strong> {selectedOrder.customerName}</p>)}{selectedOrder.customerMobile && (<p><strong>Mobile:</strong> {selectedOrder.customerMobile}</p>)}<p><strong>Payment Method:</strong> {selectedOrder.paymentMethod}</p></div></div>
+                                <div>
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Itemized List</h3>
+                                    <div className="overflow-x-auto border rounded-lg"><table className="min-w-full text-sm"><thead className="bg-gray-100"><tr><th className="p-3 text-left font-medium text-gray-600">#</th><th className="p-3 text-left font-medium text-gray-600">Product Name</th><th className="p-3 text-center font-medium text-gray-600">Qty</th><th className="p-3 text-right font-medium text-gray-600">Rate</th><th className="p-3 text-right font-medium text-gray-600">Subtotal</th></tr></thead><tbody>{selectedOrder.products.map((item, index) => (<tr key={index} className="border-t hover:bg-gray-50"><td className="p-3 text-gray-500">{index + 1}</td><td className="p-3 font-medium text-gray-800">{item.productName}</td><td className="p-3 text-center text-gray-600">{item.qty}</td><td className="p-3 text-right text-gray-600">{item.rate.toFixed(2)}</td><td className="p-3 text-right font-semibold text-gray-800">{item.subtotal.toFixed(2)}</td></tr>))}</tbody></table></div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><div></div><div className="text-sm border rounded-lg p-4 space-y-2 bg-gray-50/50"><div className="flex justify-between"><span className="text-gray-600">Subtotal:</span><span className="font-medium text-gray-800">{selectedOrder.totalSale.toFixed(2)}</span></div><div className="flex justify-between"><span className="text-gray-600">VAT (+):</span><span className="font-medium text-gray-800">{selectedOrder.vat.toFixed(2)}</span></div><div className="flex justify-between"><span className="text-gray-600">Discount (-):</span><span className="font-medium text-red-500">{selectedOrder.discount.toFixed(2)}</span></div><div className="flex justify-between text-base font-bold pt-2 border-t mt-2"><span className="text-gray-900">Grand Total:</span><span className="text-blue-600">{selectedOrder.totalAmount.toFixed(2)}</span></div></div></div>
+                            </div>
+                        )}
+                    </div>
+                    <div className="p-5 border-t bg-gray-50 rounded-b-2xl sticky bottom-0 z-10 flex justify-end gap-4">
+                        {/* Conditionally render QR Code button */}
+                        {selectedOrder.orderStatus !== 'completed' && (
+                            <button onClick={handleQRCodeClick} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border rounded-md hover:bg-gray-100 transition">
+                                <FaQrcode />
+                                QR Code
+                            </button>
+                        )}
+                        <button onClick={handlePrintOrder} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 transition">
+                            <FaPrint />
+                            Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        )}
+
       {isPrintModalOpen && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
@@ -458,6 +416,17 @@ const OrdersHistory = () => {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {isQrModalOpen && selectedOrder && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="bg-gray-100 p-4 rounded-3xl shadow-2xl w-full max-w-xs relative">
+                <button onClick={() => setIsQrModalOpen(false)} className="absolute -top-2 -right-2 bg-white p-2 rounded-full text-red-500 hover:bg-red-100 shadow-md transition-all" aria-label="Close QR Code modal">
+                    <FaTimesCircle size={24} />
+                </button>
+                <QRCodeGenerator type="invoice" id={selectedOrder._id} />
+            </div>
         </div>
       )}
     </div>

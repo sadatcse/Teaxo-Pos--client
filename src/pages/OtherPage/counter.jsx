@@ -1,214 +1,204 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { FiEdit, FiTrash2 } from 'react-icons/fi';
+import { FaPlus, FaPencilAlt, FaTrash } from "react-icons/fa";
+import { FiX, FiEdit, FiTrash2 } from 'react-icons/fi';
+import { motion, AnimatePresence } from "framer-motion";
 import Swal from 'sweetalert2';
-import { GoPlus } from "react-icons/go";
+import { ColorRing } from "react-loader-spinner";
+
+
 import Mpagination from "../../components library/Mpagination";
 import Mtitle from "../../components library/Mtitle";
-import UseAxiosSecure from "../../Hook/UseAxioSecure";
+import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
-import Preloader from "../../components/Shortarea/Preloader";
+
+const MtableLoading = () => (
+    <div className="flex justify-center items-center w-full h-full py-28">
+        <ColorRing
+            visible={true}
+            height="80"
+            width="80"
+            ariaLabel="color-ring-loading"
+            wrapperClass="color-ring-wrapper"
+            colors={["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"]}
+        />
+    </div>
+);
 
 const Counter = () => {
-  const axiosSecure = UseAxiosSecure();
-  const [counters, setCounters] = useState([]);
-  const { branch } = useContext(AuthContext); // Branch from context
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    counterName: "",
-    counterSerial: "",
-    branch: branch, // Automatically set branch
-  });
-  const [editId, setEditId] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [Loading, setLoading] = useState(false);
-  const fetchCounters = useCallback(async () => {
-    setLoading(true);
-    try {
-      const response = await axiosSecure.get(`/counter/${branch}/get-all`);
-      setCounters(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching counters:", error);
-      setLoading(false);
-    }
-  }, [axiosSecure, branch]);
-  
-  useEffect(() => {
-    fetchCounters();
-  }, [fetchCounters]);
-
-  const handleAddOrEditCounter = async () => {
-    setIsLoading(true);
-    try {
-      if (editId) {
-        await axiosSecure.put(`/counter/update/${editId}`, formData);
-      } else {
-        await axiosSecure.post(`/counter/post`, formData);
-      }
-      fetchCounters();
-      setIsModalOpen(false);
-      setFormData({
+    const axiosSecure = UseAxiosSecure();
+    const { branch } = useContext(AuthContext);
+    const [counters, setCounters] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [formData, setFormData] = useState({
         counterName: "",
         counterSerial: "",
-        branch: branch, // Reset to context branch
-      });
-      setEditId(null);
-    } catch (error) {
-      console.error("Error saving counter:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error!",
-        text: "Failed to save counter. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleEdit = (id) => {
-    const counter = counters.find((c) => c._id === id);
-    setEditId(id);
-    setFormData({ ...counter, branch }); // Ensure branch remains from context
-    setIsModalOpen(true);
-  };
-
-  const handleRemove = (id) => {
-    Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, delete it!",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        axiosSecure.delete(`/counter/delete/${id}`)
-          .then(() => {
-            fetchCounters();
-            Swal.fire("Deleted!", "The counter has been deleted.", "success");
-          })
-          .catch((error) => {
-            console.error("Error deleting counter:", error);
-            Swal.fire("Error!", "Failed to delete counter.", "error");
-          });
-      }
+        branch: branch || "",
     });
-  };
+    const [editId, setEditId] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
 
-  const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: counters });
+    const fetchCounters = useCallback(async () => {
+        setLoading(true);
+        try {
+            const response = await axiosSecure.get(`/counter/${branch}/get-all`);
+            setCounters(response.data);
+        } catch (error) {
+            console.error("Error fetching counters:", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [axiosSecure, branch]);
+    
+    useEffect(() => {
+        if (branch) {
+            fetchCounters();
+        }
+    }, [fetchCounters, branch]);
 
-  return (
-    <div className="p-4 min-h-screen">
-      <Mtitle title="Counter Management" rightcontent={
-        <div className="flex justify-end gap-4">
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-700 transition duration-300"
-          >
-            <GoPlus className="text-xl" /> Add New
-          </button>
+    const handleAddOrEditCounter = async () => {
+        setIsLoading(true);
+        try {
+            if (editId) {
+                await axiosSecure.put(`/counter/update/${editId}`, formData);
+            } else {
+                await axiosSecure.post(`/counter/post`, formData);
+            }
+            fetchCounters();
+            closeModal();
+        } catch (error) {
+            console.error("Error saving counter:", error);
+            Swal.fire({
+                icon: "error",
+                title: "Error!",
+                text: "Failed to save counter. Please try again.",
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    const closeModal = () => {
+        setIsModalOpen(false);
+        setEditId(null);
+        setFormData({
+            counterName: "",
+            counterSerial: "",
+            branch: branch || "",
+        });
+    };
+
+    const handleEdit = (id) => {
+        const counter = counters.find((c) => c._id === id);
+        setEditId(id);
+        setFormData({ ...counter, branch });
+        setIsModalOpen(true);
+    };
+
+    const handleRemove = (id) => {
+        Swal.fire({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, delete it!",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axiosSecure.delete(`/counter/delete/${id}`)
+                    .then(() => {
+                        fetchCounters();
+                        Swal.fire("Deleted!", "The counter has been deleted.", "success");
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting counter:", error);
+                        Swal.fire("Error!", "Failed to delete counter.", "error");
+                    });
+            }
+        });
+    };
+
+    const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: counters });
+    const inputClass = "w-full border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
+
+    return (
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+            <Mtitle title="Counter Management" rightcontent={
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => { setIsModalOpen(true); closeModal(); }}
+                    className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300"
+                >
+                    <FaPlus  className="text-xl" /> Add New Counter
+                </motion.button>
+            } />
+
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                className="card bg-base-100 shadow-xl mt-6"
+            >
+                <div className="card-body p-4 sm:p-6">
+                    <div className="text-sm text-slate-700 mb-4">{rowsPerPageAndTotal}</div>
+                    {loading ? <MtableLoading /> : (
+                        <div className="overflow-x-auto">
+                            <table className="table w-full">
+                                <thead className="bg-blue-600 text-white uppercase text-xs">
+                                    <tr>
+                                        <th className="p-3 rounded-tl-lg">Counter Name</th>
+                                        <th className="p-3">Counter Serial</th>
+                                        <th className="p-3 text-center rounded-tr-lg">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <AnimatePresence>
+                                        {paginatedData.length === 0 ? (
+                                            <tr><td colSpan="3" className="text-center py-12 text-slate-700">No counters found.</td></tr>
+                                        ) : (
+                                            paginatedData.map((counter) => (
+                                                <motion.tr key={counter._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                    <td className="p-3 font-medium">{counter.counterName}</td>
+                                                    <td className="p-3">{counter.counterSerial}</td>
+                                                    <td className="p-3">
+                                                        <div className="flex justify-center items-center gap-2">
+                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(counter._id)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white"><FiEdit /></motion.button>
+                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(counter._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white"><FiTrash2 /></motion.button>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            ))
+                                        )}
+                                    </AnimatePresence>
+                                </tbody>
+                            </table>
+                            {paginationControls}
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+
+            <AnimatePresence>
+                {isModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
+                            <h3 className="text-xl font-semibold text-blue-600 mb-6">{editId ? 'Edit Counter' : 'Add New Counter'}</h3>
+                            <div className="space-y-4">
+                                <div><label className="label-text text-slate-700">Counter Name</label><input type="text" value={formData.counterName} onChange={(e) => setFormData({ ...formData, counterName: e.target.value })} className={`${inputClass} mt-1`} placeholder="e.g., Main Counter" /></div>
+                                <div><label className="label-text text-slate-700">Counter Serial</label><input type="number" value={formData.counterSerial} onChange={(e) => setFormData({ ...formData, counterSerial: parseInt(e.target.value) || "" })} className={`${inputClass} mt-1`} placeholder="e.g., 1" /></div>
+                            </div>
+                            <div className="flex justify-end gap-4 mt-8">
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn rounded-xl">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditCounter} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isLoading}>{isLoading ? <span className="loading loading-spinner"></span> : editId ? 'Save Changes' : 'Add Counter'}</motion.button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
-      } />
-
-      <div className="text-sm md:text-base">
-        {rowsPerPageAndTotal}
-      </div>
-
-      {Loading ? (
-    <Preloader />
-  ) : (
-
-      <section className="overflow-x-auto border shadow-sm rounded-xl p-4 mt-5">
-        <table className="table w-full">
-          <thead className="bg-blue-600">
-            <tr className="text-sm font-medium text-white text-left">
-              <td className="p-3">Counter Name</td>
-              <td className="p-3">Counter Serial</td>
-          
-              <td className="p-3 text-right">Action</td>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedData.length === 0 ? (
-              <tr>
-                <td colSpan="4" className="text-center py-4">No counters found</td>
-              </tr>
-            ) : (
-              paginatedData.map((counter, index) => (
-                <tr key={index} className="hover:bg-slate-100">
-                  <td className="p-3">{counter.counterName}</td>
-                  <td className="p-3">{counter.counterSerial}</td>
-                
-                  <td className="p-3 text-right flex justify-end gap-4">
-                    <button
-                      onClick={() => handleEdit(counter._id)}
-                      className="text-blue-500 hover:text-yellow-700 transition duration-150"
-                    >
-                      <FiEdit />
-                    </button>
-                    <button
-                      onClick={() => handleRemove(counter._id)}
-                      className="text-red-500 hover:text-red-700 transition duration-150"
-                    >
-                      <FiTrash2 />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-        {paginationControls}
-      </section>
- )}
-
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          <div className="bg-white p-6 rounded-lg shadow-lg">
-            <h2 className="text-2xl mb-4">{editId !== null ? "Edit Counter" : "Add New Counter"}</h2>
-            <input
-              type="text"
-              value={formData.counterName}
-              onChange={(e) => setFormData({ ...formData, counterName: e.target.value })}
-              className="w-full border rounded px-3 py-2 mb-4"
-              placeholder="Counter Name"
-            />
-            <input
-              type="number"
-              value={formData.counterSerial}
-              onChange={(e) => setFormData({ ...formData, counterSerial: parseInt(e.target.value) || "" })}
-              className="w-full border rounded px-3 py-2 mb-4"
-              placeholder="Counter Serial"
-            />
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={() => {
-                  setIsModalOpen(false);
-                  setFormData({
-                    counterName: "",
-                    counterSerial: "",
-                    branch: branch, // Reset to context branch
-                  });
-                  setEditId(null);
-                }}
-                className="bg-gray-500 text-white py-2 px-4 rounded-xl hover:bg-gray-600 transition duration-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddOrEditCounter}
-                className={`bg-blue-500 text-white py-2 px-4 rounded-xl hover:bg-blue-700 transition duration-300 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                disabled={isLoading}
-              >
-                {isLoading ? "Loading..." : editId !== null ? "Save" : "Add"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default Counter;

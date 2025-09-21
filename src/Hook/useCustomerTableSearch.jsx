@@ -5,14 +5,16 @@ import { AuthContext } from "../providers/AuthProvider";
 const useCustomerTableSearch = () => {
   const [customer, setCustomer] = useState(null);
   const [tables, setTables] = useState([]);
+  const [users, setUsers] = useState([]); // State for the user list
   const [isCustomerModalOpen, setCustomerModalOpen] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
   const axiosSecure = UseAxiosSecure();
   const [error, setError] = useState(null);
   const { branch } = useContext(AuthContext);
 
-  // ✅ Wrap in useCallback to avoid useEffect dependency warning
+  // Fetch tables based on branch
   const fetchTables = useCallback(async () => {
+    if (!branch) return;
     try {
       const response = await axiosSecure.get(`/tablecombine/tables/status/${branch}`);
       setTables(response.data);
@@ -21,9 +23,22 @@ const useCustomerTableSearch = () => {
     }
   }, [axiosSecure, branch]);
 
+  // Fetch users based on branch
+  const fetchUsers = useCallback(async () => {
+    if (!branch) return;
+    try {
+      const response = await axiosSecure.get(`/user/${branch}/get-all`);
+      setUsers(response.data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  }, [axiosSecure, branch]);
+
+
   useEffect(() => {
     fetchTables();
-  }, [fetchTables]);
+    fetchUsers();
+  }, [fetchTables, fetchUsers]);
 
   const searchCustomer = async (mobile) => {
     try {
@@ -65,6 +80,7 @@ const useCustomerTableSearch = () => {
   return {
     customer,
     tables,
+    users, // Expose the users list
     isCustomerModalOpen,
     selectedTable,
     searchCustomer,
@@ -72,6 +88,7 @@ const useCustomerTableSearch = () => {
     setSelectedTable,
     error,
     setCustomerModalOpen,
+    fetchUsers, // You can also expose the fetch function if needed
   };
 };
 

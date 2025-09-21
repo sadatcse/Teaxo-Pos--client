@@ -167,25 +167,28 @@ const Mpagination = ({ totalData }) => {
     return pageNumbers;
   };
 
-  const rowsPerPageAndTotal = (
-    <div className="flex justify-between items-center">
-      <span className="text-default-400 text-small">
-        Total {totalData.length} items
-      </span>
-      <label className="flex items-center text-default-400 text-small">
-        Rows per page:
-        <select
-          value={itemsPerPage}
-          className="bg-transparent outline-none text-default-400 text-small"
-          onChange={handleItemsPerPage}
-        >
-          <option value="5">5</option>
-          <option value="10">10</option>
-          <option value="15">15</option>
-        </select>
-      </label>
-    </div>
-  );
+const rowsPerPageAndTotal = (
+  <div className="flex justify-between items-center">
+    {/* Left side - Rows per page */}
+    <label className="flex items-center text-default-400 text-small">
+      Rows per page:
+      <select
+        value={itemsPerPage}
+        className="bg-transparent outline-none text-default-400 text-small ml-1"
+        onChange={handleItemsPerPage}
+      >
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+      </select>
+    </label>
+
+    {/* Right side - Total items */}
+    <span className="text-default-400 text-small">
+      Total {totalData.length} items
+    </span>
+  </div>
+);
 
   const paginationControls = (
     <div className="flex mt-3 items-center justify-between">

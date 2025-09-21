@@ -60,16 +60,7 @@ const menuItems = () => {
       path: "/dashboard/kitchendisplay",
       icon: <MdOutlineKitchen className="text-lg" />,
     },
-    {
-      title: "Daily Order Report",
-      path: "/dashboard/order-history",
-      icon: <MdHistory className="text-lg" />,
-    },
-    {
-      title: "Custom Order Report",
-      path: "/dashboard/customorder",
-      icon: <IoDocumentsOutline className="text-lg" />,
-    },
+
     {
       title: "Customers",
       path: "/dashboard/customers",
@@ -83,16 +74,6 @@ const menuItems = () => {
           title: "Expenses",
           path: "/dashboard/expenses",
           icon: <AiOutlineDollarCircle className="text-lg" />,
-        },
-        {
-          title: "Ingredients",
-          path: "/dashboard/ingredients",
-          icon: <MdFoodBank className="text-lg" />,
-        },
-        {
-          title: "Ingredients Expense",
-          path: "/dashboard/ingredientsexpense",
-          icon: <MdAnalytics className="text-lg" />,
         },
         {
           title: "Purchases",
@@ -167,13 +148,23 @@ const menuItems = () => {
       title: "Reports",
       icon: <MdReport className="text-lg" />,
       list: [
+            {
+      title: "Daily Order Report",
+      path: "/dashboard/order-history",
+      icon: <MdHistory className="text-lg" />,
+    },
+    {
+      title: "Custom Order Report",
+      path: "/dashboard/customorder",
+      icon: <IoDocumentsOutline className="text-lg" />,
+    },
         {
-          title: "Daily Sales",
+          title: "Daily Sales Report",
           path: "/dashboard/reports/daily-sales",
           icon: <MdAnalytics className="text-lg" />,
         },
         {
-          title: "Product Sales",
+          title: "Custom Product Sales",
           path: "/dashboard/reports/product-sales",
           icon: <MdSell className="text-lg" />,
         },
@@ -183,7 +174,7 @@ const menuItems = () => {
           icon: <MdCountertops className="text-lg" />,
         },
         {
-          title: "User Activity",
+          title: "User Activity Report ",
           path: "/dashboard/reports/user-activity",
           icon: <MdPerson className="text-lg" />,
         },
@@ -213,11 +204,11 @@ const menuItems = () => {
           path: "/dashboard/settings/counters",
           icon: <MdCountertops className="text-lg" />,
         },
-        {
-          title: "Tax / VAT",
-          path: "/dashboard/settings/tax",
-          icon: <MdAccountBalance className="text-lg" />,
-        },
+        // {
+        //   title: "Tax / VAT",
+        //   path: "/dashboard/settings/tax",
+        //   icon: <MdAccountBalance className="text-lg" />,
+        // },
         {
           title: "System Settings",
           path: "/dashboard/settings/system",

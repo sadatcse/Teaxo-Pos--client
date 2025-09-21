@@ -1,10 +1,10 @@
-import React, { forwardRef, useEffect, useState } from "react";
+import React, { forwardRef, useImperativeHandle, useRef, useCallback } from "react";
 
-// ReceiptTemplate is a functional component that displays a detailed invoice receipt.
-// It receives profileData (company info) and invoiceData (order details) as props.
-// It's forwardRef'd to allow parent components to access its DOM node for printing.
+// The component now uses an internal ref for its own DOM access
+// and useImperativeHandle to expose a specific function to the parent.
 const ReceiptTemplate = forwardRef(({ profileData, invoiceData, onPrintComplete }, ref) => {
-    const [printed, setPrinted] = useState(false);
+    // This ref is for this component's internal use to get the DOM element.
+    const internalPrintRef = useRef();
 
     // Function to get the current date and time in a formatted string.
     const getCurrentDateTime = () => {
@@ -20,138 +20,89 @@ const ReceiptTemplate = forwardRef(({ profileData, invoiceData, onPrintComplete 
         return new Date().toLocaleString("en-GB", options);
     };
 
-    // Define inline styles for the receipt for consistent rendering.
-    const styles = {
-        container: {
-            fontFamily: "'Courier New', Courier, monospace", // Use a monospaced font for better alignment
-            width: "72mm",
-            margin: "auto",
-            padding: "10px",
-            fontSize: "12px",
-            color: "#000",
-            backgroundColor: "#fff",
-        },
-        header: {
-            textAlign: "center",
-            marginBottom: "10px",
-        },
-        table: {
-            width: "100%",
-            borderCollapse: "collapse",
-            fontSize: "12px",
-        },
-        tableHeaderCell: {
-            textAlign: "left",
-            padding: "2px 0",
-            borderBottom: "1px dashed #000",
-            fontWeight: "bold",
-        },
-        tableDataCell: {
-            textAlign: "left",
-            padding: "2px 0",
-        },
-        tableCellRight: {
-            textAlign: "right",
-            padding: "2px 0",
-        },
-        dashedLine: {
-            margin: "8px 0",
-            borderTop: "1px dashed #000",
-        },
-        footer: {
-            textAlign: "center",
-            marginTop: "10px",
-        },
-        companyName: {
-            fontSize: "18px",
-            fontWeight: "bold",
-            marginBottom: "2px",
-        },
-        infoText: {
-            fontSize: "12px",
-            margin: "2px 0",
-        },
-        largeBoldText: {
-            fontSize: "14px",
-            margin: "4px 0",
-            fontWeight: "bold",
-        },
-        normalText: {
-            fontSize: "12px",
-            margin: "2px 0",
-            textAlign: "left",
-        },
-        orderMethodText: {
-            fontSize: "14px",
-            fontStyle: "italic",
-            fontWeight: "bold",
-            marginTop: "10px",
-        },
-        totalLine: {
-            fontWeight: "bold",
-            fontSize: "14px",
-        },
-    };
-
-    // useEffect hook to trigger printing when the component mounts.
-    useEffect(() => {
-        const printReceipt = () => {
-            if (!ref.current || printed) return;
-            setPrinted(true);
-
-            const iframe = document.createElement("iframe");
-            iframe.style.position = "absolute";
-            iframe.style.top = "-10000px";
-            document.body.appendChild(iframe);
-
-            const doc = iframe.contentDocument || iframe.contentWindow?.document;
-            if (!doc) {
-                console.error("Could not get iframe document for printing.");
-                return;
-            }
-
-            doc.open();
-            doc.write(`
-                <html>
-                    <head>
-                        <title>Invoice</title>
-                        <style>
-                            @media print {
-                                @page { margin: 0; size: 72mm auto; }
-                                body { margin: 0; font-family: 'Courier New', Courier, monospace; }
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        ${ref.current.outerHTML}
-                    </body>
-                </html>
-            `);
-            doc.close();
-
-            iframe.contentWindow?.focus();
-            iframe.contentWindow?.print();
-
-            // Cleanup after a delay
-            setTimeout(() => {
-                document.body.removeChild(iframe);
-                if (onPrintComplete) {
-                    onPrintComplete();
-                }
-            }, 500);
-        };
-
-        if (invoiceData && !printed) {
-            printReceipt();
+    // The entire printing logic is moved into this function.
+    // useCallback is used for optimization.
+    const printReceipt = useCallback(() => {
+        const node = internalPrintRef.current;
+        if (!node) {
+            console.error("Receipt component not mounted yet.");
+            return;
         }
-    }, [invoiceData, printed, onPrintComplete, ref]);
+
+        const iframe = document.createElement("iframe");
+        iframe.style.position = "absolute";
+        iframe.style.top = "-10000px";
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) {
+            console.error("Could not get iframe document for printing.");
+            return;
+        }
+
+        doc.open();
+        doc.write(`
+            <html>
+                <head>
+                    <title>Invoice</title>
+                    <style>
+                        @media print {
+                            @page { margin: 0; size: 72mm auto; }
+                            body { margin: 0; font-family: 'Courier New', Courier, monospace; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${node.outerHTML}
+                </body>
+            </html>
+        `);
+        doc.close();
+
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+            if (onPrintComplete) {
+                onPrintComplete();
+            }
+        }, 500);
+    }, [onPrintComplete]);
+
+    // This is the key change. useImperativeHandle customizes the instance value
+    // that is exposed to parent components when using ref.
+    useImperativeHandle(ref, () => ({
+        // The parent can now call `receiptRef.current.printReceipt()`
+        printReceipt,
+    }));
+
+    // The old useEffect that caused automatic printing has been removed.
 
     if (!profileData || !invoiceData) {
         return <p>Loading invoice...</p>;
     }
+    
+    // Define inline styles
+    const styles = {
+        container: { fontFamily: "'Courier New', Courier, monospace", width: "72mm", margin: "auto", padding: "10px", fontSize: "12px", color: "#000", backgroundColor: "#fff" },
+        header: { textAlign: "center", marginBottom: "10px" },
+        table: { width: "100%", borderCollapse: "collapse", fontSize: "12px" },
+        tableHeaderCell: { textAlign: "left", padding: "2px 0", borderBottom: "1px dashed #000", fontWeight: "bold" },
+        tableDataCell: { textAlign: "left", padding: "2px 0" },
+        tableCellRight: { textAlign: "right", padding: "2px 0" },
+        dashedLine: { margin: "8px 0", borderTop: "1px dashed #000" },
+        footer: { textAlign: "center", marginTop: "10px" },
+        companyName: { fontSize: "18px", fontWeight: "bold", marginBottom: "2px" },
+        infoText: { fontSize: "12px", margin: "2px 0" },
+        largeBoldText: { fontSize: "14px", margin: "4px 0", fontWeight: "bold" },
+        normalText: { fontSize: "12px", margin: "2px 0", textAlign: "left" },
+        orderMethodText: { fontSize: "14px", fontStyle: "italic", fontWeight: "bold", marginTop: "10px" },
+        totalLine: { fontWeight: "bold", fontSize: "14px" },
+    };
 
     return (
-        <div ref={ref} style={styles.container}>
+        <div ref={internalPrintRef} style={styles.container}>
             {/* Header Section */}
             <div style={styles.header}>
                 <h2 style={styles.companyName}>{profileData?.name || "Restaurant Name"}</h2>
@@ -213,7 +164,6 @@ const ReceiptTemplate = forwardRef(({ profileData, invoiceData, onPrintComplete 
                     <p style={styles.infoText}>VAT: ৳ {invoiceData.vat.toFixed(2)}</p>
                 )}
 
-                {/* UPDATED: Display SD if it exists */}
                 {invoiceData?.sd > 0 && (
                     <p style={styles.infoText}>SD: ৳ {invoiceData.sd.toFixed(2)}</p>
                 )}
@@ -247,6 +197,6 @@ const ReceiptTemplate = forwardRef(({ profileData, invoiceData, onPrintComplete 
     );
 });
 
-ReceiptTemplate.displayName = 'ReceiptTemplate'; // Add display name for easier debugging
+ReceiptTemplate.displayName = 'ReceiptTemplate';
 
 export default ReceiptTemplate;

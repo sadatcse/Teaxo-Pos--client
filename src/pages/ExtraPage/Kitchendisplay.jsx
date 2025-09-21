@@ -5,14 +5,14 @@ import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import io from 'socket.io-client';
 
 // --- React Icons ---
-import { IoRestaurant, IoTimeOutline, IoVolumeMuteOutline, IoVolumeHighOutline } from "react-icons/io5"; // Added IoVolumeMuteOutline and IoVolumeHighOutline
-import { MdDeliveryDining, MdOutlineFoodBank, MdOutlinePendingActions, MdSoupKitchen } from "react-icons/md";
+import { IoRestaurant, IoTimeOutline, IoVolumeMuteOutline, IoVolumeHighOutline } from "react-icons/io5";
+import { MdDeliveryDining, MdOutlineFoodBank, MdSoupKitchen } from "react-icons/md";
 import { BsHandbagFill } from "react-icons/bs";
 import { FaCheckCircle, FaUtensils } from "react-icons/fa";
 import Mtitle from '../../components library/Mtitle';
-import ding from "../../assets/ding.mp3"; // Correctly import the mp3 file
+import ding from "../../assets/ding.mp3";
 
-// --- Helper Hook for Live Timer (Unchanged) ---
+// --- Helper Hook for Live Timer ---
 const useTimeAgo = (startTime) => {
     const [timeAgo, setTimeAgo] = useState('');
 
@@ -43,11 +43,10 @@ const useTimeAgo = (startTime) => {
 };
 
 
-// --- Order Card Component (Refactored with DaisyUI & Tailwind) ---
+// --- Order Card Component (Corrected) ---
 const OrderCard = ({ order, onUpdate }) => {
     const timeAgo = useTimeAgo(order.dateTime);
 
-    // --- Helper to get styles and icon based on order type ---
     const getOrderTypeDetails = (type) => {
         switch (type) {
             case 'dine-in': 
@@ -105,7 +104,6 @@ const OrderCard = ({ order, onUpdate }) => {
     
     return (
         <div className="card bg-base-100 shadow-xl border-2 border-base-300 flex flex-col">
-            {/* --- Card Header --- */}
             <div className={`card-title p-3 rounded-t-xl flex justify-between items-center ${orderTypeDetails.className}`}>
                 <div className='flex items-center gap-3'>
                     {orderTypeDetails.icon}
@@ -120,14 +118,13 @@ const OrderCard = ({ order, onUpdate }) => {
                 </div>
             </div>
 
-            {/* --- Card Body --- */}
             <div className="card-body p-0 flex-grow">
                 <ul className="menu p-4 text-base-content">
                     {order.products.map(product => (
-                        <li key={product._id} className="flex flex-row items-center justify-between w-full py-2 border-b border-base-200 last:border-none">
-                            <div className="flex items-center gap-3">
-                                <span className="font-bold text-lg w-8 text-center">{product.qty}x</span>
-                                <span className='truncate'>{product.productName}</span>
+                        <li key={product._id} className="flex flex-row items-start justify-between w-full py-2 border-b border-base-200 last:border-none">
+                            <div className="flex items-start gap-3 flex-1 pr-2">
+                                <span className="font-bold text-lg w-8 text-center pt-0.5">{product.qty}x</span>
+                                <span>{product.productName}</span>
                             </div>
                             <div className="product-actions">
                                 {product.cookStatus === 'PENDING' && (
@@ -148,9 +145,8 @@ const OrderCard = ({ order, onUpdate }) => {
                 </ul>
             </div>
             
-            {/* --- Card Footer --- */}
             <div className="card-actions p-3 border-t border-base-200">
-                <button className="btn btn-success w-full text-white" onClick={handleCookAll}>
+                <button className="btn btn-success w-full text-white" onClick={handleCookAll} disabled={!order.products.some(p => p.cookStatus === 'PENDING')}>
                     <FaUtensils />
                     Cook All Pending Items
                 </button>
@@ -160,87 +156,76 @@ const OrderCard = ({ order, onUpdate }) => {
 };
 
 
-// --- Main Kitchen Display Component (Refactored with DaisyUI & Tailwind) ---
+// --- Main Kitchen Display Component ---
 const Kitchendisplay = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [isAlertEnabled, setIsAlertEnabled] = useState(true); // New state for alert toggle
-    const [showAlert, setShowAlert] = useState(false); // New state for visual alert
-    const audioRef = useRef(new Audio(ding)); // Reference to the audio element
+    const [isAlertEnabled, setIsAlertEnabled] = useState(true);
+    const [showAlert, setShowAlert] = useState(false);
+    const audioRef = useRef(new Audio(ding));
 
     const axiosSecure = UseAxiosSecure();
     const { branch } = useContext(AuthContext);
     const branchName = branch;
 
-    const fetchOrders = async () => {
-        try {
-            const response = await axiosSecure.get(`/invoice/${branchName}/kitchen`);
-            const sortedOrders = response.data.sort((a, b) => {
-                const statusOrder = { 'pending': 1, 'cooking': 2 };
-                const orderA = statusOrder[a.orderStatus] || 3;
-                const orderB = statusOrder[b.orderStatus] || 3;
-                if (orderA !== orderB) return orderA - orderB;
-                return new Date(a.dateTime) - new Date(b.dateTime);
-            });
-            setOrders(sortedOrders);
-            setError(null);
-        } catch (err) {
-            console.error("Failed to fetch kitchen orders:", err);
-            setError("Could not load orders. Please check connection.");
-        } finally {
-            setLoading(false);
-        }
-    };
-    
-    // Function to handle the new order alert
-    const handleNewOrderAlert = () => {
-        if (isAlertEnabled) {
-            audioRef.current.play(); // Play the sound
-            setShowAlert(true); // Show the visual alert
-            setTimeout(() => {
-                setShowAlert(false); // Hide the visual alert after a few seconds
-            }, 5000); // Alert disappears after 5 seconds
-        }
-    };
-
     useEffect(() => {
-        // Initialize socket connection
-        const socket = io(process.env.REACT_APP_UPLOAD_URL);
-        let previousOrderCount = 0;
+        if (!branchName) return;
 
-        // Join the branch-specific room
-        socket.emit('join-branch', branchName);
-
-        // Listen for updates from the server
-        socket.on('kitchen-update', async () => {
-            console.log('Received real-time update. Fetching new orders...');
-            const newOrders = await fetchAndReturnOrders();
-            if (newOrders.length > previousOrderCount) {
-                 handleNewOrderAlert();
-            }
-            previousOrderCount = newOrders.length;
-            fetchOrders();
-        });
-
-        const fetchAndReturnOrders = async () => {
+        const fetchOrders = async () => {
             try {
                 const response = await axiosSecure.get(`/invoice/${branchName}/kitchen`);
-                return response.data;
+                const sortedOrders = response.data.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+                setOrders(sortedOrders);
+                setError(null);
             } catch (err) {
-                console.error("Failed to fetch orders for check:", err);
-                return [];
+                console.error("Failed to fetch kitchen orders:", err);
+                setError("Could not load orders. Please check connection.");
+            } finally {
+                setLoading(false);
             }
         };
 
         fetchOrders();
 
-        // Cleanup on component unmount
+        const socket = io(process.env.REACT_APP_UPLOAD_URL);
+        socket.emit('join-branch', branchName);
+
+        const handleNewOrderAlert = () => {
+            if (isAlertEnabled) {
+                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
+                setShowAlert(true);
+                setTimeout(() => setShowAlert(false), 5000);
+            }
+        };
+
+        socket.on('kitchen-update', (updatedOrder) => {
+            console.log('Received real-time update:', updatedOrder);
+            setOrders(prevOrders => {
+                const existingOrderIndex = prevOrders.findIndex(o => o._id === updatedOrder._id);
+                let newOrders = [...prevOrders];
+
+                if (existingOrderIndex !== -1) {
+                    // Update existing order
+                    newOrders[existingOrderIndex] = updatedOrder;
+                } else {
+                    // Add new order
+                    newOrders.push(updatedOrder);
+                    handleNewOrderAlert();
+                }
+
+                // Filter out served orders and re-sort
+                return newOrders
+                    .filter(o => o.orderStatus !== 'served')
+                    .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+            });
+        });
+
         return () => {
             socket.off('kitchen-update');
             socket.disconnect(); 
         };
-    }, [branchName, isAlertEnabled]);
+    }, [branchName, axiosSecure, isAlertEnabled]);
 
     const handleUpdateOrder = async (updatedOrder) => {
         try {
@@ -258,10 +243,10 @@ const Kitchendisplay = () => {
     return (
         <div className="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8" >
             <div className="container mx-auto">
-                <header className="text-center mb-8 flex justify-between items-center">
+                <header className="mb-8 flex justify-between items-center">
                     <div>
-                        <Mtitle title="Kitchen Orders" />
-                        <p className="text-start text-base-content/70">{moment().format("dddd, MMMM Do YYYY")}</p>
+                        <h1 className="text-3xl font-bold text-gray-800">Kitchen Orders</h1>
+                        <p className="text-gray-500">{moment().format("dddd, MMMM D, YYYY")}</p>
                     </div>
                     <button 
                         onClick={toggleAlerts}
@@ -271,7 +256,6 @@ const Kitchendisplay = () => {
                     </button>
                 </header>
 
-                {/* --- Visual Alert UI --- */}
                 {showAlert && (
                     <div className="fixed top-0 left-0 w-full h-full z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm animate-pulse">
                         <div className="text-center p-8 bg-red-600 text-white font-extrabold text-4xl sm:text-6xl md:text-7xl lg:text-8xl rounded-xl shadow-2xl transform scale-105">
@@ -296,13 +280,13 @@ const Kitchendisplay = () => {
                 
                 {!loading && !error && (
                     orders.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
                             {orders.map(order => (
                                 <OrderCard key={order._id} order={order} onUpdate={handleUpdateOrder} />
                             ))}
                         </div>
                     ) : (
-                        <div className="text-center text-base-content/70 mt-20">
+                        <div className="text-center text-gray-500 mt-20">
                             <MdOutlineFoodBank className="mx-auto text-6xl mb-4" />
                             <p className="text-2xl font-semibold">No open orders right now.</p>
                             <p>Enjoy the quiet moment! 🍽️</p>

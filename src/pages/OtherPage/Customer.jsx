@@ -252,7 +252,7 @@ const CustomerManagement = () => {
                     pageNumbers.push(
                         <button
                             key={i}
-                            className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === i ? 'bg-indigo-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
+                            className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === i ? 'bg-blue-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
                             onClick={() => setCurrentPage(i)}
                         >
                             {i + 1}
@@ -265,7 +265,7 @@ const CustomerManagement = () => {
                     pageNumbers.push(
                         <button
                             key={i}
-                            className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === i ? 'bg-indigo-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
+                            className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === i ? 'bg-blue-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
                             onClick={() => setCurrentPage(i)}
                         >
                             {i + 1}
@@ -276,7 +276,7 @@ const CustomerManagement = () => {
                 pageNumbers.push(
                     <button
                         key={totalPages - 1}
-                        className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === totalPages - 1 ? 'bg-indigo-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
+                        className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === totalPages - 1 ? 'bg-blue-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
                         onClick={() => setCurrentPage(totalPages - 1)}
                     >
                         {totalPages}
@@ -287,7 +287,7 @@ const CustomerManagement = () => {
                 pageNumbers.push(
                     <button
                         key={0}
-                        className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === 0 ? 'bg-indigo-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
+                        className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === 0 ? 'bg-blue-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
                         onClick={() => setCurrentPage(0)}
                     >
                         1
@@ -298,7 +298,7 @@ const CustomerManagement = () => {
                     pageNumbers.push(
                         <button
                             key={i}
-                            className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === i ? 'bg-indigo-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
+                            className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === i ? 'bg-blue-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
                             onClick={() => setCurrentPage(i)}
                         >
                             {i + 1}
@@ -310,7 +310,7 @@ const CustomerManagement = () => {
                 pageNumbers.push(
                     <button
                         key={0}
-                        className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === 0 ? 'bg-indigo-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
+                        className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === 0 ? 'bg-blue-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
                         onClick={() => setCurrentPage(0)}
                     >
                         1
@@ -321,7 +321,7 @@ const CustomerManagement = () => {
                     pageNumbers.push(
                         <button
                             key={i}
-                            className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === i ? 'bg-indigo-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
+                            className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === i ? 'bg-blue-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
                             onClick={() => setCurrentPage(i)}
                         >
                             {i + 1}
@@ -332,7 +332,7 @@ const CustomerManagement = () => {
                 pageNumbers.push(
                     <button
                         key={totalPages - 1}
-                        className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === totalPages - 1 ? 'bg-indigo-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
+                        className={`px-3 join-item text-sm py-2 focus:outline-none transition-colors duration-300 ease-in-out ${currentPage === totalPages - 1 ? 'bg-blue-600 rounded-lg text-white' : 'bg-transparent hover:bg-gray-200'}`}
                         onClick={() => setCurrentPage(totalPages - 1)}
                     >
                         {totalPages}
@@ -409,7 +409,7 @@ const CustomerManagement = () => {
                 <div className="flex justify-end gap-4">
                     <button
                         onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 bg-indigo-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-indigo-700 transition duration-300 transform hover:scale-105"
+                        className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105"
                     >
                         <GoPlus className="text-xl" /> Add New
                     </button>
@@ -418,7 +418,7 @@ const CustomerManagement = () => {
 
             <div className="bg-white p-6 rounded-xl shadow-lg mt-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-gray-800">Customer List</h2>
+       
                     {rowsPerPageAndTotal}
                 </div>
 
@@ -428,7 +428,7 @@ const CustomerManagement = () => {
                     <section className="overflow-x-auto">
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50">
-                                <tr className="text-sm font-medium text-gray-500 text-left uppercase tracking-wider">
+                                <tr className="bg-blue-600 text-white uppercase text-xs font-medium tracking-wider text-left rounded-t-lg">
                                     <th className="p-4">Name</th>
                                     <th className="p-4">Mobile</th>
                                     <th className="p-4">Total Orders</th>
@@ -448,8 +448,8 @@ const CustomerManagement = () => {
                                             <td className="p-4 whitespace-nowrap text-sm font-medium text-gray-900">{customer.name}</td>
                                             <td className="p-4 whitespace-nowrap text-sm text-gray-600">{customer.mobile}</td>
                                             <td className="p-4 whitespace-nowrap text-sm text-gray-600">{customer.numberOfOrders || 0}</td>
-                                            <td className="p-4 whitespace-nowrap text-sm text-gray-600">${(customer.totalAmountSpent || 0).toFixed(2)}</td>
-                                            <td className="p-4 whitespace-nowrap text-sm text-green-600 font-bold">{customer.currentPoints || 0}</td>
+                                            <td className="p-4 whitespace-nowrap text-sm text-gray-600">৳ <span></span>{(customer.totalAmountSpent || 0).toFixed(2)}</td>
+                                            <td className="p-4 whitespace-nowrap text-sm text-blue-600 font-bold">{customer.currentPoints || 0}</td>
                                             <td className="p-4 whitespace-nowrap text-center text-sm font-medium">
                                                 <div className="flex justify-center items-center space-x-4">
                                                     <button
@@ -478,7 +478,7 @@ const CustomerManagement = () => {
                                                             setSmsMobile(customer.mobile);
                                                             setIsSmsModalOpen(true);
                                                         }}
-                                                        className="text-green-500 hover:text-green-700 transition duration-150 transform hover:scale-110"
+                                                        className="text-blue-500 hover:text-blue-700 transition duration-150 transform hover:scale-110"
                                                         title="Send SMS"
                                                     >
                                                         <FiSend className="w-5 h-5" />
@@ -567,7 +567,7 @@ const CustomerManagement = () => {
                                 </button>
                                 <button
                                     type="submit"
-                                    className={`bg-indigo-600 text-white py-2 px-6 rounded-full hover:bg-indigo-700 transition duration-300 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
+                                    className={`bg-blue-600 text-white py-2 px-6 rounded-full hover:bg-blue-700 transition duration-300 ${isLoading ? "opacity-50 cursor-not-allowed" : ""}`}
                                     disabled={isLoading}
                                 >
                                     {isLoading ? "Saving..." : editId !== null ? "Save" : "Add"}
@@ -592,7 +592,7 @@ const CustomerManagement = () => {
                         <textarea
                             value={smsMessage}
                             onChange={(e) => setSmsMessage(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-colors"
+                            className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             placeholder="Enter message"
                             rows="4"
                         />
@@ -605,7 +605,7 @@ const CustomerManagement = () => {
                             </button>
                             <button
                                 onClick={handleSendSms}
-                                className="bg-green-600 text-white py-2 px-6 rounded-full hover:bg-green-700 transition duration-300"
+                                className="bg-blue-600 text-white py-2 px-6 rounded-full hover:bg-blue-700 transition duration-300"
                             >
                                 Send SMS
                             </button>
@@ -620,7 +620,7 @@ const CustomerManagement = () => {
                     <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 animate-modal-in">
                         <h2 className="text-2xl font-bold text-gray-800 mb-4">Redeem Points</h2>
                         <p className="text-gray-600 mb-6">Redeeming points for <span className="font-semibold text-indigo-600">{selectedCustomer.name}</span></p>
-                        <p className="mb-4 text-gray-700">Current Points: <span className="font-bold text-green-600 text-lg">{selectedCustomer.currentPoints}</span></p>
+                        <p className="mb-4 text-gray-700">Current Points: <span className="font-bold text-blue-600 text-lg">{selectedCustomer.currentPoints}</span></p>
                         <input
                             type="number"
                             value={redeemPoints}
@@ -683,7 +683,7 @@ const CustomerManagement = () => {
                                                 <td className="p-3 text-sm text-gray-800">{invoice.invoiceSerial}</td>
                                                 <td className="p-3 text-sm text-gray-800">{moment(invoice.dateTime).format('MMM Do YYYY')}</td>
                                                 <td className="p-3 text-sm text-gray-800">${(invoice.totalAmount || 0).toFixed(2)}</td>
-                                                <td className="p-3 text-sm text-green-600 font-medium">{invoice.earnedPoints}</td>
+                                                <td className="p-3 text-sm text-blue-600 font-medium">{invoice.earnedPoints}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -762,7 +762,7 @@ const CustomerManagement = () => {
                         <div className="flex justify-end mt-8">
                             <button
                                 onClick={() => setIsDetailModalOpen(false)}
-                                className="bg-indigo-600 text-white py-2 px-6 rounded-full hover:bg-indigo-700 transition duration-300"
+                                className="bg-blue-600 text-white py-2 px-6 rounded-full hover:bg-blue-700 transition duration-300"
                             >
                                 Close
                             </button>

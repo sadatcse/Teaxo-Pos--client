@@ -1,260 +1,277 @@
-import React, { useState, useEffect, useContext } from "react";
-import { FiEye, FiBell, FiEdit2, FiAlertTriangle } from 'react-icons/fi';
+import React, { useState, useEffect, useContext, useCallback } from "react";
+import { FaSearch, FaEye, FaTimes } from 'react-icons/fa';
+import { MdSportsMartialArts, MdNavigateBefore, MdNavigateNext } from "react-icons/md";
+import { FiBell, FiSliders } from "react-icons/fi";
 import Swal from 'sweetalert2';
-import { TfiSearch } from "react-icons/tfi";
-import Mpagination from "../../components library/Mpagination";
-import MtableLoading from "../../components library/MtableLoading";
+import { motion, AnimatePresence } from 'framer-motion';
+
+
 import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
-import Preloader from './../../components/Shortarea/Preloader';
+import useIngredientCategories from "../../Hook/useIngredientCategories";
+import MtableLoading from "../../components library/MtableLoading"; 
+
+const PaginationControls = ({ currentPage, totalPages, onPageChange, totalDocuments, rowsPerPage }) => {
+    if (totalPages <= 1) return null;
+    return (
+        <div className="flex items-center justify-between pt-4 text-sm text-slate-700">
+            <div>
+                Showing <span className="font-semibold">{(currentPage - 1) * rowsPerPage + 1}</span> to <span className="font-semibold">{Math.min(currentPage * rowsPerPage, totalDocuments)}</span> of <span className="font-semibold">{totalDocuments}</span> entries
+            </div>
+            <div className="join">
+                <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="join-item btn btn-sm">
+                    <MdNavigateBefore />
+                </button>
+                <button className="join-item btn btn-sm">Page {currentPage} of {totalPages}</button>
+                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="join-item btn btn-sm">
+                    <MdNavigateNext />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+const StockDetailsModal = ({ stock, onClose, axiosSecure }) => {
+    const [activeTab, setActiveTab] = useState('details');
+    const [movements, setMovements] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (activeTab === 'movement' && stock?._id) {
+            const fetchMovements = async () => {
+                setIsLoading(true);
+                try {
+                    const { data } = await axiosSecure.get(`/stock/${stock._id}/movements`);
+                    setMovements(data);
+                } catch (error) {
+                    console.error("Failed to fetch stock movements:", error);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchMovements();
+        }
+    }, [activeTab, stock, axiosSecure]);
+
+    if (!stock) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="card bg-base-100 shadow-xl w-full max-w-2xl">
+                <div className="p-4 border-b border-slate-200 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-blue-600">Stock Details: {stock.ingredient?.name}</h2>
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onClose} className="btn btn-sm btn-circle btn-ghost"><FaTimes /></motion.button>
+                </div>
+                <div className="p-4 sm:p-6">
+                    <div role="tablist" className="tabs tabs-boxed mb-4">
+                        <a role="tab" className={`tab ${activeTab === 'details' ? 'tab-active font-semibold' : ''}`} onClick={() => setActiveTab('details')}>Details</a>
+                        <a role="tab" className={`tab ${activeTab === 'movement' ? 'tab-active font-semibold' : ''}`} onClick={() => setActiveTab('movement')}>Movement History</a>
+                    </div>
+                    {activeTab === 'details' && (
+                        <div className="space-y-3 text-sm text-slate-700">
+                            <p><strong>SKU:</strong> {stock.ingredient?.sku || 'N/A'}</p>
+                            <p><strong>Current Quantity:</strong> <span className="font-bold text-lg text-blue-600">{stock.quantityInStock} {stock.unit}</span></p>
+                            <p><strong>Stock Alert Level:</strong> {stock.ingredient?.stockAlert || 0} {stock.unit}</p>
+                            <p><strong>Category:</strong> {stock.ingredient?.category?.categoryName || 'N/A'}</p>
+                            <p><strong>Last Updated:</strong> {new Date(stock.updatedAt).toLocaleString()}</p>
+                        </div>
+                    )}
+                    {activeTab === 'movement' && (
+                        <div className="overflow-x-auto max-h-96">
+                            {isLoading ? <MtableLoading /> : (
+                                <table className="table table-zebra table-sm w-full">
+                                    <thead><tr><th>Date</th><th>Before</th><th>After</th><th>Adj.</th><th>User</th><th>Note</th></tr></thead>
+                                    <tbody>
+                                        {movements.length > 0 ? movements.map(m => (
+                                            <tr key={m._id}><td>{new Date(m.createdAt).toLocaleString()}</td><td>{m.beforeQuantity}</td><td>{m.afterQuantity}</td><td className={m.adjustment >= 0 ? 'text-green-600' : 'text-red-600'}>{m.adjustment > 0 ? `+${m.adjustment}` : m.adjustment}</td><td>{m.createdBy?.name || 'System'}</td><td>{m.note}</td></tr>
+                                        )) : (<tr><td colSpan="6" className="text-center">No movement history found.</td></tr>)}
+                                    </tbody>
+                                </table>
+                            )}
+                        </div>
+                    )}
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+const UpdateStockAlertModal = ({ stock, onClose, onSuccess, axiosSecure }) => {
+    const [newAlert, setNewAlert] = useState(stock.ingredient?.stockAlert || 0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            await axiosSecure.put(`/stock/ingredient/${stock.ingredient._id}/alert`, { newStockAlert: Number(newAlert) });
+            Swal.fire('Success!', 'Stock alert has been updated.', 'success');
+            onSuccess();
+            onClose();
+        } catch (error) {
+            Swal.fire('Error!', 'Could not update stock alert.', 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="card bg-base-100 shadow-xl w-full max-w-md">
+                <div className="p-4 border-b border-slate-200 flex justify-between items-center"><h2 className="text-xl font-semibold text-blue-600">Update Stock Alert</h2><button onClick={onClose} className="btn btn-sm btn-circle btn-ghost"><FaTimes /></button></div>
+                <form onSubmit={handleSubmit} className="p-6">
+                    <div className="form-control">
+                        <label className="label"><span className="label-text text-slate-700">Alert Level for <span className="font-semibold">{stock.ingredient?.name}</span> ({stock.unit})</span></label>
+                        <input type="number" className="border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full" value={newAlert} onChange={(e) => setNewAlert(e.target.value)} required />
+                    </div>
+                    <div className="flex justify-end gap-4 mt-8">
+                        <motion.button type="button" onClick={onClose} className="btn rounded-xl" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Cancel</motion.button>
+                        <motion.button type="submit" className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md" disabled={isSubmitting} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>{isSubmitting ? <span className="loading loading-spinner"></span> : 'Update Alert'}</motion.button>
+                    </div>
+                </form>
+            </motion.div>
+        </div>
+    );
+};
+
+const UpdateStockAdjustmentModal = ({ stock, onClose, onSuccess, axiosSecure }) => {
+    const [physicalQuantity, setPhysicalQuantity] = useState(stock.quantityInStock || '');
+    const [note, setNote] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        try {
+            await axiosSecure.put(`/stock/adjust`, { stockId: stock._id, newQuantity: Number(physicalQuantity), note: note });
+            Swal.fire('Success!', 'Stock has been adjusted.', 'success');
+            onSuccess();
+            onClose();
+        } catch (error) {
+            Swal.fire('Error!', 'Could not adjust stock.', 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="card bg-base-100 shadow-xl w-full max-w-md">
+                <div className="p-4 border-b border-slate-200 flex justify-between items-center"><h2 className="text-xl font-semibold text-blue-600">Stock Adjustment</h2><button onClick={onClose} className="btn btn-sm btn-circle btn-ghost"><FaTimes /></button></div>
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div className="form-control"><label className="label"><span className="label-text">Current Stock ({stock.unit})</span></label><input type="text" value={stock.quantityInStock} className="input input-bordered bg-slate-100 rounded-xl" disabled /></div>
+                        <div className="form-control"><label className="label"><span className="label-text font-semibold">New Physical Quantity</span></label><input type="number" step="any" className="border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full" value={physicalQuantity} onChange={(e) => setPhysicalQuantity(e.target.value)} required /></div>
+                    </div>
+                    <div className="form-control"><label className="label"><span className="label-text">Note (Reason for adjustment)</span></label><textarea className="textarea border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 h-24" placeholder="e.g., Weekly stock count..." value={note} onChange={(e) => setNote(e.target.value)}></textarea></div>
+                    <div className="flex justify-end gap-4 mt-6">
+                        <motion.button type="button" onClick={onClose} className="btn rounded-xl" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Cancel</motion.button>
+                        <motion.button type="submit" className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md" disabled={isSubmitting} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>{isSubmitting ? <span className="loading loading-spinner"></span> : 'Update Stock'}</motion.button>
+                    </div>
+                </form>
+            </motion.div>
+        </div>
+    );
+};
 
 const Stocks = () => {
     const axiosSecure = UseAxiosSecure();
     const { branch } = useContext(AuthContext);
-
+    const { ingredientCategories } = useIngredientCategories();
     const [stocks, setStocks] = useState([]);
-    const [filteredStocks, setFilteredStocks] = useState([]);
     const [isTableLoading, setTableLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
     const [showLowStockOnly, setShowLowStockOnly] = useState(false);
-
-    // Modal States
-    const [selectedStock, setSelectedStock] = useState(null);
-    const [isAdjustModalOpen, setAdjustModalOpen] = useState(false);
-    const [isAlertModalOpen, setAlertModalOpen] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [paginationInfo, setPaginationInfo] = useState({ totalPages: 1, totalDocuments: 0 });
+    const [rowsPerPage, setRowsPerPage] = useState(10);
     const [isDetailsModalOpen, setDetailsModalOpen] = useState(false);
+    const [isAlertModalOpen, setAlertModalOpen] = useState(false);
+    const [isAdjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
+    const [selectedStock, setSelectedStock] = useState(null);
 
-    // Form States
-    const [adjustFormData, setAdjustFormData] = useState({ newQuantity: 0, note: '' });
-    const [alertFormData, setAlertFormData] = useState({ stockAlert: 0 });
-    const [isFormLoading, setFormLoading] = useState(false);
-
-    const fetchStocks = async () => {
+    const fetchStocks = useCallback(async () => {
         if (!branch) return;
         setTableLoading(true);
-        try {
-            const { data } = await axiosSecure.get(`/stock/${branch}/get-all`);
-            setStocks(data);
-        } catch (error) {
-            console.error("Error fetching stocks:", error);
-            Swal.fire({ icon: 'error', title: 'Error!', text: 'Failed to fetch stock data.' });
-        } finally {
-            setTableLoading(false);
-        }
-    };
+        const params = new URLSearchParams({ page: currentPage, limit: rowsPerPage });
+        if (selectedCategory) params.append('category', selectedCategory);
+        if (searchTerm) params.append('search', searchTerm);
+        if (showLowStockOnly) params.append('lowStock', 'true');
+        try { const { data } = await axiosSecure.get(`/stock/${branch}/get-all?${params.toString()}`); setStocks(data.data); setPaginationInfo(data.pagination); } catch (error) { Swal.fire({ icon: 'error', title: 'Error!', text: 'Failed to fetch stock data.' }); } finally { setTableLoading(false); }
+    }, [branch, currentPage, rowsPerPage, selectedCategory, searchTerm, showLowStockOnly, axiosSecure]);
 
-    useEffect(() => {
-        fetchStocks();
-    }, [branch]);
+    useEffect(() => { const handler = setTimeout(() => { if (currentPage !== 1) setCurrentPage(1); else fetchStocks(); }, 500); return () => clearTimeout(handler); }, [searchTerm]);
+    useEffect(() => { if (currentPage !== 1) setCurrentPage(1); else fetchStocks(); }, [selectedCategory, showLowStockOnly, rowsPerPage]);
+    useEffect(() => { fetchStocks(); }, [currentPage, fetchStocks]);
 
-    useEffect(() => {
-        let data = stocks;
-        if (showLowStockOnly) {
-            data = data.filter(s => s.quantityInStock < s.ingredient.stockAlert);
-        }
-        if (searchTerm) {
-            const lowercasedFilter = searchTerm.toLowerCase();
-            data = data.filter(s =>
-                s.ingredient.name.toLowerCase().includes(lowercasedFilter) ||
-                s.ingredient.sku.toLowerCase().includes(lowercasedFilter)
-            );
-        }
-        setFilteredStocks(data);
-    }, [searchTerm, showLowStockOnly, stocks]);
-
-    const openModal = (modalSetter, stockItem) => {
-        setSelectedStock(stockItem);
-        if (modalSetter === setAdjustModalOpen) {
-            setAdjustFormData({ newQuantity: stockItem.quantityInStock, note: '' });
-        }
-        if (modalSetter === setAlertModalOpen) {
-            setAlertFormData({ stockAlert: stockItem.ingredient.stockAlert });
-        }
-        modalSetter(true);
-    };
-
-    const closeModal = () => {
-        setAdjustModalOpen(false);
-        setAlertModalOpen(false);
-        setDetailsModalOpen(false);
-        setSelectedStock(null);
-        setFormLoading(false);
-    };
-
-    const handleAdjustStock = async () => {
-        setFormLoading(true);
-        try {
-            await axiosSecure.put(`/stock/${branch}/adjust`, {
-                ingredientId: selectedStock.ingredient._id,
-                newQuantity: adjustFormData.newQuantity,
-            });
-            await fetchStocks(); // Refetch to get updated data
-            closeModal();
-            Swal.fire('Success!', 'Stock quantity has been updated.', 'success');
-        } catch (error) {
-            Swal.fire('Error!', 'Failed to adjust stock.', 'error');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const handleSetAlert = async () => {
-        setFormLoading(true);
-        try {
-            await axiosSecure.put(`/ingredient/update-alert/${selectedStock.ingredient._id}`, {
-                stockAlert: alertFormData.stockAlert,
-            });
-            await fetchStocks(); // Refetch to get updated alert levels
-            closeModal();
-            Swal.fire('Success!', 'Stock alert level has been updated.', 'success');
-        } catch (error) {
-            Swal.fire('Error!', 'Failed to set stock alert.', 'error');
-        } finally {
-            setFormLoading(false);
-        }
-    };
-
-    const lowStockCount = stocks.filter(s => s.quantityInStock < s.ingredient.stockAlert).length;
-    const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: filteredStocks });
+    const handleViewDetails = (stock) => { setSelectedStock(stock); setDetailsModalOpen(true); };
+    const handleOpenAlertModal = (stock) => { setSelectedStock(stock); setAlertModalOpen(true); };
+    const handleOpenAdjustmentModal = (stock) => { setSelectedStock(stock); setAdjustmentModalOpen(true); };
 
     return (
-        <div className="p-4 min-h-screen">
+        <main className="bg-base-200 min-h-screen p-4 sm:p-6 lg:p-8">
             <Mtitle title="Current Stock" rightcontent={
-                <div className='flex items-center gap-4'>
-                    <div className='md:w-64 border shadow-sm py-2 px-3 bg-white rounded-xl'>
-                        <div className='flex items-center gap-2'>
-                            <TfiSearch className='text-xl font-bold text-gray-500' />
-                            <input type="text" className='outline-none w-full' placeholder='Search Stocks...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                        </div>
+                <div className="flex flex-col md:flex-row gap-4 justify-end items-center">
+                    <div className="w-full md:max-w-xs relative">
+                        <input type="text" className="border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full pr-10" placeholder="Search by Name or SKU" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        <FaSearch className="text-slate-400 absolute top-1/2 right-4 transform -translate-y-1/2" />
                     </div>
+                    <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                        <option value="">All Categories</option>
+                        {ingredientCategories.map(cat => (<option key={cat._id} value={cat._id}>{cat.categoryName}</option>))}
+                    </select>
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowLowStockOnly(!showLowStockOnly)} className={`btn rounded-xl gap-2 ${showLowStockOnly ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white hover:bg-gray-50 border border-gray-300'}`}>
+                        <MdSportsMartialArts /> Low Stock
+                    </motion.button>
                 </div>
             } />
-
-            <div className="mt-4">
-                <button onClick={() => setShowLowStockOnly(!showLowStockOnly)} className={`flex items-center gap-2 py-2 px-4 rounded-lg font-semibold ${showLowStockOnly ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
-                    <FiAlertTriangle />
-                    Low Stock ({lowStockCount})
-                </button>
-            </div>
-
-            <div className="text-sm md:text-base mt-4">{rowsPerPageAndTotal}</div>
-
-            {isTableLoading ? <Preloader /> : (
-                <section className="overflow-x-auto border shadow-sm rounded-xl bg-white mt-5">
-                    <table className="table w-full">
-                        <thead className='bg-gray-50'>
-                            <tr className="text-sm font-semibold text-gray-600 text-left">
-                                <td className="p-4">Name</td>
-                                <td className="p-4">Quantity</td>
-                                <td className="p-4">Unit</td>
-                                <td className="p-4">Stock Alert</td>
-                                <td className="p-4">SKU</td>
-                                <td className="p-4">Last Update</td>
-                                <td className="p-4 text-center">Actions</td>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {paginatedData.map((s) => {
-                                const isLow = s.quantityInStock < s.ingredient.stockAlert;
-                                return (
-                                    <tr key={s._id} className={`hover:bg-slate-50 border-b ${isLow ? 'bg-red-50' : ''}`}>
-                                        <td className="p-4 font-medium flex items-center gap-2">
-                                            {s.ingredient.name}
-                                            {isLow && <FiAlertTriangle className="text-red-500" />}
-                                        </td>
-                                        <td className="p-4 font-bold">{s.quantityInStock}</td>
-                                        <td className="p-4">{s.unit}</td>
-                                        <td className="p-4">{s.ingredient.stockAlert}</td>
-                                        <td className="p-4">{s.ingredient.sku}</td>
-                                        <td className="p-4">{new Date(s.updatedAt).toLocaleString()}</td>
-                                        <td className="p-4 text-lg flex justify-center items-center space-x-4">
-                                            <button onClick={() => openModal(setDetailsModalOpen, s)} className="text-gray-400 hover:text-blue-500"><FiEye /></button>
-                                            <button onClick={() => openModal(setAlertModalOpen, s)} className="text-gray-400 hover:text-yellow-600"><FiBell /></button>
-                                            <button onClick={() => openModal(setAdjustModalOpen, s)} className="text-gray-400 hover:text-green-600"><FiEdit2 /></button>
-                                        </td>
-                                    </tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                    <div className="p-4">
-                        <MtableLoading data={stocks} />
-                        {paginationControls}
-                    </div>
-                </section>
-            )}
-
-            {/* Modals */}
-            {isAdjustModalOpen && (
-                <div className="modal-backdrop">
-                    <div className="modal-content max-w-lg">
-                        <h2 className="modal-title">Update Stock Adjustment: {selectedStock?.ingredient.name}</h2>
-                        <div>
-                            <label className="label">Physical Quantity *</label>
-                            <input type="number" value={adjustFormData.newQuantity} onChange={e => setAdjustFormData({...adjustFormData, newQuantity: e.target.value})} className="input-style" />
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
+                <div className="card-body p-4 sm:p-6">
+                    {isTableLoading ? <MtableLoading /> : (
+                        <div className="overflow-x-auto">
+                            <table className="table w-full">
+                                <thead className="bg-blue-600 text-white uppercase text-xs font-medium tracking-wider">
+                                    <tr><th className="p-3 rounded-tl-lg">Name</th><th className="p-3">Quantity</th><th className="p-3">Unit</th><th className="p-3">Stock Alert</th><th className="p-3">SKU</th><th className="p-3">Last Update</th><th className="p-3 rounded-tr-lg text-center">Action</th></tr>
+                                </thead>
+                                <tbody>
+                                    <AnimatePresence>
+                                        {stocks.length === 0 && (<tr><td colSpan="7" className="text-center py-4 text-slate-700">No stock items found.</td></tr>)}
+                                        {stocks.map((s) => {
+                                            const isLow = s.quantityInStock < s.ingredient.stockAlert;
+                                            return (
+                                                <motion.tr key={s._id} className={`hover:bg-blue-50 transition-colors duration-200 ${isLow ? 'bg-red-50' : ''}`} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                                    <td className="p-3 font-semibold text-slate-700 border-b border-slate-200 flex items-center gap-2">{s.ingredient?.name || 'N/A'}{isLow && <MdSportsMartialArts className="text-red-500" title="Low stock" />}</td>
+                                                    <td className="p-3 font-bold text-blue-700 border-b border-slate-200">{s.quantityInStock}</td>
+                                                    <td className="p-3 text-slate-700 border-b border-slate-200">{s.unit}</td>
+                                                    <td className="p-3 text-slate-700 border-b border-slate-200">{s.ingredient?.stockAlert || 0}</td>
+                                                    <td className="p-3 text-slate-500 border-b border-slate-200">{s.ingredient?.sku || 'N/A'}</td>
+                                                    <td className="p-3 text-sm text-slate-500 border-b border-slate-200">{new Date(s.updatedAt).toLocaleString()}</td>
+                                                    <td className="p-3 border-b border-slate-200">
+                                                        <div className="flex items-center justify-center gap-2">
+                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleViewDetails(s)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Details"><FaEye /></motion.button>
+                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenAlertModal(s)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Update Stock Alert"><FiBell /></motion.button>
+                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenAdjustmentModal(s)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Stock Adjustment"><FiSliders /></motion.button>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })}
+                                    </AnimatePresence>
+                                </tbody>
+                            </table>
+                            <PaginationControls currentPage={currentPage} totalPages={paginationInfo.totalPages} onPageChange={(page) => setCurrentPage(page)} totalDocuments={paginationInfo.totalDocuments} rowsPerPage={rowsPerPage} />
                         </div>
-                        <div className="mt-2 text-sm text-gray-500">Current Stock: {selectedStock?.quantityInStock} {selectedStock?.unit}</div>
-                        <div className="mt-4">
-                            <label className="label">Note</label>
-                            <textarea value={adjustFormData.note} onChange={e => setAdjustFormData({...adjustFormData, note: e.target.value})} className="input-style w-full" placeholder="Reason for adjustment (e.g., waste, correction)"></textarea>
-                        </div>
-                        <div className="modal-actions">
-                            <button onClick={closeModal} className="btn-cancel">Cancel</button>
-                            <button onClick={handleAdjustStock} className="btn-confirm" disabled={isFormLoading}>{isFormLoading ? 'Saving...' : 'Update Stock Adjustment'}</button>
-                        </div>
-                    </div>
+                    )}
                 </div>
-            )}
-
-            {isAlertModalOpen && (
-                <div className="modal-backdrop">
-                    <div className="modal-content max-w-md">
-                        <h2 className="modal-title">Update Stock Alert: {selectedStock?.ingredient.name}</h2>
-                        <div>
-                            <label className="label">Stock Alert Level *</label>
-                            <input type="number" value={alertFormData.stockAlert} onChange={e => setAlertFormData({stockAlert: e.target.value})} className="input-style" />
-                            <p className="text-xs text-gray-500 mt-1">Receive a warning when stock falls below this quantity.</p>
-                        </div>
-                        <div className="modal-actions">
-                            <button onClick={closeModal} className="btn-cancel">Cancel</button>
-                            <button onClick={handleSetAlert} className="btn-confirm" disabled={isFormLoading}>{isFormLoading ? 'Saving...' : 'Update Stock Alert'}</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {isDetailsModalOpen && (
-                 <div className="modal-backdrop">
-                    <div className="modal-content max-w-2xl">
-                        <div className="flex justify-between items-center">
-                            <h2 className="modal-title">Stock Details</h2>
-                            <button onClick={closeModal} className="text-2xl text-gray-500 hover:text-gray-800">&times;</button>
-                        </div>
-                        {/* Tab Navigation */}
-                        <div className="border-b mt-2">
-                             <nav className="-mb-px flex space-x-6">
-                                <button className="py-3 px-1 border-b-2 font-medium text-sm border-blue-500 text-blue-600">Details</button>
-                                <button className="py-3 px-1 border-b-2 font-medium text-sm border-transparent text-gray-500 hover:text-gray-700">Stock Movement</button>
-                             </nav>
-                        </div>
-                        <div className="mt-4">
-                            <h3 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
-                                {selectedStock.ingredient.name}
-                                {selectedStock.quantityInStock < selectedStock.ingredient.stockAlert && <span className="text-sm font-semibold px-2 py-1 bg-red-100 text-red-700 rounded-full">Low Stock</span>}
-                            </h3>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4 text-sm">
-                                <div><div className="text-gray-500">Unit</div><div className="font-semibold">{selectedStock.unit}</div></div>
-                                <div><div className="text-gray-500">Stock Alert</div><div className="font-semibold">{selectedStock.ingredient.stockAlert}</div></div>
-                                <div><div className="text-gray-500">SKU</div><div className="font-semibold">{selectedStock.ingredient.sku}</div></div>
-                                <div><div className="text-gray-500">Current Quantity</div><div className="font-semibold text-lg">{selectedStock.quantityInStock}</div></div>
-                                {/* Add Average Price when available */}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </div>
+            </motion.div>
+            <AnimatePresence>
+                {isDetailsModalOpen && <StockDetailsModal stock={selectedStock} onClose={() => setDetailsModalOpen(false)} axiosSecure={axiosSecure} />}
+                {isAlertModalOpen && <UpdateStockAlertModal stock={selectedStock} onClose={() => setAlertModalOpen(false)} onSuccess={fetchStocks} axiosSecure={axiosSecure} />}
+                {isAdjustmentModalOpen && <UpdateStockAdjustmentModal stock={selectedStock} onClose={() => setAdjustmentModalOpen(false)} onSuccess={fetchStocks} axiosSecure={axiosSecure} />}
+            </AnimatePresence>
+        </main>
     );
 };
 

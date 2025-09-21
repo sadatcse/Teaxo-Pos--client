@@ -2,432 +2,435 @@ import React, { useState, useEffect, useContext, useRef } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ReactPaginate from "react-paginate";
-import { FaCalendarAlt, FaSearch } from "react-icons/fa";
+import { FaCalendarAlt, FaTimes, FaPrint, FaEye, FaUndo, FaFilter, FaSearch } from "react-icons/fa";
+import { MdPictureAsPdf, MdGridOn } from "react-icons/md";
 import moment from "moment";
-import Preloader from "../../components/Shortarea/Preloader";
+import { motion, AnimatePresence } from "framer-motion";
+
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
-import Mtitle from "../../components library/Mtitle";
-import { FaTimes, FaPrint, FaEye } from "react-icons/fa";
 import useCompanyHook from "../../Hook/useCompanyHook";
+import useCustomerTableSearch from "../../Hook/useCustomerTableSearch";
+
+import Mtitle from "../../components library/Mtitle";
+import Summary from "../../components library/Summary";
+import Preloader from "../../components/Shortarea/Preloader";
 import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
- import Summary from "../../components library/Summary";
+import CustomReportPrint from "../../components/Receipt/CustomReportPrint";
+import { generatePdf } from "../../components/utils/generateCustomPdfReport";
+import { generateExcel } from "../../components/utils/generateCustomExcelReport";
+
 const CustomOrder = () => {
-  const { branch } = useContext(AuthContext);
-  const { companies } = useCompanyHook();
-  const axiosSecure = UseAxiosSecure();
-  const receiptRef = useRef();
-  const [summary, setSummary] = useState(null);
-  const [orders, setOrders] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [totalPages, setTotalPages] = useState(0);
-  const [totalInvoices, setTotalInvoices] = useState(0);
-  const ordersPerPage = 10;
+    const { branch } = useContext(AuthContext);
+    const { companies } = useCompanyHook();
+    const { tables, users } = useCustomerTableSearch();
+    const axiosSecure = UseAxiosSecure();
 
-  // Filter states
-  const [filters, setFilters] = useState({
-    startDate: new Date(),
-    endDate: new Date(),
-    orderType: "all",
-    orderStatus: "all",
-    tableName: "all",
-    deliveryProvider: "all",
-    paymentMethod: "all",
-    loginUserName: "all",
-    searchQuery: "",
-  });
+    const receiptRef = useRef();
+    const customReportPrintRef = useRef();
 
-  const [selectedOrder, setSelectedOrder] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
-  const [printData, setPrintData] = useState(null);
+    const [summary, setSummary] = useState(null);
+    const [orders, setOrders] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
-  // Hardcoded options for filters as requested
-  const orderTypeOptions = ["all", "dine-in", "takeaway", "delivery"];
-  const orderStatusOptions = ["all", "pending", "completed", "cancelled"];
-  const paymentMethodOptions = ["all", "Cash", "Visa Card", "Master Card", "Amex Card", "Bkash", "Nagad", "Rocket", "Bank"];
-  const deliveryProviderOptions = ["all", "Pathao", "Foodi", "Foodpanda", "DeliveryBoy"];
-  const tableNameOptions = ["all", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12"];
-  const loginUserOptions = ["all", "Sadat", "Babu", "sakil"];
+    const [currentPage, setCurrentPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const ordersPerPage = 10;
 
-  const handleFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
-  };
-
-  const handleDateChange = (date, name) => {
-    setFilters({ ...filters, [name]: date });
-  };
-
-  const fetchFilteredOrders = async () => {
-    if (!branch) return;
-    setIsLoading(true);
-    try {
-      const {
-        startDate,
-        endDate,
-        orderType,
-        orderStatus,
-        tableName,
-        deliveryProvider,
-        paymentMethod,
-        loginUserName,
-        searchQuery,
-      } = filters;
-
-      const formattedStartDate = moment(startDate).format("YYYY-MM-DD");
-      const formattedEndDate = moment(endDate).format("YYYY-MM-DD");
-
-      const queryParams = new URLSearchParams({
-        startDate: formattedStartDate,
-        endDate: formattedEndDate,
-        page: currentPage + 1,
-        limit: ordersPerPage,
-      });
-
-      if (orderType !== "all") queryParams.append("orderType", orderType);
-      if (orderStatus !== "all") queryParams.append("orderStatus", orderStatus);
-      if (tableName !== "all") queryParams.append("tableName", tableName);
-      if (deliveryProvider !== "all") queryParams.append("deliveryProvider", deliveryProvider);
-      if (paymentMethod !== "all") queryParams.append("paymentMethod", paymentMethod);
-      if (loginUserName !== "all") queryParams.append("loginUserName", loginUserName);
-      if (searchQuery) queryParams.append("searchQuery", searchQuery);
-
-      const response = await axiosSecure.get(`/invoice/${branch}/filtered-search?${queryParams.toString()}`);
-      
-      setOrders(response.data.invoices);
-      setTotalPages(response.data.pagination.totalPages);
-      setTotalInvoices(response.data.pagination.total);
-      setSummary(response.data.summary);
-    } catch (error) {
-      console.error("Error fetching filtered orders:", error);
-      setOrders([]);
-      setTotalPages(0);
-      setTotalInvoices(0);
-      setSummary(null);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // NEW: Function to reset all filters to their initial state
-  const resetFilters = () => {
-    setFilters({
-      startDate: new Date(),
-      endDate: new Date(),
-      orderType: "all",
-      orderStatus: "all",
-      tableName: "all",
-      deliveryProvider: "all",
-      paymentMethod: "all",
-      loginUserName: "all",
-      searchQuery: "",
+    const [filters, setFilters] = useState({
+        startDate: new Date(),
+        endDate: new Date(),
+        orderType: "all",
+        orderStatus: "all",
+        tableName: "all",
+        deliveryProvider: "all",
+        paymentMethod: "all",
+        loginUserName: "all",
+        searchQuery: "",
     });
-    setCurrentPage(0); // Reset pagination to the first page
-  };
 
-  useEffect(() => {
-    fetchFilteredOrders();
-  }, [branch, currentPage, filters]);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
+    const [isSummaryPrintModalOpen, setIsSummaryPrintModalOpen] = useState(false);
+    const [printData, setPrintData] = useState(null);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setCurrentPage(0); // Reset to page 1 on new search
-    // The useEffect hook will be triggered by the filter state change
-  };
+    const orderTypeOptions = ["all", "dine-in", "takeaway", "delivery"];
+    const orderStatusOptions = ["all", "pending", "completed", "cancelled"];
+    const paymentMethodOptions = ["all", "Cash", "Visa Card", "Master Card", "Amex Card", "Bkash", "Nagad", "Rocket", "Bank"];
+    const deliveryProviderOptions = ["all", "Pathao", "Foodi", "Foodpanda", "DeliveryBoy"];
 
-  const handlePageClick = (selectedPage) => {
-    setCurrentPage(selectedPage.selected);
-  };
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters({ ...filters, [name]: value });
+    };
 
-  const handleViewDetails = (order) => {
-    setSelectedOrder(order);
-    setShowModal(true);
-  };
+    const handleDateChange = (date, name) => {
+        setFilters({ ...filters, [name]: date });
+    };
+    
+    const buildQueryParams = (fetchAll = false) => {
+        const { startDate, endDate, ...otherFilters } = filters;
+        const formattedStartDate = moment(startDate).format("YYYY-MM-DD");
+        const formattedEndDate = moment(endDate).format("YYYY-MM-DD");
 
-  const handlePrintOrder = (order) => {
-    setPrintData(order);
-    setIsPrintModalOpen(true);
-  };
+        const queryParams = new URLSearchParams({
+            startDate: formattedStartDate,
+            endDate: formattedEndDate,
+        });
 
-  const handlePrintComplete = () => {
-    setIsPrintModalOpen(false);
-    setPrintData(null);
-  };
+        if (fetchAll) {
+            queryParams.append("fetchAll", "true");
+        } else {
+            queryParams.append("page", currentPage + 1);
+            queryParams.append("limit", ordersPerPage);
+        }
 
-  return (
-    <div className="bg-gray-100 min-h-screen p-6 font-sans">
-      <Mtitle title="Custom Order Report" />
-      <div className="bg-white p-6 md:p-8 rounded-2xl shadow-xl mb-8">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 border-b border-gray-200 pb-4">
-          <h2 className="text-2xl md:text-3xl font-bold text-gray-800">Advanced Filters</h2>
-          <button
-            type="button"
-            onClick={resetFilters} // <-- Add onClick handler
-            className="mt-3 md:mt-0 px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            Reset Filters
-          </button>
-        </div>
+        Object.entries(otherFilters).forEach(([key, value]) => {
+            if (value && value !== "all") {
+                queryParams.append(key, value);
+            }
+        });
+        
+        return queryParams;
+    };
 
-        <form
-          onSubmit={handleSearch}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+
+    const fetchFilteredOrders = async () => {
+        if (!branch) return;
+        setIsLoading(true);
+        try {
+            const queryParams = buildQueryParams();
+            const response = await axiosSecure.get(`/invoice/${branch}/filtered-search?${queryParams.toString()}`);
+            setOrders(response.data.invoices);
+            setTotalPages(response.data.pagination.totalPages);
+            setSummary(response.data.summary);
+        } catch (error) {
+            console.error("Error fetching filtered orders:", error);
+            setOrders([]);
+            setTotalPages(0);
+            setSummary(null);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    const resetFilters = () => {
+        setFilters({
+            startDate: new Date(),
+            endDate: new Date(),
+            orderType: "all",
+            orderStatus: "all",
+            tableName: "all",
+            deliveryProvider: "all",
+            paymentMethod: "all",
+            loginUserName: "all",
+            searchQuery: "",
+        });
+        setCurrentPage(0);
+    };
+
+    useEffect(() => {
+        if(branch) {
+            fetchFilteredOrders();
+        }
+    }, [branch, currentPage]);
+
+    const handleSearch = (e) => {
+        e.preventDefault();
+        setCurrentPage(0);
+        fetchFilteredOrders();
+    };
+
+    const handlePageClick = (selectedPage) => {
+        setCurrentPage(selectedPage.selected);
+    };
+
+    const fetchAllDataForExport = async () => {
+        if (!branch) return null;
+        setIsExporting(true);
+        try {
+            const queryParams = buildQueryParams(true);
+            const response = await axiosSecure.get(`/invoice/${branch}/filtered-search?${queryParams.toString()}`);
+            return response.data;
+        } catch (error) {
+            console.error("Error fetching all data for export:", error);
+            alert("Failed to fetch data for export. Please try again.");
+            return null;
+        } finally {
+            setIsExporting(false);
+        }
+    };
+    
+    const handleViewDetails = (order) => { setSelectedOrder(order); setShowModal(true); };
+    const handlePrintOrder = (order) => { setPrintData(order); setIsPrintModalOpen(true); };
+    const handlePrintComplete = () => { setIsPrintModalOpen(false); setPrintData(null); };
+    const handleSummaryPrintComplete = () => setIsSummaryPrintModalOpen(false);
+
+    const handlePrintSummary = () => {
+        if (summary && orders.length > 0) {
+            setIsSummaryPrintModalOpen(true);
+        } else {
+            alert("No data available to print.");
+        }
+    };
+
+    const handleExportPdf = async () => {
+        const exportData = await fetchAllDataForExport();
+        if (exportData && exportData.invoices.length > 0) {
+            const reportData = { invoices: exportData.invoices, summary: exportData.summary, company: companies[0], filters };
+            generatePdf(reportData);
+        } else if (exportData) {
+            alert("No data available to export for the selected filters.");
+        }
+    };
+
+    const handleExportExcel = async () => {
+        const exportData = await fetchAllDataForExport();
+        if (exportData && exportData.invoices.length > 0) {
+            const reportData = { invoices: exportData.invoices, summary: exportData.summary, company: companies[0], filters };
+            generateExcel(reportData);
+        } else if (exportData) {
+            alert("No data available to export for the selected filters.");
+        }
+    };
+
+    return (
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+            <Mtitle title="Custom Order Report" rightcontent={
+                <div className="flex items-center gap-2">
+                    <motion.button disabled={isExporting} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handlePrintSummary} className="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100" title="Print POS Summary"><FaPrint className="text-xl" /></motion.button>
+                    <motion.button disabled={isExporting} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleExportPdf} className="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100" title="Export as PDF">{isExporting ? <span className="loading loading-spinner"></span> : <MdPictureAsPdf className="text-xl" />}</motion.button>
+                    <motion.button disabled={isExporting} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleExportExcel} className="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100" title="Export as Excel">{isExporting ? <span className="loading loading-spinner"></span> : <MdGridOn className="text-xl" />}</motion.button>
+                </div>
+            } />
+
+
+<motion.div
+  initial={{ opacity: 0, y: 20 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{ duration: 0.5 }}
+  className="card bg-base-100 shadow-xl mt-6"
+>
+  <div className="card-body p-4 sm:p-6 lg:p-8">
+    <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 border-b border-slate-200 pb-4">
+      <h2 className="text-xl font-semibold text-blue-600">Advanced Filters</h2>
+    </div>
+    <form onSubmit={handleSearch} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+      {/* Row 1 */}
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">From Date</span>
+        </label>
+        <DatePicker
+          selected={filters.startDate}
+          onChange={(date) => handleDateChange(date, "startDate")}
+          className="input input-bordered w-full"
+          dateFormat="MMMM d, yyyy"
+        />
+      </div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">To Date</span>
+        </label>
+        <DatePicker
+          selected={filters.endDate}
+          onChange={(date) => handleDateChange(date, "endDate")}
+          className="input input-bordered w-full"
+          dateFormat="MMMM d, yyyy"
+        />
+      </div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">Order Type</span>
+        </label>
+        <select
+          name="orderType"
+          value={filters.orderType}
+          onChange={handleFilterChange}
+          className="select select-bordered capitalize"
         >
-          {/* From Date */}
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">
-              From Date
-            </label>
-            <div className="relative">
-              <DatePicker
-                selected={filters.startDate}
-                onChange={(date) => handleDateChange(date, "startDate")}
-                className="w-full p-3 pl-12 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                dateFormat="MMMM d, yyyy"
-              />
-              <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            </div>
-          </div>
-
-          {/* To Date */}
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">To Date</label>
-            <div className="relative">
-              <DatePicker
-                selected={filters.endDate}
-                onChange={(date) => handleDateChange(date, "endDate")}
-                className="w-full p-3 pl-12 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                dateFormat="MMMM d, yyyy"
-              />
-              <FaCalendarAlt className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            </div>
-          </div>
-
-          {/* Order Type */}
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">Order Type</label>
-            <select
-              name="orderType"
-              value={filters.orderType}
-              onChange={handleFilterChange}
-              className="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all capitalize"
-            >
-              {orderTypeOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Order Status */}
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">Order Status</label>
-            <select
-              name="orderStatus"
-              value={filters.orderStatus}
-              onChange={handleFilterChange}
-              className="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all capitalize"
-            >
-              {orderStatusOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Table Name */}
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">Table Name</label>
-            <select
-              name="tableName"
-              value={filters.tableName}
-              onChange={handleFilterChange}
-              className="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              disabled={filters.orderType !== "dine-in"}
-            >
-              {tableNameOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option === "all" ? "All" : `Table ${option}`}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Delivery Provider */}
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">
-              Delivery Provider
-            </label>
-            <select
-              name="deliveryProvider"
-              value={filters.deliveryProvider}
-              onChange={handleFilterChange}
-              className="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              disabled={filters.orderType !== "delivery"}
-            >
-              {deliveryProviderOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Payment Method */}
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">
-              Payment Method
-            </label>
-            <select
-              name="paymentMethod"
-              value={filters.paymentMethod}
-              onChange={handleFilterChange}
-              className="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            >
-              {paymentMethodOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* User */}
-          <div className="flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">User</label>
-            <select
-              name="loginUserName"
-              value={filters.loginUserName}
-              onChange={handleFilterChange}
-              className="w-full p-3 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-            >
-              {loginUserOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Search */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-3 flex flex-col">
-            <label className="text-sm font-semibold mb-2 text-gray-700">Search</label>
-            <div className="relative">
-              <input
-                type="text"
-                name="searchQuery"
-                value={filters.searchQuery}
-                onChange={handleFilterChange}
-                placeholder="Invoice ID, Amount, Staff, Table..."
-                className="w-full p-3 pl-12 border border-gray-300 rounded-xl text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-              />
-              <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-            </div>
-          </div>
-
-          {/* Submit */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-1 flex items-end">
-            <button
-              type="submit"
-              className="w-full px-8 py-3 bg-blue-600 text-white font-semibold rounded-xl shadow-md hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 transition-colors"
-            >
-              Apply Filters
-            </button>
-          </div>
-        </form>
+          {orderTypeOptions.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
       </div>
-<div>
-          <div className="bg-white p-6 rounded-xl shadow-lg mt-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 mb-6 pb-4 border-b border-gray-200">
-          Filtered Orders
-        </h2>
-        {isLoading ? (
-          <div className="flex justify-center items-center h-full min-h-[400px]">
-            <Preloader />
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
-              <table className="w-full min-w-[800px] text-left">
-                <thead className="bg-gray-50 text-sm text-gray-600 uppercase tracking-wider border-b border-gray-200">
-                  <tr>
-                    <th className="p-4 font-semibold">#</th>
-                    <th className="p-4 font-semibold whitespace-nowrap">Time</th>
-                    <th className="p-4 font-semibold whitespace-nowrap">Invoice ID</th>
-                    <th className="p-4 font-semibold">Order Type</th>
-                    <th className="p-4 font-semibold">Status</th>
-                    <th className="p-4 font-semibold text-right">Total Amount</th>
-                    <th className="p-4 font-semibold text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {orders.length > 0 ? (
-                    orders.map((order, index) => (
-                      <tr key={order._id} className="hover:bg-gray-50 transition-colors text-sm text-gray-700">
-                        <td className="p-4">{(currentPage * ordersPerPage) + index + 1}</td>
-                        <td className="p-4 whitespace-nowrap">{moment(order.dateTime).format("h:mm A")}</td>
-                        <td className="p-4 font-mono text-blue-600 whitespace-nowrap">{order.invoiceSerial}</td>
-                        <td className="p-4 capitalize">{order.orderType}</td>
-                        <td className="p-4 capitalize">{order.orderStatus}</td>
-                        <td className="p-4 font-bold text-right text-green-600">৳{order.totalAmount.toFixed(2)}</td>
-                        <td className="p-4">
-                          <div className="flex justify-center items-center gap-4">
-                            <button
-                              onClick={() => handleViewDetails(order)}
-                              className="text-blue-600 hover:text-blue-800 transition-colors"
-                              title="View Details"
-                            >
-                              <FaEye size={20} />
-                            </button>
-                            <button
-                              onClick={() => handlePrintOrder(order)}
-                              className="text-gray-500 hover:text-gray-800 transition-colors"
-                              title="Print Receipt"
-                            >
-                              <FaPrint size={18} />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="7" className="text-center py-16 text-gray-500">
-                        No orders found for the selected filters.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-            {totalPages > 1 && (
-              <div className="mt-8 flex justify-center">
-                <ReactPaginate
-                  previousLabel={"< Prev"}
-                  nextLabel={"Next >"}
-                  pageCount={totalPages}
-                  forcePage={currentPage}
-                  onPageChange={handlePageClick}
-                  containerClassName={"flex flex-wrap justify-center items-center gap-2 text-sm font-medium"}
-                  pageLinkClassName={"px-4 py-2 rounded-lg transition-colors bg-white border border-gray-300 hover:bg-gray-100 text-gray-700"}
-                  previousLinkClassName={"px-4 py-2 rounded-lg bg-gray-50 border border-gray-300 hover:bg-gray-100 transition-colors text-gray-700"}
-                  nextLinkClassName={"px-4 py-2 rounded-lg bg-gray-50 border border-gray-300 hover:bg-gray-100 transition-colors text-gray-700"}
-                  activeLinkClassName={"!bg-blue-600 !text-white !border-blue-600 hover:!bg-blue-700"}
-                  disabledClassName={"opacity-50 cursor-not-allowed"}
-                />
-              </div>
-            )}
-          </>
-        )}
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">Order Status</span>
+        </label>
+        <select
+          name="orderStatus"
+          value={filters.orderStatus}
+          onChange={handleFilterChange}
+          className="select select-bordered capitalize"
+        >
+          {orderStatusOptions.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
       </div>
-        {summary && <Summary summary={summary} />}
-</div>
+      
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">Table Name</span>
+        </label>
+        <select
+          name="tableName"
+          value={filters.tableName}
+          onChange={handleFilterChange}
+          className="select select-bordered"
+          disabled={filters.orderType !== 'dine-in'}
+        >
+          <option value="all">All Tables</option>
+          {tables.map((t) => (
+            <option key={t._id} value={t.tableName}>{t.tableName}</option>
+          ))}
+        </select>
+      </div>
 
+      {/* Row 2 */}
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">Delivery Provider</span>
+        </label>
+        <select
+          name="deliveryProvider"
+          value={filters.deliveryProvider}
+          onChange={handleFilterChange}
+          className="select select-bordered"
+          disabled={filters.orderType !== 'delivery'}
+        >
+          {deliveryProviderOptions.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+      </div>
 
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">Payment Method</span>
+        </label>
+        <select
+          name="paymentMethod"
+          value={filters.paymentMethod}
+          onChange={handleFilterChange}
+          className="select select-bordered"
+        >
+          {paymentMethodOptions.map((o) => (
+            <option key={o} value={o}>{o}</option>
+          ))}
+        </select>
+      </div>
+
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">User</span>
+        </label>
+        <select
+          name="loginUserName"
+          value={filters.loginUserName}
+          onChange={handleFilterChange}
+          className="select select-bordered"
+        >
+          <option value="all">All Users</option>
+          {users.map((u) => (
+            <option key={u._id} value={u.name}>{u.name}</option>
+          ))}
+        </select>
+      </div>
+      
+      <div className="form-control">
+        <label className="label">
+          <span className="label-text font-semibold text-slate-700">Search</span>
+        </label>
+        <input
+          type="text"
+          name="searchQuery"
+          value={filters.searchQuery}
+          onChange={handleFilterChange}
+          placeholder="Invoice ID..."
+          className="input input-bordered w-full"
+        />
+      </div>
+
+      <div className="flex items-end gap-2">
+        <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            type="button"
+            onClick={resetFilters}
+            className="btn btn-ghost btn-square"
+            title="Reset Filters"
+        >
+            <FaUndo />
+        </motion.button>
+        <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            type="submit"
+            className="btn bg-blue-600 hover:bg-blue-700 text-white btn-square"
+            title="Apply Filters"
+        >
+            <FaFilter />
+        </motion.button>
+      </div>
+    </form>
+  </div>
+</motion.div>
+
+             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="card bg-base-100 shadow-xl mt-6">
+                <div className="card-body p-4 sm:p-6 lg:p-8">
+                     <h3 className="text-xl font-semibold text-blue-600 mb-4">Filtered Orders</h3>
+                     {isLoading ? <div className="flex justify-center p-20"><Preloader /></div> : (
+                        <>
+                            <div className="overflow-x-auto">
+                                <table className="table w-full">
+                                    <thead><tr className="bg-blue-600 text-white uppercase text-xs tracking-wider">
+                                        <th className="rounded-tl-lg">#</th><th>Time</th><th>Invoice ID</th><th>Order Type</th><th>Status</th><th className="text-right">Amount</th><th className="text-center rounded-tr-lg">Action</th>
+                                    </tr></thead>
+                                    <tbody>
+                                        <AnimatePresence>
+                                            {orders.length > 0 ? ( orders.map((order, index) => (
+                                                <motion.tr key={order._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover text-sm">
+                                                    <td>{(currentPage * ordersPerPage) + index + 1}</td>
+                                                    <td>{moment(order.dateTime).format("h:mm A")}</td>
+                                                    <td className="font-mono">{order.invoiceSerial}</td>
+                                                    <td className="capitalize">{order.orderType}</td>
+                                                    <td className="capitalize">{order.orderStatus}</td>
+                                                    <td className="text-right font-bold text-green-600">৳{order.totalAmount.toFixed(2)}</td>
+                                                    <td><div className="flex justify-center items-center gap-2">
+                                                        <button onClick={() => handleViewDetails(order)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View"><FaEye /></button>
+                                                        <button onClick={() => handlePrintOrder(order)} className="btn btn-circle btn-sm btn-ghost text-blue-600" title="Print"><FaPrint /></button>
+                                                    </div></td>
+                                                </motion.tr>
+                                            ))) : ( <tr><td colSpan="7" className="text-center py-16 text-slate-500">No orders found for the selected filters.</td></tr> )}
+                                        </AnimatePresence>
+                                    </tbody>
+                                </table>
+                            </div>
+                            {totalPages > 1 && (
+                                <div className="mt-8 flex justify-center">
+                                     <ReactPaginate
+                                        previousLabel={"< Prev"} nextLabel={"Next >"} pageCount={totalPages} forcePage={currentPage} onPageChange={handlePageClick}
+                                        containerClassName={"join"} pageLinkClassName={"join-item btn btn-sm"}
+                                        previousLinkClassName={"join-item btn btn-sm"} nextLinkClassName={"join-item btn btn-sm"}
+                                        activeLinkClassName={"btn-active"} disabledClassName={"btn-disabled"}
+                                    />
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </motion.div>
+            
+            {!isLoading && summary && <Summary summary={summary} />}
+            
+   <AnimatePresence>
       {showModal && selectedOrder && (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl transform transition-all max-h-[90vh] flex flex-col">
@@ -546,38 +549,28 @@ const CustomOrder = () => {
           </div>
         </div>
       )}
-
-      {isPrintModalOpen && printData && companies[0] && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-2xl w-full max-w-md p-6 relative">
-            <button onClick={() => setIsPrintModalOpen(false)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-3xl font-bold">&times;</button>
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">Print Receipt</h2>
-            <p className="text-gray-700 mb-6">
-              Click "Print Now" to generate the receipt for Invoice: <span className="font-semibold">{printData.invoiceSerial}</span>.
-            </p>
-            <div className="hidden">
-              <ReceiptTemplate ref={receiptRef} onPrintComplete={handlePrintComplete} profileData={companies[0]} invoiceData={printData} />
-            </div>
-            <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-gray-200">
-              <button onClick={() => setIsPrintModalOpen(false)} className="bg-gray-500 text-white py-2 px-5 rounded-md hover:bg-gray-600 transition duration-300 font-semibold">
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  if (receiptRef.current) {
-                    receiptRef.current.printReceipt();
-                  }
-                }}
-                className="bg-blue-600 text-white py-2 px-5 rounded-md hover:bg-blue-700 transition duration-300 font-semibold"
-              >
-                Print Now
-              </button>
-            </div>
-          </div>
+                {isPrintModalOpen && printData && ( 
+                     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
+                            <h2 className="text-xl font-semibold text-blue-600 mb-4">Print Receipt</h2><p className="text-slate-700 mb-6">Click "Print Now" for Invoice: <span className="font-semibold">{printData.invoiceSerial}</span>.</p><div className="hidden"><ReceiptTemplate ref={receiptRef} onPrintComplete={handlePrintComplete} profileData={companies[0]} invoiceData={printData} /></div>
+                            <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-slate-200"><button onClick={handlePrintComplete} className="btn rounded-xl">Cancel</button><button onClick={() => { if (receiptRef.current) { receiptRef.current.printReceipt(); } }} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md">Print Now</button></div>
+                        </motion.div>
+                    </div>
+                )}
+                
+                {isSummaryPrintModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
+                             <h2 className="text-xl font-semibold text-blue-600 mb-4">Print Custom Report Summary</h2>
+                             <p className="text-slate-700 mb-6">Click "Print Now" to generate the summary for the selected date range.</p>
+                             <div className="hidden"><CustomReportPrint ref={customReportPrintRef} profileData={companies[0]} summaryData={summary} filters={filters} /></div>
+                             <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-slate-200"><button onClick={handleSummaryPrintComplete} className="btn rounded-xl">Cancel</button><button onClick={() => customReportPrintRef.current.printReceipt()} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md">Print Now</button></div>
+                         </motion.div>
+                     </div>
+                )}
+            </AnimatePresence>
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default CustomOrder;

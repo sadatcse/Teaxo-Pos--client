@@ -9,44 +9,39 @@ import {
     FaBookmark,
 } from 'react-icons/fa';
 import useCustomerTableSearch from '../../Hook/useCustomerTableSearch';
-import Mtitle from '../../components library/Mtitle'; // Custom Title Component
+import Mtitle from '../../components library/Mtitle';
+import MtableLoading from "../../components library/MtableLoading"; 
 
-// Configuration for table statuses with design system classes and icons
 const statusConfig = {
     free: {
         display: 'Available',
         badgeClass: 'badge-success text-white',
         icon: FaChair,
-        iconClass: 'text-success',
-        borderClass: 'border-success',
+        iconClass: 'text-green-500',
     },
     pending: {
         display: 'Occupied',
         badgeClass: 'badge-warning text-slate-800',
         icon: FaUserClock,
-        iconClass: 'text-warning',
-        borderClass: 'border-warning',
+        iconClass: 'text-yellow-500',
     },
     cooking: {
         display: 'Cooking',
         badgeClass: 'badge-info text-white',
         icon: FaUtensils,
-        iconClass: 'text-info',
-        borderClass: 'border-info',
+        iconClass: 'text-sky-500',
     },
     served: {
         display: 'Served',
         badgeClass: 'badge-primary text-white',
         icon: FaCheckCircle,
-        iconClass: 'text-primary',
-        borderClass: 'border-primary',
+        iconClass: 'text-indigo-500',
     },
     reserved: {
         display: 'Reserved',
         badgeClass: 'badge-error text-white',
         icon: FaBookmark,
-        iconClass: 'text-error',
-        borderClass: 'border-error',
+        iconClass: 'text-red-500',
     },
 };
 
@@ -81,7 +76,11 @@ const Lobby = () => {
 
     const cardVariants = {
         hidden: { opacity: 0, scale: 0.8 },
-        visible: { opacity: 1, scale: 1, transition: { duration: 0.4 } },
+        visible: (i) => ({
+            opacity: 1,
+            scale: 1,
+            transition: { delay: i * 0.05, duration: 0.4 }
+        }),
         exit: { opacity: 0, scale: 0.8, transition: { duration: 0.3 } },
     };
 
@@ -94,9 +93,9 @@ const Lobby = () => {
                 transition={{ duration: 0.5 }}
             >
                 <div className="card-body">
-                    <header className="mb-6 text-center md:text-left">
+                    <header className="mb-6">
                         <Mtitle title="Restaurant Lobby" />
-                        <p className="text-slate-500 mt-2">
+                        <p className="text-slate-700 mt-1">
                             Please select a table to proceed.
                         </p>
                     </header>
@@ -104,12 +103,12 @@ const Lobby = () => {
                     <main>
                         {loading ? (
                             <div className="col-span-full flex justify-center items-center py-24">
-                                <span className="loading loading-spinner loading-lg text-blue-600"></span>
+                                <MtableLoading />
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                                 <AnimatePresence>
-                                    {(tables || []).map((table) => {
+                                    {(tables || []).map((table, i) => {
                                         const config = statusConfig[table.status] || statusConfig.free;
                                         const isClickable = ['free', 'pending', 'reserved', 'cooking', 'served'].includes(table.status);
                                         const IconComponent = config.icon;
@@ -118,6 +117,7 @@ const Lobby = () => {
                                             <motion.div
                                                 key={table._id}
                                                 layout
+                                                custom={i}
                                                 variants={cardVariants}
                                                 initial="hidden"
                                                 animate="visible"
@@ -127,7 +127,7 @@ const Lobby = () => {
                                                 onMouseEnter={() => setHoveredTableId(table._id)}
                                                 onMouseLeave={() => setHoveredTableId(null)}
                                                 onClick={() => isClickable && handleTableSelect(table)}
-                                                className={`card compact bg-base-100 shadow-md transition-shadow duration-300 relative overflow-hidden border-t-4 ${config.borderClass} ${isClickable ? 'cursor-pointer hover:shadow-xl' : 'cursor-not-allowed opacity-70'}`}
+                                                className={`card compact bg-base-100 shadow-md transition-all duration-300 relative overflow-hidden border border-slate-200 ${isClickable ? 'cursor-pointer hover:shadow-xl hover:border-blue-600' : 'cursor-not-allowed opacity-70'}`}
                                             >
                                                 <div className="card-body items-center text-center p-4">
                                                     <div className="absolute top-3 right-3">
@@ -147,7 +147,6 @@ const Lobby = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-
                                                 <AnimatePresence>
                                                     {table.status === 'reserved' && hoveredTableId === table._id && table.reservation && (
                                                         <motion.div

@@ -1,20 +1,36 @@
-import React, { useState, useEffect, useContext, useRef, useCallback } from "react";
+import { useState, useEffect, useContext, useRef, useCallback } from "react";
 import {
-    FiTrash2, FiSearch, FiRefreshCw, FiX, FiClock, FiUser, FiTag, FiTruck, FiMapPin, FiPhone, FiGrid,
+    FiTrash2, FiSearch, FiRefreshCw, FiX, FiGrid,
     FiEye, FiEdit, FiCheckCircle, FiPrinter, FiChevronLeft, FiChevronRight
 } from "react-icons/fi";
+import { FaCalendarAlt, FaUser as FaUserAlt, FaHashtag, FaMoneyBillWave, FaTimesCircle } from "react-icons/fa";
 import Swal from "sweetalert2";
 import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import useCompanyHook from "../../Hook/useCompanyHook";
 import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
-import CookingAnimation from "../../components/CookingAnimation";
+import MtableLoading from "../../components library/MtableLoading";
 import { useNavigate } from "react-router-dom";
 import QRCodeGenerator from "../../components/QRCodeGenerator";
 
 // Define items per page as a constant
 const ITEMS_PER_PAGE = 10;
+
+// Helper function for status badge styling
+const getStatusClass = (status) => {
+    switch (status) {
+        case 'completed':
+            return 'bg-green-100 text-green-700';
+        case 'pending':
+            return 'bg-yellow-100 text-yellow-700';
+        case 'cancelled':
+            return 'bg-red-100 text-red-700';
+        default:
+            return 'bg-gray-100 text-gray-700';
+    }
+};
+
 
 const PendingOrders = () => {
     const axiosSecure = UseAxiosSecure();
@@ -54,7 +70,6 @@ const PendingOrders = () => {
         };
     }, [filters.searchTerm]);
 
-    // Reset current page to 1 whenever filters are changed
     useEffect(() => {
         setCurrentPage(1);
     }, [debouncedSearchTerm, filters.orderType]);
@@ -76,8 +91,6 @@ const PendingOrders = () => {
             });
 
             const response = await axiosSecure.get(`/invoice/${branch}/status/pending`, { params });
-            
-            // Set state from the new API response structure
             setOrders(response.data.invoices);
             setTotalPages(response.data.totalPages);
 
@@ -87,7 +100,7 @@ const PendingOrders = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [axiosSecure, branch, debouncedSearchTerm, filters.orderType, currentPage]); // Add currentPage to dependency array
+    }, [axiosSecure, branch, debouncedSearchTerm, filters.orderType, currentPage]);
 
     useEffect(() => {
         if (branch) {
@@ -182,14 +195,14 @@ const PendingOrders = () => {
         if (orderToPrint) {
             setPrintData(orderToPrint);
             setIsPrintModalOpen(true);
-            setIsModalOpen(false); // Close the view modal when opening the print modal
+            setIsModalOpen(false);
         }
     };
 
     const handleQRCodeClick = (order) => {
         setSelectedOrderForQR(order);
         setIsQrModalOpen(true);
-        setIsModalOpen(false); // Close the view modal when opening the QR modal
+        setIsModalOpen(false);
     };
 
     useEffect(() => {
@@ -208,7 +221,7 @@ const PendingOrders = () => {
     return (
         <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 font-inter">
             {companiesLoading ? (
-                <CookingAnimation />
+                <MtableLoading data={null} />
             ) : (
                 <>
                     <Mtitle title="Pending Orders" />
@@ -251,7 +264,7 @@ const PendingOrders = () => {
                         </div>
                     </section>
                     
-                    {isLoading ? <CookingAnimation /> : (
+                    {isLoading ? <MtableLoading data={null} /> : (
                         <>
                             <section className="overflow-x-auto border border-gray-200 shadow-sm rounded-lg p-4 bg-white">
                                 <table className="min-w-full divide-y divide-gray-200">
@@ -301,7 +314,6 @@ const PendingOrders = () => {
                                 </table>
                             </section>
 
-                            {/* Pagination Controls UI */}
                             {totalPages > 1 && (
                                 <div className="mt-6 flex justify-between items-center px-4 py-2">
                                     <div className="text-sm text-gray-700">
@@ -330,52 +342,134 @@ const PendingOrders = () => {
                         </>
                     )}
                     
-                    {isModalOpen && viewOrder && companies[0] && (
-                        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
-                            <div className="bg-slate-50 rounded-2xl shadow-2xl w-full max-w-4xl p-8 relative flex flex-col max-h-[90vh]">
-                                {/* Header */}
-                                <div className="flex-shrink-0 flex justify-between items-start pb-4 border-b border-slate-200">
-                                    <div>
-                                        <h2 className="text-3xl font-bold text-slate-800">{companies[0].name}</h2>
-                                        <p className="text-sm text-slate-500 mt-1">Order Details</p>
-                                    </div>
-                                    <button onClick={() => setIsModalOpen(false)} className="p-2 rounded-full text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors">
-                                        <FiX size={24} />
-                                    </button>
-                                </div>
+                    {isModalOpen && viewOrder && (
+                        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 transition-opacity duration-300">
+                          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl transform transition-all duration-300 scale-95 hover:scale-100 max-h-[90vh] flex flex-col">
+                            <div className="flex justify-between items-center p-5 border-b bg-gray-50 rounded-t-2xl sticky top-0 z-10 flex-shrink-0">
+                              <div>
+                                <h2 className="text-2xl font-bold text-gray-800">Order Details</h2>
+                                <p className="text-sm text-gray-500">Invoice ID: {viewOrder.invoiceSerial}</p>
+                              </div>
+                              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-red-500 transition-transform transform hover:rotate-90">
+                                <FaTimesCircle size={28} />
+                              </button>
+                            </div>
 
-                                {/* Order Info */}
-                                <div className="flex-shrink-0 grid grid-cols-1 md:grid-cols-3 gap-6 my-6 text-sm">
-                                    <div className="flex items-start gap-3"><FiTag className="text-blue-500 mt-1" size={18} /><div><p className="font-semibold text-slate-700">Order ID</p><p className="text-slate-500">{viewOrder.invoiceSerial}</p></div></div>
-                                    <div className="flex items-start gap-3"><FiClock className="text-blue-500 mt-1" size={18} /><div><p className="font-semibold text-slate-700">Date & Time</p><p className="text-slate-500">{new Date(viewOrder.dateTime).toLocaleString()}</p></div></div>
-                                    <div className="flex items-start gap-3"><FiUser className="text-blue-500 mt-1" size={18} /><div><p className="font-semibold text-slate-700">Served By</p><p className="text-slate-500">{viewOrder.loginUserName}</p></div></div>
-                                    {viewOrder.orderType === "dine-in" && (<div className="flex items-start gap-3"><FiMapPin className="text-blue-500 mt-1" size={18} /><div><p className="font-semibold text-slate-700">Table Name</p><p className="text-slate-500">{viewOrder.tableName}</p></div></div>)}
-                                    {viewOrder.orderType === "delivery" && (<><div className="flex items-start gap-3"><FiTruck className="text-blue-500 mt-1" size={18} /><div><p className="font-semibold text-slate-700">Delivery via</p><p className="text-slate-500">{viewOrder.deliveryProvider}</p></div></div><div className="flex items-start gap-3"><FiUser className="text-blue-500 mt-1" size={18} /><div><p className="font-semibold text-slate-700">Customer Name</p><p className="text-slate-500">{viewOrder.customerName || 'N/A'}</p></div></div><div className="flex items-start gap-3"><FiPhone className="text-blue-500 mt-1" size={18} /><div><p className="font-semibold text-slate-700">Customer Mobile</p><p className="text-slate-500">{viewOrder.customerMobile || 'N/A'}</p></div></div></>)}
-                                </div>
-                                
-                                {/* Scrolling Content */}
-                                <div className="bg-white rounded-lg p-6 border border-slate-200 flex-grow overflow-y-auto">
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full">
-                                            <thead className="border-b border-slate-200"><tr><th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Product</th><th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Qty</th><th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Rate</th><th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Subtotal</th></tr></thead>
-                                            <tbody className="divide-y divide-slate-100">{viewOrder.products.map((product, index) => (<tr key={index}><td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-medium">{product.productName}</td><td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600 text-center">{product.qty}</td><td className="px-4 py-4 whitespace-nowrap text-sm text-slate-600 text-right">{product.rate?.toFixed(2)}</td><td className="px-4 py-4 whitespace-nowrap text-sm text-slate-800 font-medium text-right">{product.subtotal?.toFixed(2)}</td></tr>))}</tbody>
+                            <div className="overflow-y-auto">
+                                {companiesLoading ? <MtableLoading data={null}/> : (
+                                <div className="p-6 space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+                                        <FaCalendarAlt className="text-blue-500 flex-shrink-0" size={20} />
+                                        <div>
+                                        <p className="font-semibold text-gray-700">Order Date</p>
+                                        <p className="text-gray-600">{new Date(viewOrder.dateTime).toLocaleString()}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+                                        <FaUserAlt className="text-green-500 flex-shrink-0" size={20} />
+                                        <div>
+                                        <p className="font-semibold text-gray-700">Server</p>
+                                        <p className="text-gray-600">{viewOrder.loginUserName}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+                                        <FaHashtag className="text-purple-500 flex-shrink-0" size={20} />
+                                        <div>
+                                        <p className="font-semibold text-gray-700">Order Type</p>
+                                        <p className="text-gray-600 capitalize">{viewOrder.orderType.replace('-', ' ')}</p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+                                        <FaMoneyBillWave className="text-yellow-500 flex-shrink-0" size={20} />
+                                        <div>
+                                        <p className="font-semibold text-gray-700">Order Status</p>
+                                        <span className={`px-3 py-1 text-xs font-bold rounded-full capitalize ${getStatusClass(viewOrder.orderStatus)}`}>
+                                            {viewOrder.orderStatus}
+                                        </span>
+                                        </div>
+                                    </div>
+                                    </div>
+                                    <div className="border rounded-lg p-4 bg-gray-50/50">
+                                    <h4 className="font-semibold text-gray-700 mb-2">Additional Info</h4>
+                                    <div className="text-sm space-y-1 text-gray-600">
+                                        {viewOrder.tableName && (<p><strong>Table:</strong> {viewOrder.tableName}</p>)}
+                                        {viewOrder.deliveryProvider && (<p><strong>Delivery Via:</strong> {viewOrder.deliveryProvider}</p>)}
+                                        {viewOrder.customerName && (<p><strong>Customer:</strong> {viewOrder.customerName}</p>)}
+                                        {viewOrder.customerMobile && (<p><strong>Mobile:</strong> {viewOrder.customerMobile}</p>)}
+                                        <p><strong>Payment Method:</strong> {viewOrder.paymentMethod}</p>
+                                    </div>
+                                    </div>
+                                    <div>
+                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Itemized List</h3>
+                                    <div className="overflow-x-auto border rounded-lg">
+                                        <table className="min-w-full text-sm">
+                                        <thead className="bg-gray-100">
+                                            <tr>
+                                            <th className="p-3 text-left font-medium text-gray-600">#</th>
+                                            <th className="p-3 text-left font-medium text-gray-600">Product Name</th>
+                                            <th className="p-3 text-center font-medium text-gray-600">Qty</th>
+                                            <th className="p-3 text-right font-medium text-gray-600">Rate</th>
+                                            <th className="p-3 text-right font-medium text-gray-600">Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {viewOrder.products.map((item, index) => (
+                                            <tr key={index} className="border-t hover:bg-gray-50">
+                                                <td className="p-3 text-gray-500">{index + 1}</td>
+                                                <td className="p-3 font-medium text-gray-800">{item.productName}</td>
+                                                <td className="p-3 text-center text-gray-600">{item.qty}</td>
+                                                <td className="p-3 text-right text-gray-600">{item.rate.toFixed(2)}</td>
+                                                <td className="p-3 text-right font-semibold text-gray-800">{item.subtotal.toFixed(2)}</td>
+                                            </tr>
+                                            ))}
+                                        </tbody>
                                         </table>
                                     </div>
-                                    <div className="mt-6 pt-6 border-t border-slate-200 w-full max-w-xs ml-auto text-sm"><div className="flex justify-between items-center text-slate-600"><p>Subtotal</p><p className="font-medium">{viewOrder.totalSale?.toFixed(2)} Taka</p></div><div className="flex justify-between items-center text-slate-600 mt-2"><p>Discount</p><p className="font-medium">-{discountDisplay?.toFixed(2)} Taka</p></div>{viewOrder.vat > 0 && (<div className="flex justify-between items-center text-slate-600 mt-2"><p>VAT</p><p className="font-medium">{viewOrder.vat?.toFixed(2)} Taka</p></div>)}{viewOrder.sd > 0 && (<div className="flex justify-between items-center text-slate-600 mt-2"><p>SD</p><p className="font-medium">{viewOrder.sd?.toFixed(2)} Taka</p></div>)}<div className="flex justify-between items-center text-slate-800 font-bold text-lg mt-4 pt-4 border-t border-slate-200"><p>Grand Total</p><p className="text-blue-600">{viewOrder.totalAmount?.toFixed(2)} Taka</p></div></div>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div></div>
+                                        <div className="text-sm border rounded-lg p-4 space-y-2 bg-gray-50/50">
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Subtotal:</span>
+                                                <span className="font-medium text-gray-800">{viewOrder.totalSale.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">VAT (+):</span>
+                                                <span className="font-medium text-gray-800">{viewOrder.vat.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between">
+                                                <span className="text-gray-600">Discount (-):</span>
+                                                <span className="font-medium text-red-500">{viewOrder.discount.toFixed(2)}</span>
+                                            </div>
+                                            <div className="flex justify-between text-base font-bold pt-2 border-t mt-2">
+                                                <span className="text-gray-900">Grand Total:</span>
+                                                <span className="text-blue-600">{viewOrder.totalAmount.toFixed(2)}</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                                
-                                {/* Modal Footer with Actions */}
-                                <div className="flex-shrink-0 mt-8 pt-6 border-t border-slate-200 flex justify-end gap-4">
-                                    <button onClick={() => handleQRCodeClick(viewOrder)} className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-700 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600 transition-colors duration-200">
-                                        <FiGrid />
-                                        <span>Generate QR</span>
-                                    </button>
-                                    <button onClick={() => handlePrintOrder(viewOrder._id)} className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200">
-                                        <FiPrinter />
-                                        <span>Print Receipt</span>
-                                    </button>
-                                </div>
+                                )}
                             </div>
+
+                            <div className="flex-shrink-0 p-5 border-t bg-gray-50 rounded-b-2xl flex justify-end gap-4">
+                                <button
+                                    onClick={() => handleQRCodeClick(viewOrder)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-gray-700 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600 transition-colors"
+                                >
+                                    <FiGrid />
+                                    <span>Generate QR</span>
+                                </button>
+                                <button
+                                    onClick={() => handlePrintOrder(viewOrder._id)}
+                                    className="inline-flex items-center gap-2 px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                >
+                                    <FiPrinter />
+                                    <span>Print Receipt</span>
+                                </button>
+                            </div>
+
+                          </div>
                         </div>
                     )}
 

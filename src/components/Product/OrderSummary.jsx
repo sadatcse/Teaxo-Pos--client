@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 import {
     FaPlus, FaMinus, FaTrash, FaSearch, FaUser, FaMobileAlt, FaUtensils,
     FaTruck, FaMoneyBillWave, FaCreditCard, FaSave,
@@ -44,6 +45,80 @@ const OrderSummary = ({
             setSelectedCardIcon(null);
         }
     };
+
+    const validateOrder = () => {
+        if (addedProducts.length === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'No Products Added',
+                text: 'Please add at least one product to the invoice before proceeding.',
+            });
+            return false;
+        }
+
+        if (orderType === 'dine-in' && !TableName) {
+            Swal.fire({
+                icon: 'error',
+                title: 'No Table Selected',
+                text: 'Please select a table for this dine-in order.',
+            });
+            return false;
+        }
+
+        if (orderType === 'delivery' && !deliveryProvider) {
+            Swal.fire({
+                icon: 'error',
+                title: 'No Delivery Provider',
+                text: 'Please select a delivery provider for this order.',
+            });
+            return false;
+        }
+
+        if (selectedPaymentMethod === 'Card' && !cardOptions.some(o => o.name === selectedSubMethod)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Card Type Not Selected',
+                text: 'Please select a specific card type (e.g., Visa, Master Card).',
+            });
+            return false;
+        }
+        
+        if (selectedPaymentMethod === 'Mobile' && !mobileOptions.some(o => o.name === selectedSubMethod)) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Mobile Payment Not Selected',
+                text: 'Please select a specific mobile payment option (e.g., Bkash, Nagad).',
+            });
+            return false;
+        }
+
+        return true;
+    };
+    
+    const handleFinalizeOrder = (actionCallback, withPrint) => {
+        if (!validateOrder()) {
+            return;
+        }
+
+        if (paid < payable) {
+            Swal.fire({
+                title: 'Are you sure?',
+                text: "The paid amount is less than the total payable. Do you want to proceed?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Yes, proceed!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    actionCallback(withPrint);
+                }
+            });
+        } else {
+            actionCallback(withPrint);
+        }
+    };
+
 
     const cardOptions = [
         { name: "Visa Card", icon: <FaCcVisa /> },
@@ -250,21 +325,21 @@ const OrderSummary = ({
                             </div>
                             <div className="grid grid-cols-2 gap-4 mt-6">
                                 <button
-                                    onClick={() => printInvoice(false)}
+                                     onClick={() => handleFinalizeOrder(() => printInvoice(false))}
                                     className="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold flex items-center justify-center gap-2"
                                     disabled={isProcessing}
                                 >
                                     <FaSave /> {isProcessing ? "Saving..." : "Save"}
                                 </button>
                                 <button
-                                    onClick={() => printInvoice(true)}
+                                    onClick={() => handleFinalizeOrder(() => printInvoice(true))}
                                     className="bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-bold flex items-center justify-center gap-2"
                                     disabled={isProcessing}
                                 >
                                     <FaPrint /> {isProcessing ? "Printing..." : "Print"}
                                 </button>
                                 <button
-                                    onClick={handleKitchenClick}
+                                    onClick={() => handleFinalizeOrder(handleKitchenClick)}
                                     className=" bg-yellow-500 text-white py-3 rounded-lg hover:bg-yellow-600 font-bold flex items-center justify-center gap-2"
                                     disabled={isProcessing}
                                 >
