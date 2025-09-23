@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useContext } from "react";
-import { FiEdit, FiTrash2, FiEye, FiX } from 'react-icons/fi';
+import { FiEdit, FiTrash2,FiBookOpen , FiEye, FiX } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { TfiSearch } from "react-icons/tfi";
 import { GoPlus } from "react-icons/go";
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from "react-router-dom"; // 1. <-- Import Link
 
 
 import Mpagination from "../../components library/Mpagination";
@@ -93,18 +94,38 @@ const Vendors = () => {
         });
     }
 
-    const handleRemove = (id) => {
-        Swal.fire({
-            title: 'Are you sure?', text: "You won't be able to revert this!", icon: 'warning', showCancelButton: true,
-            confirmButtonColor: '#3085d6', cancelButtonColor: '#d33', confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                axiosSecure.delete(`/vendor/delete/${id}`)
-                    .then(() => { refreshVendors(); Swal.fire('Deleted!', 'The vendor has been deleted.', 'success'); })
-                    .catch(error => { console.error('Error deleting vendor:', error); Swal.fire('Error!', 'Failed to delete vendor.', 'error'); });
-            }
-        });
-    };
+const handleRemove = (id) => {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: "This vendor might have associated transactions.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            axiosSecure.delete(`/vendor/delete/${id}`)
+                .then(() => {
+                    refreshVendors();
+                    Swal.fire('Deleted!', 'The vendor has been deleted.', 'success');
+                })
+                .catch(error => {
+                    console.error('Error deleting vendor:', error.response);
+                    
+                    // Get the specific message from the server's response,
+                    // or show a generic message if one isn't available.
+                    const errorMessage = error.response?.data?.message || 'Failed to delete the vendor.';
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Deletion Failed',
+                        text: errorMessage // Use the dynamic error message here
+                    });
+                });
+        }
+    });
+};
 
     const handleInputChange = (e) => { setFormData({ ...formData, [e.target.name]: e.target.value }); };
     const renderStatusBadge = (status) => { const styles = { Active: "bg-green-100 text-green-700", Inactive: "bg-red-100 text-red-700", }; return (<span className={`px-3 py-1 text-sm font-medium rounded-full ${styles[status] || 'bg-gray-100 text-gray-700'}`}>{status}</span>); };
@@ -139,12 +160,22 @@ const Vendors = () => {
                                             paginatedData.map((vendor) => (
                                                 <motion.tr key={vendor._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
                                                     <td className="p-3 font-medium">{vendor.vendorID}</td><td className="p-3">{vendor.vendorName}</td><td className="p-3">{vendor.primaryPhone}</td><td className="p-3">{vendor.primaryEmail || 'N/A'}</td><td className="p-3">{renderStatusBadge(vendor.status)}</td>
-                                                    <td className="p-3 text-center">
-                                                        <div className="flex justify-center items-center gap-2">
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(vendor)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white"><FiEdit /></motion.button>
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(vendor._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white"><FiTrash2 /></motion.button>
-                                                        </div>
-                                                    </td>
+                                           <td className="p-3 text-center">
+  <div className="flex justify-center items-center gap-2">
+    {/* 3. Add this Link and Button */}
+    <Link to={`/dashboard/vendor-ledger/${vendor._id}`}>
+        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Ledger">
+            <FiBookOpen />
+        </motion.button>
+    </Link>
+    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(vendor)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit">
+        <FiEdit />
+    </motion.button>
+    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(vendor._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete">
+        <FiTrash2 />
+    </motion.button>
+  </div>
+</td>
                                                 </motion.tr>
                                             ))
                                         )}

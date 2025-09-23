@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import UseAxiosSecure from '../../Hook/UseAxioSecure';
+import UseAxiosSecure from '../../Hook/useAxiosPublic';
 
 // --- SVG Icon Components ---
 

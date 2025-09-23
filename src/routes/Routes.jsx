@@ -61,6 +61,18 @@ import RecipeIngredients from "../pages/Ingredients/RecipeIngredients";
 import IngredientsMaster from "../pages/Ingredients/IngredientsMaster";
 import ReviewCustomer from "../pages/Review/ReviewCustomer";
 import ViewReview from "../pages/Review/ViewReview";
+import AiBusinessChat from "../pages/AIInsights/AiBusinessChat";
+import ReviewInsights from "../pages/AIInsights/ReviewInsights";
+import MenuOptimizer from "../pages/AIInsights/MenuOptimizer";
+import AiSalesAdvisor from "../pages/AIInsights/AiSalesAdvisor";
+import DailySalesForecast from "../pages/AIInsights/DailySalesForecast";
+import VendorLedger from "../pages/VendorLedger/VendorLedger";
+import ExpenseSummary from "../pages/Accounting & Inventory/ExpenseSummary";
+import ProfitAndLoss from "../pages/Reports/ProfitAndLoss";
+import StockSalesCompare from "../pages/Reports/StockSalesCompare";
+import AiPurchaseAdvisor from "../pages/AIInsights/aipurchaseadvisor";
+import UserProfile from "../pages/OtherPage/UserProfile";
+import NewBranchWizard from "../pages/Admin/NewBranchWizard";
 
 
 export const router = createBrowserRouter([
@@ -276,7 +288,28 @@ export const router = createBrowserRouter([
         path: "print-preview",
         element: <PrivateRoot><PrintPreview /></PrivateRoot>,
       },
+       {
+        path: "expense-summary",
+        element: <PrivateRoot><ExpenseSummary /></PrivateRoot>,
+      },
 
+          {
+        path: "profit-loss-report",
+        element: <PrivateRoot><ProfitAndLoss /></PrivateRoot>,
+      },
+     {
+        path: 'stock-sales-compare',
+        element:<PrivateRoot><StockSalesCompare /></PrivateRoot>,
+      },
+
+           {
+        path: 'aipurchaseadvisor',
+        element:<PrivateRoot><AiPurchaseAdvisor /></PrivateRoot>,
+      },
+           {
+        path: 'profile',
+        element:<PrivateRoot><UserProfile /></PrivateRoot>,
+      },
       // {
       //   path: 'review/:route/:tableId',
       //   element:<ReviewCustomer />,
@@ -285,6 +318,32 @@ export const router = createBrowserRouter([
         path: 'view-review',
         element:<PrivateRoot><ViewReview /></PrivateRoot>,
       },
+         {
+        path: 'dailysalesforecast',
+        element:<PrivateRoot><DailySalesForecast /></PrivateRoot>,
+      },
+         {
+        path: 'aisalesadvisor',
+        element:<PrivateRoot><AiSalesAdvisor /></PrivateRoot>,
+      },
+         {
+        path: 'menuoptimizer',
+        element:<PrivateRoot><MenuOptimizer /></PrivateRoot>,
+      },
+         {
+        path: 'reviewinsights',
+        element:<PrivateRoot><ReviewInsights /></PrivateRoot>,
+      },
+         {
+        path: 'aibusinesschat',
+        element:<PrivateRoot><AiBusinessChat /></PrivateRoot>,
+      },
+           {
+        path: 'vendor-ledger/:vendorId',
+        element:<VendorLedger />,
+      },
+
+
     ],
   },
   {
@@ -331,6 +390,13 @@ export const router = createBrowserRouter([
           <SuperAdminPrivateRoute> <AProduct /></SuperAdminPrivateRoute> 
         ),
       },
+           {
+        path: "newbranchwizard",
+        element: (
+          <SuperAdminPrivateRoute> <NewBranchWizard /></SuperAdminPrivateRoute> 
+        ),
+      },
+
       {
         path: "login-log",
         element: (

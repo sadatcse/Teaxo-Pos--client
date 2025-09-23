@@ -23,7 +23,7 @@ const DMenuitems = () => {
       icon: <MdCategory className="text-lg" />,
     },
     {
-      title: "Company",
+      title: "Branch",
       path: "/admin/company",
       icon: <MdBusiness className="text-lg" />,
     },
@@ -37,6 +37,11 @@ const DMenuitems = () => {
       path: "/admin/product",
       icon: <MdShoppingCart className="text-lg" />,
     },
+        {
+      title: "New Branch Wizard",
+      path: "/admin/newbranchwizard",
+      icon: <MdShoppingCart className="text-lg" />,
+    },
     {
       title: "Log Data",
       icon: <MdSettings className="text-lg" />,
@@ -47,15 +52,11 @@ const DMenuitems = () => {
           icon: <MdLogin className="text-lg" />,
         },
         {
-          title: "Error Log",
+          title: "System Transaction Logs",
           path: "/admin/error-log",
           icon: <MdError className="text-lg" />,
         },
-        {
-          title: "Work Log",
-          path: "/admin/work-log",
-          icon: <MdWork className="text-lg" />,
-        },
+
       ],
     },
   ];
