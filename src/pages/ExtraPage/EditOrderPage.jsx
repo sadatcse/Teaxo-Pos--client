@@ -61,7 +61,6 @@ const EditOrderPage = () => {
     // --- Modal State ---
     const [isTableSelectionModalOpen, setIsTableSelectionModalOpen] = useState(false);
     const [isDeliveryProviderModalOpen, setIsDeliveryProviderModalOpen] = useState(false);
-    const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
     const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
 
     // --- Refs for Printing ---
@@ -82,9 +81,8 @@ const EditOrderPage = () => {
                 const response = await axiosSecure.get(`/invoice/get-id/${orderId}`);
                 const orderData = response.data;
 
-                // --- UPDATED MAPPING: Now captures productId for each original item ---
                 const initialOriginalItems = orderData.products.map(p => ({
-                    ...p, // Spreads all properties from the fetched product
+                    ...p,
                     price: p.rate,
                     quantity: p.qty,
                     originalQuantity: p.qty,
@@ -119,73 +117,39 @@ const EditOrderPage = () => {
 
     const allOrderItems = useMemo(() => [...originalOrderItems, ...newOrderItems], [originalOrderItems, newOrderItems]);
 
-    // --- Core Logic Functions (UPDATED to use productId) ---
-
+    // --- Core Logic Functions (Handlers) ---
     const addProduct = (product) => {
-        // --- UPDATED: Uses product._id (as productId) to find existing items ---
         const existingItem = allOrderItems.find(p => p.productId === product._id && !p.isComplimentary);
-
         if (existingItem) {
             if (existingItem.isOriginal) {
-                setOriginalOrderItems(items =>
-                    items.map(p =>
-                        p.productId === product._id
-                            ? { ...p, quantity: p.quantity + 1 }
-                            : p
-                    )
-                );
+                setOriginalOrderItems(items => items.map(p => p.productId === product._id ? { ...p, quantity: p.quantity + 1 } : p));
             } else {
-                setNewOrderItems(items =>
-                    items.map(p =>
-                        p.productId === product._id
-                            ? { ...p, quantity: p.quantity + 1 }
-                            : p
-                    )
-                );
+                setNewOrderItems(items => items.map(p => p.productId === product._id ? { ...p, quantity: p.quantity + 1 } : p));
             }
             toast.info(`Quantity for ${product.productName} incremented.`);
         } else {
-            const itemToAdd = {
-                ...product,
-                productId: product._id, // --- ADDED: Ensure productId is stored ---
-                quantity: 1,
-                cookStatus: 'PENDING',
-                isOriginal: false,
-                isComplimentary: false,
-            };
+            const itemToAdd = { ...product, productId: product._id, quantity: 1, cookStatus: 'PENDING', isOriginal: false, isComplimentary: false };
             setNewOrderItems(current => [...current, itemToAdd]);
             toast.success(`${product.productName} added to order!`);
         }
     };
     
-    // --- UPDATED: All handler functions now accept productId ---
     const incrementQuantity = (productId) => {
-        setOriginalOrderItems(items =>
-            items.map(p => p.productId === productId ? { ...p, quantity: p.quantity + 1 } : p)
-        );
-        setNewOrderItems(items =>
-            items.map(p => p.productId === productId ? { ...p, quantity: p.quantity + 1 } : p)
-        );
+        setOriginalOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity + 1 } : p));
+        setNewOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity + 1 } : p));
     };
 
     const decrementQuantity = (productId) => {
         const originalItem = originalOrderItems.find(p => p.productId === productId);
         if (originalItem) {
             if (originalItem.quantity > originalItem.originalQuantity) {
-                setOriginalOrderItems(items =>
-                    items.map(p => p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p)
-                );
+                setOriginalOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p));
             } else {
                 toast.warn("Cannot reduce quantity below the original amount.");
             }
             return;
         }
-
-        setNewOrderItems(items =>
-            items.map(p =>
-                p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p
-            ).filter(p => p.quantity > 0)
-        );
+        setNewOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p).filter(p => p.quantity > 0));
     };
 
     const removeProduct = (productId) => {
@@ -210,18 +174,8 @@ const EditOrderPage = () => {
 
     const toggleComplimentaryStatus = (productId) => {
         const isOriginal = originalOrderItems.some(p => p.productId === productId);
-        const updater = items =>
-            items.map(p =>
-                p.productId === productId
-                    ? { ...p, isComplimentary: !p.isComplimentary, quantity: !p.isComplimentary ? 1 : p.quantity }
-                    : p
-            );
-
-        if (isOriginal) {
-            setOriginalOrderItems(updater);
-        } else {
-            setNewOrderItems(updater);
-        }
+        const updater = items => items.map(p => p.productId === productId ? { ...p, isComplimentary: !p.isComplimentary, quantity: !p.isComplimentary ? 1 : p.quantity } : p);
+        if (isOriginal) { setOriginalOrderItems(updater); } else { setNewOrderItems(updater); }
         toast.info("Product complimentary status updated.");
     };
 
@@ -299,44 +253,18 @@ const EditOrderPage = () => {
         const sd = nonComplimentaryProducts.reduce((total, p) => total + ((p.sd || 0) * p.quantity), 0);
         const discount = parseFloat(invoiceSummary.discount || 0);
         const payable = subtotal + vat + sd - discount;
-        
-        return {
-            subtotal: roundAmount(subtotal),
-            vat: roundAmount(vat),
-            sd: roundAmount(sd),
-            discount: roundAmount(discount),
-            payable: roundAmount(payable),
-        };
+        return { subtotal: roundAmount(subtotal), vat: roundAmount(vat), sd: roundAmount(sd), discount: roundAmount(discount), payable: roundAmount(payable) };
     };
 
     const getInvoicePayload = () => {
         const { subtotal, vat, sd, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
-            // --- UPDATED: Payload now includes productId for each product ---
-            products: allOrderItems.map((p) => ({
-                productId: p.productId, // Essential for the updated backend model
-                productName: p.productName,
-                qty: p.quantity,
-                rate: p.price,
-                subtotal: roundAmount(p.price * p.quantity),
-                vat: p.vat || 0,
-                sd: p.sd || 0,
-                cookStatus: p.cookStatus || 'PENDING',
-                isComplimentary: p.isComplimentary || false,
-            })),
-            subtotal,
-            discount,
-            vat,
-            sd,
-            loginUserEmail,
-            loginUserName,
-            customerName: customer?.name || "Guest",
-            customerMobile: customer?.mobile || "n/a",
-            counter: "Counter 1",
-            branch: branch,
-            totalAmount: payable,
-            paymentMethod: selectedPaymentMethod,
+            products: allOrderItems.map((p) => ({ productId: p.productId, productName: p.productName, qty: p.quantity, rate: p.price, subtotal: roundAmount(p.price * p.quantity), vat: p.vat || 0, sd: p.sd || 0, cookStatus: p.cookStatus || 'PENDING', isComplimentary: p.isComplimentary || false })),
+            subtotal, discount, vat, sd,
+            loginUserEmail, loginUserName,
+            customerName: customer?.name || "Guest", customerMobile: customer?.mobile || "n/a",
+            counter: "Counter 1", branch: branch, totalAmount: payable, paymentMethod: selectedPaymentMethod,
         };
         if (orderType === "dine-in") invoiceDetails.tableName = TableName;
         if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
@@ -346,25 +274,15 @@ const EditOrderPage = () => {
     const saveOrUpdateInvoice = async (isPrintAction = false) => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
-
         const invoiceDetails = getInvoicePayload();
-
         try {
             const response = await axiosSecure.put(`/invoice/update/${currentInvoiceId}`, invoiceDetails);
             toast.success("Invoice updated successfully! ✅");
-
             const data = response.data;
-            const dataForPrint = {
-                ...data,
-                ...invoiceDetails,
-                dateTime: data.dateTime || new Date().toISOString(),
-                invoiceSerial: data.invoiceSerial || currentInvoiceId,
-            };
-
+            const dataForPrint = { ...data, ...invoiceDetails, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || currentInvoiceId };
             setPrint(dataForPrint);
-
             if (isPrintAction && companies[0] && data) {
-                setIsReceiptModalOpen(true);
+                setTimeout(() => { receiptRef.current?.printReceipt(); }, 100);
             }
             return true;
         } catch (error) {
@@ -379,7 +297,6 @@ const EditOrderPage = () => {
 
     const handleFinalizeOrder = async () => {
         if (!validateInputs()) return;
-
         Swal.fire({
             title: 'Are you sure?',
             text: "This will finalize the order and mark it as completed. This action cannot be undone.",
@@ -392,22 +309,15 @@ const EditOrderPage = () => {
             if (result.isConfirmed) {
                 setIsProcessing(true);
                 const invoiceDetails = getInvoicePayload();
-
                 try {
                     const response = await axiosSecure.put(`/invoice/finalize/${currentInvoiceId}`, invoiceDetails);
-                    toast.success(response.data.message || "Order finalized successfully! 🎉");
-                    
                     const data = response.data.invoice;
-                    const dataForPrint = {
-                        ...data,
-                        ...invoiceDetails,
-                        dateTime: data.dateTime || new Date().toISOString(),
-                        invoiceSerial: data.invoiceSerial || currentInvoiceId,
-                    };
+                    const dataForPrint = { ...data, ...invoiceDetails, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || currentInvoiceId };
                     setPrint(dataForPrint);
 
                     if (companies[0] && data) {
-                        setIsReceiptModalOpen(true);
+                        toast.success(response.data.message || "Order finalized successfully! 🎉");
+                        setTimeout(() => { receiptRef.current?.printReceipt(); }, 100);
                     }
                 } catch (error) {
                     console.error("Error finalizing invoice:", error);
@@ -419,13 +329,15 @@ const EditOrderPage = () => {
             }
         });
     };
+    
+    // CHANGE: This new function will be called after printing.
+    // It shows a simple message and does NOT navigate away.
+    const handlePrintComplete = () => {
+        toast.info("Print dialog closed.");
+    };
 
     if (isLoading) {
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <h1 className="text-2xl font-bold">Loading Order Details... ⏳</h1>
-            </div>
-        );
+        return ( <div className="flex items-center justify-center min-h-screen"><h1 className="text-2xl font-bold">Loading Order Details... ⏳</h1></div> );
     }
 
     const { subtotal, vat, sd, payable } = calculateTotal();
@@ -434,85 +346,43 @@ const EditOrderPage = () => {
 
     return (
         <div className="font-sans antialiased bg-gray-100 min-h-screen">
-            <TableSelectionModal
-                isOpen={isTableSelectionModalOpen}
-                tables={tables}
-                selectedTable={selectedTable}
-                handleTableSelect={handleTableSelect}
-                onConfirm={handleTableSelectionConfirm}
-                onClose={() => setIsTableSelectionModalOpen(false)}
-            />
-            <DeliveryProviderSelectionModal
-                isOpen={isDeliveryProviderModalOpen}
-                onSelect={handleDeliveryProviderSelect}
-                onClose={() => setIsDeliveryProviderModalOpen(false)}
-            />
-            <NewCustomerModal
-                isOpen={isCustomerModalOpen}
-                onClose={() => setCustomerModalOpen(false)}
-                mobile={mobile}
-            />
+            <TableSelectionModal isOpen={isTableSelectionModalOpen} tables={tables} selectedTable={selectedTable} handleTableSelect={handleTableSelect} onConfirm={handleTableSelectionConfirm} onClose={() => setIsTableSelectionModalOpen(false)} />
+            <DeliveryProviderSelectionModal isOpen={isDeliveryProviderModalOpen} onSelect={handleDeliveryProviderSelect} onClose={() => setIsDeliveryProviderModalOpen(false)} />
+            <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} />
 
             <main className="flex flex-col lg:flex-row p-1 gap-1">
-                <ProductSelection
-                    products={products}
-                    categories={categories}
-                    selectedCategory={selectedCategory}
-                    setSelectedCategory={setSelectedCategory}
-                    addProduct={addProduct}
-                    loading={loadingProducts}
-                />
+                <ProductSelection products={products} categories={categories} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} addProduct={addProduct} loading={loadingProducts} />
                 <OrderSummary
                     title={`Editing Order: ${currentInvoiceId.slice(-6)}`}
-                    customer={customer}
-                    mobile={mobile}
-                    setMobile={setMobile}
-                    handleCustomerSearch={handleCustomerSearch}
-                    isCustomerModalOpen={isCustomerModalOpen}
-                    setCustomerModalOpen={setCustomerModalOpen}
-                    orderType={orderType}
-                    handleOrderTypeChange={handleOrderTypeChange}
-                    TableName={TableName}
-                    deliveryProvider={deliveryProvider}
+                    customer={customer} mobile={mobile} setMobile={setMobile} handleCustomerSearch={handleCustomerSearch}
+                    isCustomerModalOpen={isCustomerModalOpen} setCustomerModalOpen={setCustomerModalOpen}
+                    orderType={orderType} handleOrderTypeChange={handleOrderTypeChange}
+                    TableName={TableName} deliveryProvider={deliveryProvider}
                     addedProducts={allOrderItems}
-                    incrementQuantity={incrementQuantity}
-                    decrementQuantity={decrementQuantity}
-                    removeProduct={removeProduct}
-                    invoiceSummary={invoiceSummary}
-                    setInvoiceSummary={setInvoiceSummary}
-                    subtotal={subtotal}
-                    vat={vat}
-                    sd={sd}
-                    payable={payable}
-                    paid={paid}
-                    change={change}
+                    incrementQuantity={incrementQuantity} decrementQuantity={decrementQuantity} removeProduct={removeProduct}
+                    invoiceSummary={invoiceSummary} setInvoiceSummary={setInvoiceSummary}
+                    subtotal={subtotal} vat={vat} sd={sd} payable={payable} paid={paid} change={change}
                     printInvoice={saveOrUpdateInvoice} 
                     handleFinalizeOrder={handleFinalizeOrder}
                     handleKitchenClick={handleKitchenClick}
                     resetOrder={resetOrder}
                     isProcessing={isProcessing}
-                    selectedPaymentMethod={selectedPaymentMethod}
-                    handlePaymentMethodSelect={handlePaymentMethodSelect}
-                    updateCookStatus={updateCookStatus}
-                    toggleComplimentaryStatus={toggleComplimentaryStatus}
+                    selectedPaymentMethod={selectedPaymentMethod} handlePaymentMethodSelect={handlePaymentMethodSelect}
+                    updateCookStatus={updateCookStatus} toggleComplimentaryStatus={toggleComplimentaryStatus}
                 />
             </main>
-
-            {isReceiptModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => navigate('/dashboard/order-list')}>
-                    <div className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-                        <button className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700" onClick={() => navigate('/dashboard/order-list')}>
-                            Close
-                        </button>
-                        <ReceiptTemplate
-                            ref={receiptRef}
-                            onPrintComplete={() => navigate('/dashboard/order-list')}
-                            profileData={companies[0]}
-                            invoiceData={print}
-                        />
-                    </div>
-                </div>
-            )}
+            
+            {/* CHANGE: The onPrintComplete prop now calls the new handlePrintComplete function. */}
+            <div style={{ display: 'none' }}>
+                {print && companies[0] && (
+                    <ReceiptTemplate
+                        ref={receiptRef}
+                        onPrintComplete={handlePrintComplete}
+                        profileData={companies[0]}
+                        invoiceData={print}
+                    />
+                )}
+            </div>
 
             {isKitchenModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setIsKitchenModalOpen(false)}>

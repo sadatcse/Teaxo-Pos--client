@@ -43,7 +43,7 @@ const PendingOrders = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [viewOrder, setViewOrder] = useState(null);
-    const [discountDisplay, setDiscountDisplay] = useState(0);
+
 
     const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
     const [printData, setPrintData] = useState(null);
@@ -156,7 +156,7 @@ const PendingOrders = () => {
 
     const handleViewOrder = (order) => {
         setViewOrder(order);
-        setDiscountDisplay(order.discount || 0);
+      
         setIsModalOpen(true);
     };
 
@@ -195,7 +195,7 @@ const PendingOrders = () => {
         if (orderToPrint) {
             setPrintData(orderToPrint);
             setIsPrintModalOpen(true);
-            setIsModalOpen(false);
+            setIsModalOpen(false); // Close the view modal if it's open
         }
     };
 
@@ -270,8 +270,8 @@ const PendingOrders = () => {
                                 <table className="min-w-full divide-y divide-gray-200">
                                     <thead className="bg-blue-600">
                                         <tr>
-                                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider rounded-tl-lg">Order ID</th>
-                                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Date</th>
+                                            {/* <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider rounded-tl-lg">Order ID</th> */}
+                                            <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Date & Time</th>
                                             <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">User</th>
                                             <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Total</th>
                                             <th scope="col" className="px-4 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Order Type</th>
@@ -289,20 +289,56 @@ const PendingOrders = () => {
                                         ) : (
                                             orders.map((order) => (
                                                 <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
-                                                    <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{order.invoiceSerial}</td>
+                                                    {/* <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">{order.invoiceSerial}</td> */}
                                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{new Date(order.dateTime).toLocaleString()}</td>
                                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{order.loginUserName}</td>
                                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{order.totalAmount?.toFixed(2)} Taka</td>
                                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{order.orderType}</td>
                                                     <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{order.tableName || order.deliveryProvider || 'N/A'}</td>
+                                                    
+                                                    {/* MODIFIED ACTION BUTTONS SECTION */}
                                                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                                        <div className="flex justify-end space-x-2">
-                                                            <button onClick={() => handleViewOrder(order)} title="View Order" className="p-2 rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200"><FiEye size={16} /></button>
-                                                            <button onClick={() => handleEditClick(order._id)} title="Edit Order" className="p-2 rounded-md text-white bg-yellow-600 hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 transition-colors duration-200"><FiEdit size={16} /></button>
-                                                            <button onClick={() => handleCompleteClick(order._id)} title="Complete Order" className="p-2 rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors duration-200"><FiCheckCircle size={16} /></button>
+                                                        <div className="flex justify-end items-center flex-wrap gap-2">
+                                                            <button
+                                                                onClick={() => handleViewOrder(order)}
+                                                                title="View Order"
+                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
+                                                            >
+                                                                <FiEye size={14} />
+                                                                <span>View</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleEditClick(order._id)}
+                                                                title="Edit Order"
+                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-yellow-600 hover:bg-yellow-700 transition-colors duration-200"
+                                                            >
+                                                                <FiEdit size={14} />
+                                                                <span>Edit</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handlePrintOrder(order._id)}
+                                                                title="Print Order"
+                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-gray-600 hover:bg-gray-700 transition-colors duration-200"
+                                                            >
+                                                                <FiPrinter size={14} />
+                                                                <span>Print</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleCompleteClick(order._id)}
+                                                                title="Complete Order"
+                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-green-600 hover:bg-green-700 transition-colors duration-200"
+                                                            >
+                                                                <FiCheckCircle size={14} />
+                                                                <span>Complete</span>
+                                                            </button>
                                                             {user?.role === "admin" && (
-                                                                <button onClick={() => handleRemove(order._id)} title="Delete Order" className="p-2 rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors duration-200">
-                                                                    <FiTrash2 size={16} />
+                                                                <button
+                                                                    onClick={() => handleRemove(order._id)}
+                                                                    title="Delete Order"
+                                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-red-600 hover:bg-red-700 transition-colors duration-200"
+                                                                >
+                                                                    <FiTrash2 size={14} />
+                                                                    <span>Delete</span>
                                                                 </button>
                                                             )}
                                                         </div>
@@ -358,96 +394,96 @@ const PendingOrders = () => {
                             <div className="overflow-y-auto">
                                 {companiesLoading ? <MtableLoading data={null}/> : (
                                 <div className="p-6 space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-                                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
-                                        <FaCalendarAlt className="text-blue-500 flex-shrink-0" size={20} />
-                                        <div>
-                                        <p className="font-semibold text-gray-700">Order Date</p>
-                                        <p className="text-gray-600">{new Date(viewOrder.dateTime).toLocaleString()}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
-                                        <FaUserAlt className="text-green-500 flex-shrink-0" size={20} />
-                                        <div>
-                                        <p className="font-semibold text-gray-700">Server</p>
-                                        <p className="text-gray-600">{viewOrder.loginUserName}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
-                                        <FaHashtag className="text-purple-500 flex-shrink-0" size={20} />
-                                        <div>
-                                        <p className="font-semibold text-gray-700">Order Type</p>
-                                        <p className="text-gray-600 capitalize">{viewOrder.orderType.replace('-', ' ')}</p>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
-                                        <FaMoneyBillWave className="text-yellow-500 flex-shrink-0" size={20} />
-                                        <div>
-                                        <p className="font-semibold text-gray-700">Order Status</p>
-                                        <span className={`px-3 py-1 text-xs font-bold rounded-full capitalize ${getStatusClass(viewOrder.orderStatus)}`}>
-                                            {viewOrder.orderStatus}
-                                        </span>
-                                        </div>
-                                    </div>
-                                    </div>
-                                    <div className="border rounded-lg p-4 bg-gray-50/50">
-                                    <h4 className="font-semibold text-gray-700 mb-2">Additional Info</h4>
-                                    <div className="text-sm space-y-1 text-gray-600">
-                                        {viewOrder.tableName && (<p><strong>Table:</strong> {viewOrder.tableName}</p>)}
-                                        {viewOrder.deliveryProvider && (<p><strong>Delivery Via:</strong> {viewOrder.deliveryProvider}</p>)}
-                                        {viewOrder.customerName && (<p><strong>Customer:</strong> {viewOrder.customerName}</p>)}
-                                        {viewOrder.customerMobile && (<p><strong>Mobile:</strong> {viewOrder.customerMobile}</p>)}
-                                        <p><strong>Payment Method:</strong> {viewOrder.paymentMethod}</p>
-                                    </div>
-                                    </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+                                    <FaCalendarAlt className="text-blue-500 flex-shrink-0" size={20} />
                                     <div>
-                                    <h3 className="text-lg font-semibold text-gray-800 mb-2">Itemized List</h3>
-                                    <div className="overflow-x-auto border rounded-lg">
-                                        <table className="min-w-full text-sm">
-                                        <thead className="bg-gray-100">
-                                            <tr>
-                                            <th className="p-3 text-left font-medium text-gray-600">#</th>
-                                            <th className="p-3 text-left font-medium text-gray-600">Product Name</th>
-                                            <th className="p-3 text-center font-medium text-gray-600">Qty</th>
-                                            <th className="p-3 text-right font-medium text-gray-600">Rate</th>
-                                            <th className="p-3 text-right font-medium text-gray-600">Subtotal</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {viewOrder.products.map((item, index) => (
-                                            <tr key={index} className="border-t hover:bg-gray-50">
-                                                <td className="p-3 text-gray-500">{index + 1}</td>
-                                                <td className="p-3 font-medium text-gray-800">{item.productName}</td>
-                                                <td className="p-3 text-center text-gray-600">{item.qty}</td>
-                                                <td className="p-3 text-right text-gray-600">{item.rate.toFixed(2)}</td>
-                                                <td className="p-3 text-right font-semibold text-gray-800">{item.subtotal.toFixed(2)}</td>
-                                            </tr>
-                                            ))}
-                                        </tbody>
-                                        </table>
+                                    <p className="font-semibold text-gray-700">Order Date</p>
+                                    <p className="text-gray-600">{new Date(viewOrder.dateTime).toLocaleString()}</p>
                                     </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+                                    <FaUserAlt className="text-green-500 flex-shrink-0" size={20} />
+                                    <div>
+                                    <p className="font-semibold text-gray-700">Server</p>
+                                    <p className="text-gray-600">{viewOrder.loginUserName}</p>
                                     </div>
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        <div></div>
-                                        <div className="text-sm border rounded-lg p-4 space-y-2 bg-gray-50/50">
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">Subtotal:</span>
-                                                <span className="font-medium text-gray-800">{viewOrder.totalSale.toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">VAT (+):</span>
-                                                <span className="font-medium text-gray-800">{viewOrder.vat.toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span className="text-gray-600">Discount (-):</span>
-                                                <span className="font-medium text-red-500">{viewOrder.discount.toFixed(2)}</span>
-                                            </div>
-                                            <div className="flex justify-between text-base font-bold pt-2 border-t mt-2">
-                                                <span className="text-gray-900">Grand Total:</span>
-                                                <span className="text-blue-600">{viewOrder.totalAmount.toFixed(2)}</span>
-                                            </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+                                    <FaHashtag className="text-purple-500 flex-shrink-0" size={20} />
+                                    <div>
+                                    <p className="font-semibold text-gray-700">Order Type</p>
+                                    <p className="text-gray-600 capitalize">{viewOrder.orderType.replace('-', ' ')}</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
+                                    <FaMoneyBillWave className="text-yellow-500 flex-shrink-0" size={20} />
+                                    <div>
+                                    <p className="font-semibold text-gray-700">Order Status</p>
+                                    <span className={`px-3 py-1 text-xs font-bold rounded-full capitalize ${getStatusClass(viewOrder.orderStatus)}`}>
+                                        {viewOrder.orderStatus}
+                                    </span>
+                                    </div>
+                                  </div>
+                                  </div>
+                                  <div className="border rounded-lg p-4 bg-gray-50/50">
+                                  <h4 className="font-semibold text-gray-700 mb-2">Additional Info</h4>
+                                  <div className="text-sm space-y-1 text-gray-600">
+                                    {viewOrder.tableName && (<p><strong>Table:</strong> {viewOrder.tableName}</p>)}
+                                    {viewOrder.deliveryProvider && (<p><strong>Delivery Via:</strong> {viewOrder.deliveryProvider}</p>)}
+                                    {viewOrder.customerName && (<p><strong>Customer:</strong> {viewOrder.customerName}</p>)}
+                                    {viewOrder.customerMobile && (<p><strong>Mobile:</strong> {viewOrder.customerMobile}</p>)}
+                                    <p><strong>Payment Method:</strong> {viewOrder.paymentMethod}</p>
+                                  </div>
+                                  </div>
+                                  <div>
+                                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Itemized List</h3>
+                                  <div className="overflow-x-auto border rounded-lg">
+                                    <table className="min-w-full text-sm">
+                                    <thead className="bg-gray-100">
+                                        <tr>
+                                        <th className="p-3 text-left font-medium text-gray-600">#</th>
+                                        <th className="p-3 text-left font-medium text-gray-600">Product Name</th>
+                                        <th className="p-3 text-center font-medium text-gray-600">Qty</th>
+                                        <th className="p-3 text-right font-medium text-gray-600">Rate</th>
+                                        <th className="p-3 text-right font-medium text-gray-600">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {viewOrder.products.map((item, index) => (
+                                        <tr key={index} className="border-t hover:bg-gray-50">
+                                            <td className="p-3 text-gray-500">{index + 1}</td>
+                                            <td className="p-3 font-medium text-gray-800">{item.productName}</td>
+                                            <td className="p-3 text-center text-gray-600">{item.qty}</td>
+                                            <td className="p-3 text-right text-gray-600">{item.rate.toFixed(2)}</td>
+                                            <td className="p-3 text-right font-semibold text-gray-800">{item.subtotal.toFixed(2)}</td>
+                                        </tr>
+                                        ))}
+                                    </tbody>
+                                    </table>
+                                  </div>
+                                  </div>
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div></div>
+                                    <div className="text-sm border rounded-lg p-4 space-y-2 bg-gray-50/50">
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Subtotal:</span>
+                                            <span className="font-medium text-gray-800">{viewOrder.totalSale.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">VAT (+):</span>
+                                            <span className="font-medium text-gray-800">{viewOrder.vat.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between">
+                                            <span className="text-gray-600">Discount (-):</span>
+                                            <span className="font-medium text-red-500">{viewOrder.discount.toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex justify-between text-base font-bold pt-2 border-t mt-2">
+                                            <span className="text-gray-900">Grand Total:</span>
+                                            <span className="text-blue-600">{viewOrder.totalAmount.toFixed(2)}</span>
                                         </div>
                                     </div>
+                                  </div>
                                 </div>
                                 )}
                             </div>

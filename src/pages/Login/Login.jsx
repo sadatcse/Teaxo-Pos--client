@@ -181,12 +181,12 @@ const handleLogin = async (e) => {
               {loading ? "Logging in..." : "Sign In"}
             </motion.button>
 
-            <p className="text-center text-gray-300 text-sm">
+            {/* <p className="text-center text-gray-300 text-sm">
               Don't have an account?{" "}
               <Link to="/register" className="text-blue-400 hover:underline">
                 Create Account
               </Link>
-            </p>
+            </p> */}
           </form>
         </motion.div>
       </div>

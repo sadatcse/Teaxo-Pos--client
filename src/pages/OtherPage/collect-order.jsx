@@ -22,14 +22,9 @@ const CollectOrder = () => {
     const loginUserEmail = user?.email || "info@leavesoft.com";
     const loginUserName = user?.name || "leavesoft";
     const [mobile, setMobile] = useState("");
-    const {
-        customer, tables, searchCustomer, selectedTable,
-        isCustomerModalOpen, setSelectedTable, setCustomerModalOpen,
-    } = useCustomerTableSearch();
+    const { customer, tables, searchCustomer, selectedTable, isCustomerModalOpen, setSelectedTable, setCustomerModalOpen } = useCustomerTableSearch();
     const axiosSecure = UseAxiosSecure();
-    const {
-        products, categories, selectedCategory, setSelectedCategory, loadingProducts,
-    } = useCategoriesWithProducts(branch);
+    const { products, categories, selectedCategory, setSelectedCategory, loadingProducts } = useCategoriesWithProducts(branch);
     const [addedProducts, setAddedProducts] = useState([]);
     const [orderType, setOrderType] = useState(null);
     const [TableName, setTableName] = useState("");
@@ -41,10 +36,13 @@ const CollectOrder = () => {
     const [isOrderTypeModalOpen, setIsOrderTypeModalOpen] = useState(true);
     const [isTableSelectionModalOpen, setIsTableSelectionModalOpen] = useState(false);
     const [isDeliveryProviderModalOpen, setIsDeliveryProviderModalOpen] = useState(false);
-    const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+    
+    // REMOVED: isReceiptModalOpen state is no longer needed.
+    // const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
+
     const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
-    const [customDateTime, setCustomDateTime] = useState(""); // State for admin's custom date/time
+    const [customDateTime, setCustomDateTime] = useState("");
     const receiptRef = useRef();
     const kitchenReceiptRef = useRef();
     const { companies } = useCompanyHook();
@@ -165,7 +163,7 @@ const CollectOrder = () => {
         setOrderType(null);
         setDeliveryProvider("");
         setCurrentInvoiceId(null);
-        setCustomDateTime(""); // Reset custom date
+        setCustomDateTime("");
         setIsOrderTypeModalOpen(true);
         toast.error("Order Reset!");
     };
@@ -209,20 +207,11 @@ const CollectOrder = () => {
     const printInvoice = async (isPrintAction) => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
+        // ... (invoiceDetails calculation remains the same)
         const { subtotal, vat, sd, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
-            products: addedProducts.map((p) => ({
-                productId: p._id,
-                productName: p.productName,
-                qty: p.quantity,
-                rate: p.price,
-                subtotal: roundAmount(p.price * p.quantity),
-                vat: p.vat || 0,
-                sd: p.sd || 0,
-                cookStatus: p.cookStatus || 'PENDING',
-                isComplimentary: p.isComplimentary,
-            })),
+            products: addedProducts.map((p) => ({ productId: p._id, productName: p.productName, qty: p.quantity, rate: p.price, subtotal: roundAmount(p.price * p.quantity), vat: p.vat || 0, sd: p.sd || 0, cookStatus: p.cookStatus || 'PENDING', isComplimentary: p.isComplimentary, })),
             subtotal: roundAmount(subtotal),
             discount: roundAmount(discount),
             vat: roundAmount(vat),
@@ -236,24 +225,18 @@ const CollectOrder = () => {
             totalAmount: payable,
             paymentMethod: selectedPaymentMethod,
         };
-
-        // NEW LOGIC: Check for and handle back-dated admin entries
         if (user?.role === 'admin' && customDateTime) {
             invoiceDetails.dateTime = customDateTime;
-            
             const customDate = new Date(customDateTime);
             const now = new Date();
-
-            // If the custom date is earlier than the current time, mark order as completed
             if (customDate < now) {
                 invoiceDetails.orderStatus = "completed";
-                // Since it's a completed back-dated order, we can also assume items were served
                 invoiceDetails.products.forEach(p => p.cookStatus = 'SERVED');
             }
         }
-
         if (orderType === "dine-in") invoiceDetails.tableName = TableName;
         if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
+
 
         try {
             let response;
@@ -265,13 +248,21 @@ const CollectOrder = () => {
                 toast.success("Invoice saved successfully!");
             }
             const data = response.data;
-            // Ensure the print data reflects the completed status if it was set
             const finalInvoiceDetails = { ...invoiceDetails, ...data };
             const dataForPrint = { ...finalInvoiceDetails, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || data._id };
             setPrint(dataForPrint);
             setCurrentInvoiceId(data.invoiceId || data._id);
+            
+            // CHANGE: Instead of opening a modal, we now call the print function on the hidden component.
             if (isPrintAction && companies[0] && data) {
-                setIsReceiptModalOpen(true);
+                // Use a short timeout to allow React to update the state and render the hidden receipt
+                setTimeout(() => {
+                    if (receiptRef.current) {
+                        receiptRef.current.printReceipt();
+                    } else {
+                        console.error("Receipt component reference not found.");
+                    }
+                }, 100);
             }
             return true;
         } catch (error) {
@@ -290,91 +281,31 @@ const CollectOrder = () => {
 
     return (
         <div className="font-sans antialiased bg-gray-100 min-h-screen">
-            <OrderTypeSelectionModal
-                isOpen={isOrderTypeModalOpen}
-                onSelect={handleOrderTypeSelect}
-                onClose={() => !orderType && setIsOrderTypeModalOpen(true)}
-            />
-            <TableSelectionModal
-                isOpen={isTableSelectionModalOpen}
-                tables={tables}
-                selectedTable={selectedTable}
-                handleTableSelect={handleTableSelect}
-                onConfirm={handleTableSelectionConfirm}
-                onClose={() => setIsTableSelectionModalOpen(false)}
-            />
-            <DeliveryProviderSelectionModal
-                isOpen={isDeliveryProviderModalOpen}
-                onSelect={handleDeliveryProviderSelect}
-                onClose={() => setIsDeliveryProviderModalOpen(false)}
-            />
+            <OrderTypeSelectionModal isOpen={isOrderTypeModalOpen} onSelect={handleOrderTypeSelect} onClose={() => !orderType && setIsOrderTypeModalOpen(true)} />
+            <TableSelectionModal isOpen={isTableSelectionModalOpen} tables={tables} selectedTable={selectedTable} handleTableSelect={handleTableSelect} onConfirm={handleTableSelectionConfirm} onClose={() => setIsTableSelectionModalOpen(false)} />
+            <DeliveryProviderSelectionModal isOpen={isDeliveryProviderModalOpen} onSelect={handleDeliveryProviderSelect} onClose={() => setIsDeliveryProviderModalOpen(false)} />
 
             {!isOrderTypeModalOpen && !isTableSelectionModalOpen && !isDeliveryProviderModalOpen && (
                 <div className="flex flex-col lg:flex-row p-1 gap-1">
-                    <NewCustomerModal
-                        isOpen={isCustomerModalOpen}
-                        onClose={() => setCustomerModalOpen(false)}
-                        mobile={mobile}
-                    />
-                    <ProductSelection
-                        products={products}
-                        categories={categories}
-                        selectedCategory={selectedCategory}
-                        setSelectedCategory={setSelectedCategory}
-                        addProduct={addProduct}
-                        loading={loadingProducts}
-                    />
-                    <OrderSummary
-                        user={user}
-                        customDateTime={customDateTime}
-                        setCustomDateTime={setCustomDateTime}
-                        customer={customer}
-                        mobile={mobile}
-                        setMobile={setMobile}
-                        handleCustomerSearch={handleCustomerSearch}
-                        orderType={orderType}
-                        handleOrderTypeChange={handleOrderTypeChange}
-                        TableName={TableName}
-                        deliveryProvider={deliveryProvider}
-                        addedProducts={addedProducts}
-                        incrementQuantity={incrementQuantity}
-                        decrementQuantity={decrementQuantity}
-                        removeProduct={removeProduct}
-                        invoiceSummary={invoiceSummary}
-                        setInvoiceSummary={setInvoiceSummary}
-                        subtotal={subtotal}
-                        vat={vat}
-                        sd={sd}
-                        payable={payable}
-                        paid={paid}
-                        change={change}
-                        printInvoice={printInvoice}
-                        handleKitchenClick={handleKitchenClick}
-                        resetOrder={resetOrder}
-                        isProcessing={isProcessing}
-                        selectedPaymentMethod={selectedPaymentMethod}
-                        handlePaymentMethodSelect={handlePaymentMethodSelect}
-                        updateCookStatus={updateCookStatus}
-                        toggleComplimentaryStatus={toggleComplimentaryStatus}
-                    />
+                    <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} />
+                    <ProductSelection products={products} categories={categories} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} addProduct={addProduct} loading={loadingProducts} />
+                    <OrderSummary user={user} customDateTime={customDateTime} setCustomDateTime={setCustomDateTime} customer={customer} mobile={mobile} setMobile={setMobile} handleCustomerSearch={handleCustomerSearch} orderType={orderType} handleOrderTypeChange={handleOrderTypeChange} TableName={TableName} deliveryProvider={deliveryProvider} addedProducts={addedProducts} incrementQuantity={incrementQuantity} decrementQuantity={decrementQuantity} removeProduct={removeProduct} invoiceSummary={invoiceSummary} setInvoiceSummary={setInvoiceSummary} subtotal={subtotal} vat={vat} sd={sd} payable={payable} paid={paid} change={change} printInvoice={printInvoice} handleKitchenClick={handleKitchenClick} resetOrder={resetOrder} isProcessing={isProcessing} selectedPaymentMethod={selectedPaymentMethod} handlePaymentMethodSelect={handlePaymentMethodSelect} updateCookStatus={updateCookStatus} toggleComplimentaryStatus={toggleComplimentaryStatus} />
                 </div>
             )}
 
-            {isReceiptModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => { setIsReceiptModalOpen(false); resetOrder(); }}>
-                    <div className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-                        <button className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700" onClick={() => { setIsReceiptModalOpen(false); resetOrder(); }}>
-                            Close
-                        </button>
-                        <ReceiptTemplate
-                            ref={receiptRef}
-                            onPrintComplete={() => { setIsReceiptModalOpen(false); resetOrder(); }}
-                            profileData={companies[0]}
-                            invoiceData={print}
-                        />
-                    </div>
-                </div>
-            )}
+            {/* REMOVED: The on-screen receipt modal is no longer needed. */}
+
+            {/* CHANGE: Added a hidden div to contain the receipt component for printing. */}
+            <div style={{ display: 'none' }}>
+                {print && companies[0] && (
+                    <ReceiptTemplate
+                        ref={receiptRef}
+                        onPrintComplete={resetOrder} // After printing is complete, reset the order.
+                        profileData={companies[0]}
+                        invoiceData={print}
+                    />
+                )}
+            </div>
 
             {isKitchenModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setIsKitchenModalOpen(false)}>

@@ -117,13 +117,13 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
           >
             <MdMail />
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-white text-xs">
-              3
+              0
             </span>
           </button>
           {isMailOpen && (
             <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg p-2 z-20">
               <p className="text-sm text-gray-700 p-2">
-                Mail dropdown content here.
+                Coming Soon 
               </p>
             </div>
           )}
@@ -139,13 +139,13 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
           >
             <MdNotifications />
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white text-xs">
-              4
+              0
             </span>
           </button>
           {isNotificationsOpen && (
             <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg p-2 z-20">
               <p className="text-sm text-gray-700 p-2">
-                Notifications dropdown content here.
+                comming soon .
               </p>
             </div>
           )}
