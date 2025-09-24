@@ -1,24 +1,27 @@
 import React, { useState } from 'react';
-import { FiArrowLeft, FiArrowRight, FiCheckCircle } from 'react-icons/fi';
+import { FiCheckCircle } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import UseAxiosSecure from './../../Hook/UseAxioSecure';
 
-// Import step components (we will create these next)
+// Import all step components, including the new and renamed ones
 import Step1Company from './Step/Step1Company';
 import Step2Categories from './Step/Step2Categories';
 import Step3Products from './Step/Step3Products';
 import Step4Tables from './Step/Step4Tables';
-import Step5Users from './Step/Step5Users';
-import Step6Review from './Step/Step6Review';
+import Step5UserRoles from './Step/Step5UserRoles'; // New Step
+import Step6Users from './Step/Step6Users';         // Renamed (was Step5)
+import Step7Review from './Step/Step7Review';       // Renamed (was Step6)
 
 
+// Updated STEPS array with the new "User Roles" step
 const STEPS = [
     { title: "Branch Info", component: Step1Company },
     { title: "Categories", component: Step2Categories },
     { title: "Products", component: Step3Products },
     { title: "Tables", component: Step4Tables },
-    { title: "Users", component: Step5Users },
-    { title: "Review & Submit", component: Step6Review },
+    { title: "User Roles", component: Step5UserRoles }, // <-- INTEGRATED STEP
+    { title: "Users", component: Step6Users },
+    { title: "Review & Submit", component: Step7Review },
 ];
 
 const NewBranchWizard = () => {
@@ -26,12 +29,13 @@ const NewBranchWizard = () => {
     const [currentStep, setCurrentStep] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
-    // State to hold all data from the wizard
+    // Updated state to hold all data from the wizard, including roles
     const [wizardData, setWizardData] = useState({
         company: {},
         categories: [],
         products: [],
         tables: [],
+        roles: [], // <-- ADDED ROLES STATE
         users: []
     });
 
@@ -51,15 +55,16 @@ const NewBranchWizard = () => {
     const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
+            // The wizardData object now includes the 'roles' array
             await axiosSecure.post('/branch/setup-wizard', wizardData);
             Swal.fire({
                 icon: 'success',
                 title: 'Branch Created!',
                 text: `${wizardData.company.name} has been set up successfully.`,
             });
-            // Optionally redirect or reset state here
+            // Reset state to initial values
             setCurrentStep(0);
-            setWizardData({ company: {}, categories: [], products: [], tables: [], users: [] });
+            setWizardData({ company: {}, categories: [], products: [], tables: [], roles: [], users: [] });
         } catch (error) {
             Swal.fire({
                 icon: 'error',

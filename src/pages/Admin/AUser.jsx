@@ -59,7 +59,7 @@ const AUser = () => {
     const handleSubmit = async (formData) => {
         setIsSubmitting(true);
         const isEditing = !!editingUser;
-        const endpoint = isEditing ? `/user/update/${editingUser._id}` : '/user/post';
+        const endpoint = isEditing ? `/user/updatea/${editingUser._id}` : '/user/post';
         const method = isEditing ? 'put' : 'post';
         
         try {

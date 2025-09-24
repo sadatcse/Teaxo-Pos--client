@@ -1,26 +1,14 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { FiEdit, FiTrash2, FiPlus, FiX } from 'react-icons/fi';
+import { FiEdit,  FiPlus } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { motion, AnimatePresence } from "framer-motion";
-import { ColorRing } from "react-loader-spinner";
+
 
 import Mtitle from "../../components library/Mtitle";
 import ImageUpload from "../../config/ImageUploadcpanel";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
-
-const MtableLoading = () => (
-    <div className="flex justify-center items-center w-full h-full py-28">
-        <ColorRing
-            visible={true}
-            height="80"
-            width="80"
-            ariaLabel="color-ring-loading"
-            wrapperClass="color-ring-wrapper"
-            colors={["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"]}
-        />
-    </div>
-);
+import MtableLoading from "../../components library/MtableLoading"; 
 
 const CompanySettings = () => {
     const axiosSecure = UseAxiosSecure();
@@ -91,24 +79,7 @@ const CompanySettings = () => {
         setIsModalOpen(true);
     };
 
-    const handleRemove = (id) => {
-        Swal.fire({
-            title: "Are you sure?", text: "You won't be able to revert this!", icon: "warning",
-            showCancelButton: true, confirmButtonColor: "#d33", cancelButtonColor: "#3085d6", confirmButtonText: "Yes, delete it!",
-        }).then((result) => {
-            if (result.isConfirmed) {
-                axiosSecure.delete(`/company/delete/${id}`)
-                    .then(() => {
-                        fetchCompanies();
-                        Swal.fire("Deleted!", "The company profile has been deleted.", "success");
-                    })
-                    .catch((error) => {
-                        console.error("Error deleting company:", error);
-                        Swal.fire("Error!", "Failed to delete company.", "error");
-                    });
-            }
-        });
-    };
+
 
     const ProfileDetail = ({ label, value }) => (
         <div>

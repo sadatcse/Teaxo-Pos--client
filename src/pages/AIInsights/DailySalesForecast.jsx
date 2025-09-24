@@ -1,27 +1,13 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { FaExclamationCircle } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
-import { ColorRing } from "react-loader-spinner";
 import moment from "moment";
 
 // Integrated with your actual project components and hooks
 import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
-
-// Reusable Loading Component
-const MLoading = () => (
-    <div className="flex justify-center items-center w-full h-full py-28">
-        <ColorRing
-            visible={true}
-            height="80"
-            width="80"
-            ariaLabel="color-ring-loading"
-            wrapperClass="color-ring-wrapper"
-            colors={["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"]}
-        />
-    </div>
-);
+import MtableLoading from "../../components library/MtableLoading"; 
 
 // Component for Displaying an Empty or Error State
 const MEmptyState = ({ message, details }) => (
@@ -110,7 +96,7 @@ const DailySalesForecast = () => {
 
             <div className="mt-8">
                 {isLoading ? (
-                    <MLoading />
+                    <MtableLoading />
                 ) : error ? (
                     <MEmptyState message="An Error Occurred" details={error} />
                 ) : predictions.length === 0 ? (

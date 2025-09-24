@@ -233,6 +233,19 @@ const menuItems = () => {
           path: "/dashboard/settings/system",
           icon: <FiSliders className="text-lg" />,
         },
+
+ {
+          title: "User Role",
+          path: "/dashboard/userrolemanagement",
+          icon: <FiSliders className="text-lg" />,
+        },
+ {
+          title: "User Permission",
+          path: "/dashboard/permission",
+          icon: <FiSliders className="text-lg" />,
+        },
+
+
       ],
     },
     {

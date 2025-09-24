@@ -13,20 +13,7 @@ import DailySummaryPrint from "../../components/Receipt/DailySummaryPrint";
 import { generatePdf } from "./../../components/utils/generatePdfReport"; 
 import { generateExcel } from "./../../components/utils/generateExcelReport"; 
 import { motion, AnimatePresence } from "framer-motion";
-import { ColorRing } from "react-loader-spinner";
-
-const MtableLoading = () => (
-    <div className="flex justify-center items-center w-full h-full py-28">
-        <ColorRing
-            visible={true}
-            height="80"
-            width="80"
-            ariaLabel="color-ring-loading"
-            wrapperClass="color-ring-wrapper"
-            colors={["#2563eb", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe"]}
-        />
-    </div>
-);
+import MtableLoading from "../../components library/MtableLoading"; 
 
 const SalesSummaryFooter = ({ data }) => {
     // ... (Your existing SalesSummaryFooter component code remains unchanged)

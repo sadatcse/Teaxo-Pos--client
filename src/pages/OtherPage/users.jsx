@@ -12,11 +12,11 @@ import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import Preloader from "../../components/Shortarea/Preloader";
 
-// Moved initial form data outside the component to prevent re-creation on every render
+// Updated initial form data with a neutral default role
 const INITIAL_FORM_DATA = {
     email: "",
     name: "",
-    role: "user",
+    role: "", // Default role is now empty, will be set dynamically
     status: "active",
     photo: "",
     password: "",
@@ -25,10 +25,10 @@ const INITIAL_FORM_DATA = {
 
 const Users = () => {
     const axiosSecure = UseAxiosSecure();
-    // Aliased 'user' to 'currentUser' to avoid naming conflicts in map functions
     const { user: currentUser, branch } = useContext(AuthContext);
 
     const [users, setUsers] = useState([]);
+    const [userRoles, setUserRoles] = useState([]); // State for dynamic roles
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({ ...INITIAL_FORM_DATA, branch: branch || "" });
     const [editId, setEditId] = useState(null);
@@ -36,28 +36,30 @@ const Users = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPageLoading, setPageLoading] = useState(true);
 
-    // Debounce search term to improve performance by delaying filtering
     const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
 
-    const fetchUsers = useCallback(async () => {
-        if (!branch) return;
-        setPageLoading(true);
-        try {
-            const response = await axiosSecure.get(`/user/${branch}/get-all/`);
-            setUsers(response.data);
-        } catch (error) {
-            console.error('Error fetching users:', error);
-            Swal.fire('Error!', 'Could not fetch user data.', 'error');
-        } finally {
-            setPageLoading(false);
-        }
-    }, [axiosSecure, branch]);
-
+    // useEffect now fetches both users and roles concurrently for efficiency
     useEffect(() => {
-        fetchUsers();
-    }, [fetchUsers]);
+        const loadData = async () => {
+            if (!branch) return;
+            setPageLoading(true);
+            try {
+                const [usersResponse, rolesResponse] = await Promise.all([
+                    axiosSecure.get(`/user/${branch}/get-all/`),
+                    axiosSecure.get(`/userrole/branch/${branch}`)
+                ]);
+                setUsers(usersResponse.data);
+                setUserRoles(rolesResponse.data);
+            } catch (error) {
+                console.error('Error fetching initial data:', error);
+                Swal.fire('Error!', 'Could not fetch required page data.', 'error');
+            } finally {
+                setPageLoading(false);
+            }
+        };
+        loadData();
+    }, [axiosSecure,axiosSecure, branch]);
 
-    // Derived state for filtered users using useMemo for optimization
     const filteredUsers = useMemo(() => {
         return users.filter(user =>
             user.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
@@ -65,12 +67,18 @@ const Users = () => {
         );
     }, [users, debouncedSearchTerm]);
 
-    // Memoized list of roles the current user is allowed to assign
+    // assignableRoles is now fully dynamic, based on fetched roles and current user's permissions
     const assignableRoles = useMemo(() => {
-        if (currentUser?.role === 'admin') return ['admin', 'manager', 'user'];
-        if (currentUser?.role === 'manager') return ['manager', 'user'];
-        return []; // Regular users cannot assign roles
-    }, [currentUser?.role]);
+        const allRoles = userRoles.map(role => role.userrole);
+
+        if (currentUser?.role === 'admin') {
+            return allRoles; // Admin can assign any available role
+        }
+        if (currentUser?.role === 'manager') {
+            return allRoles.filter(role => role !== 'admin'); // Manager can assign any role except admin
+        }
+        return [];
+    }, [currentUser?.role, userRoles]);
 
     const openModal = (userToEdit = null) => {
         if (userToEdit) {
@@ -78,7 +86,12 @@ const Users = () => {
             setFormData(userToEdit);
         } else {
             setEditId(null);
-            setFormData({ ...INITIAL_FORM_DATA, branch: branch || "" });
+            // Set a sensible default role for new users from the dynamic list
+            setFormData({
+                ...INITIAL_FORM_DATA,
+                branch: branch || "",
+                role: assignableRoles.length > 0 ? assignableRoles[0] : ""
+            });
         }
         setIsModalOpen(true);
     };
@@ -86,6 +99,16 @@ const Users = () => {
     const closeModal = () => {
         setIsModalOpen(false);
         setEditId(null);
+    };
+    
+    // Re-fetch users after a successful operation
+    const refetchUsers = async () => {
+        try {
+            const response = await axiosSecure.get(`/user/${branch}/get-all/`);
+            setUsers(response.data);
+        } catch (error) {
+            console.error('Error re-fetching users:', error);
+        }
     };
 
     const handleAddOrEditUser = async () => {
@@ -96,7 +119,7 @@ const Users = () => {
             } else {
                 await axiosSecure.post('/user/post', formData);
             }
-            fetchUsers();
+            await refetchUsers(); // Use a targeted refetch instead of reloading all data
             closeModal();
             Swal.fire('Success!', `User has been successfully ${editId ? 'updated' : 'created'}.`, 'success');
         } catch (error) {
@@ -116,14 +139,15 @@ const Users = () => {
             confirmButtonColor: '#3085d6',
             cancelButtonColor: '#d33',
             confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
+        }).then(async (result) => {
             if (result.isConfirmed) {
-                axiosSecure.delete(`/user/delete/${id}`)
-                    .then(() => {
-                        fetchUsers();
-                        Swal.fire('Deleted!', 'The user has been deleted.', 'success');
-                    })
-                    .catch(error => Swal.fire('Error!', 'Failed to delete user.', 'error'));
+                try {
+                    await axiosSecure.delete(`/user/delete/${id}`);
+                    await refetchUsers();
+                    Swal.fire('Deleted!', 'The user has been deleted.', 'success');
+                } catch (error) {
+                    Swal.fire('Error!', 'Failed to delete user.', 'error');
+                }
             }
         });
     };
@@ -150,7 +174,6 @@ const Users = () => {
                             />
                         </div>
                     </div>
-                    {/* Only Admins and Managers can add new users */}
                     {assignableRoles.length > 0 && (
                         <button onClick={() => openModal()} className="flex gap-2 items-center bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-700 transition duration-300">
                             <span className="font-semibold">New</span>
@@ -179,9 +202,8 @@ const Users = () => {
                         </thead>
                         <tbody>
                             {paginatedData.map((user) => {
-                                // --- RBAC Logic for Edit/Delete actions ---
                                 let canPerformAction = false;
-                                if (currentUser._id !== user._id) { // Prevent users from editing themselves
+                                if (currentUser._id !== user._id) {
                                     if (currentUser.role === 'admin') {
                                         canPerformAction = true;
                                     } else if (currentUser.role === 'manager' && user.role !== 'admin') {
@@ -223,16 +245,14 @@ const Users = () => {
                             <button onClick={closeModal} className="text-gray-400 hover:text-gray-600"><FiX size={24} /></button>
                         </div>
                         <div className="space-y-4">
-                            {/* Form fields... */}
                             <input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="input input-bordered w-full" placeholder="Name" />
                             <input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="input input-bordered w-full" placeholder="Email" />
-                            {/* Only show password field for new users */}
                             {!editId && <input type="password" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} className="input input-bordered w-full" placeholder="Password" />}
                             
                             <ImageUpload setImageUrl={handleImageUpload} />
 
                             <select value={formData.role} onChange={(e) => setFormData({ ...formData, role: e.target.value })} className="select select-bordered w-full">
-                                {/* Role dropdown is now dynamically generated */}
+                                <option value="" disabled>Select a role</option>
                                 {assignableRoles.map(role => (
                                     <option key={role} value={role} className="capitalize">{role}</option>
                                 ))}
