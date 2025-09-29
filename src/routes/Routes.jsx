@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 // 1. IMPORT the new PermissionPrivateRoute
 import PermissionPrivateRoute from "./Root/PermissionPrivateRoute"; 
 import AdminPrivateRoute from "./Root/AdminPrivateRoute"; 
-
+import PrivateRoot from "./Root/PrivateRoot"; 
 // Page and Root component imports
 import Error404 from "../pages/Error404/Error";
 import Login from "../pages/Login/Login";
@@ -71,6 +71,9 @@ import UserProfile from "../pages/OtherPage/UserProfile";
 import NewBranchWizard from "../pages/Admin/NewBranchWizard";
 import UserPermission from "../pages/OtherPage/UserPermission";
 import UserRoleManagement from "../pages/OtherPage/userrolemanagement";
+// import DeviceManagement from "../pages/Door/device-management";
+// import UserSync from "../pages/Door/user-sync";
+// import AttendanceReport from "../pages/Door/attendance-report";
 
 
 export const router = createBrowserRouter([
@@ -164,7 +167,7 @@ export const router = createBrowserRouter([
             },
             {
                 path: "edit-order/:id",
-                element: <PermissionPrivateRoute><EditOrderPage /></PermissionPrivateRoute>,
+                element: <PrivateRoot><EditOrderPage /></PrivateRoot>,
             },
 
             //Accounting And Expense 
@@ -309,13 +312,24 @@ export const router = createBrowserRouter([
             },
             {
                 path: 'vendor-ledger/:vendorId',
-                element: <PermissionPrivateRoute><VendorLedger /></PermissionPrivateRoute>,
+                element:<PrivateRoot><VendorLedger /></PrivateRoot> ,
             },
-                {
+            {
                 path: 'userrolemanagement',
                 element: <PermissionPrivateRoute><UserRoleManagement /></PermissionPrivateRoute>,
             },
-
+            //    {
+            //     path: 'device-management',
+            //     element: <DeviceManagement />,
+            // },
+            //    {
+            //     path: 'user-sync',
+            //     element: <UserSync />,
+            // },
+            //    {
+            //     path: 'attendance-report',
+            //     element: <AttendanceReport />,
+            // },
         ],
     },
     {

@@ -1,36 +1,48 @@
 // src/layouts/Sidebar.js
-
 import React, { useState, useEffect, useMemo, memo } from 'react';
 import { Link, useLocation } from "react-router-dom";
 import { MdChevronRight } from "react-icons/md";
 import menuItems from "./MenuItems";
 import useCompanyHook from "../../Hook/useCompanyHook";
+import useUserPermissions from '../../Hook/useUserPermissions'; // 1. IMPORT the new hook
 
-// --- Optimization 1: Memoize the AccordionItem Component ---
-// We wrap AccordionItem in React.memo to prevent it from re-rendering if its props (item, isSidebarOpen) have not changed.
-// This is highly effective because when the sidebar toggles, only the isSidebarOpen prop changes, but without memo,
-// every single AccordionItem in the list would re-render.
+// Helper for skeleton loading UI
+const SidebarSkeleton = ({ isSidebarOpen }) => (
+    <div className="p-2">
+        {[...Array(8)].map((_, i) => (
+            <div key={i} className="flex items-center gap-3 my-4 h-8">
+                <div className="bg-gray-200 rounded-md w-8 h-full animate-pulse"></div>
+                {isSidebarOpen && <div className="bg-gray-200 rounded-md h-5 w-3/4 animate-pulse"></div>}
+            </div>
+        ))}
+    </div>
+);
+
+
 const AccordionItem = memo(({ item, isSidebarOpen }) => {
     const [isOpen, setIsOpen] = useState(false);
     const location = useLocation();
 
-    // --- Optimization 2: Add Effect for Better UX ---
-    // This `useEffect` hook automatically closes an open accordion when the entire sidebar is collapsed.
-    // It improves the user experience by resetting the accordion's state for a cleaner look when the sidebar re-opens.
     useEffect(() => {
         if (!isSidebarOpen) {
             setIsOpen(false);
         }
     }, [isSidebarOpen]);
 
-    // Memoize class names to avoid recalculating them on every render.
-    const linkClasses = useMemo(() => `flex p-2 my-1 text-sm rounded-md gap-3 items-center transition-colors ${
+    // Automatically open the accordion if a child link is active
+    useEffect(() => {
+        if (item.list && item.list.some(child => child.path === location.pathname)) {
+            setIsOpen(true);
+        }
+    }, [location.pathname, item.list]);
+    
+
+    const linkClasses = useMemo(() => `flex p-3 my-1 rounded-md gap-3 items-center transition-colors ${
         location.pathname === item.path
-            ? "bg-blue-500 text-white"
-            : "text-gray-500 hover:bg-gray-200"
+            ? "bg-blue-600 text-white shadow-md"
+            : "text-gray-600 hover:bg-gray-200"
     }`, [location.pathname, item.path]);
 
-    // Render for a dropdown menu item
     if (item.list) {
         return (
             <li className="my-1">
@@ -52,7 +64,7 @@ const AccordionItem = memo(({ item, isSidebarOpen }) => {
                                     to={child.path}
                                     className={`flex p-2 my-1 text-sm rounded-md gap-3 items-center transition-colors ${
                                         location.pathname === child.path
-                                            ? "bg-blue-500 text-white"
+                                            ? "bg-blue-600 text-white"
                                             : "text-gray-500 hover:bg-gray-200"
                                     }`}
                                 >
@@ -67,7 +79,6 @@ const AccordionItem = memo(({ item, isSidebarOpen }) => {
         );
     }
 
-    // Render for a single link item
     return (
         <li>
             <Link to={item.path} className={linkClasses}>
@@ -81,13 +92,31 @@ const AccordionItem = memo(({ item, isSidebarOpen }) => {
 
 const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
     const { companies } = useCompanyHook();
+    // 2. FETCH the user's allowed routes and loading status
+    const { allowedRoutes, loading: permissionsLoading } = useUserPermissions();
 
-    // --- Optimization 3: Memoize the Menu Items Array ---
-    // `useMemo` ensures that the `menuItems()` function is only called once, and the resulting array is reused
-    // on subsequent renders. This prevents recalculating the list of menu items every time the sidebar toggles.
-    const memoizedMenuItems = useMemo(() => menuItems(), []);
+    // 3. FILTER the menu based on permissions
+    const filteredMenuItems = useMemo(() => {
+        if (permissionsLoading) return []; // Return empty while loading
+        const allItems = menuItems();
 
-    // Memoize the dynamic class string for the sidebar container
+        return allItems.reduce((acc, item) => {
+            if (item.path) { // Direct link
+                if (allowedRoutes.includes(item.path)) {
+                    acc.push(item);
+                }
+            } else if (item.list) { // Group with sub-menu
+                const allowedSubItems = item.list.filter(subItem =>
+                    allowedRoutes.includes(subItem.path)
+                );
+                if (allowedSubItems.length > 0) {
+                    acc.push({ ...item, list: allowedSubItems });
+                }
+            }
+            return acc;
+        }, []);
+    }, [allowedRoutes, permissionsLoading]);
+
     const sidebarClasses = useMemo(() => `fixed top-0 left-0 h-full bg-white shadow-lg z-30 transition-all duration-300 flex flex-col ${
         isSidebarOpen
             ? 'w-64 translate-x-0'
@@ -108,11 +137,16 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
                 </div>
 
                 <nav className="flex-1 overflow-y-auto p-2">
-                    <ul>
-                        {memoizedMenuItems.map((item) => (
-                            <AccordionItem key={item.title} item={item} isSidebarOpen={isSidebarOpen} />
-                        ))}
-                    </ul>
+                    {/* 4. RENDER skeleton or the filtered menu */}
+                    {permissionsLoading ? (
+                        <SidebarSkeleton isSidebarOpen={isSidebarOpen} />
+                    ) : (
+                        <ul>
+                            {filteredMenuItems.map((item) => (
+                                <AccordionItem key={item.title} item={item} isSidebarOpen={isSidebarOpen} />
+                            ))}
+                        </ul>
+                    )}
                 </nav>
             </div>
         </>

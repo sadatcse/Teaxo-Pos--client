@@ -93,11 +93,11 @@ const Lobby = () => {
                 transition={{ duration: 0.5 }}
             >
                 <div className="card-body">
-                    <header className="mb-6">
+                    <header className="mb-6 center">
                         <Mtitle title="Restaurant Lobby" />
-                        <p className="text-slate-700 mt-1">
+                        {/* <p className="text-slate-700 mt-1">
                             Please select a table to proceed.
-                        </p>
+                        </p> */}
                     </header>
                     <div className="divider" />
                     <main>

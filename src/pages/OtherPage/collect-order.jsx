@@ -12,9 +12,11 @@ import TableSelectionModal from "../../components/Modal/TableSelectionModal";
 import OrderTypeSelectionModal from "../../components/Modal/OrderTypeSelectionModal.js";
 import DeliveryProviderSelectionModal from "../../components/Modal/DeliveryProviderSelectionModal";
 import { toast } from "react-toastify";
-import ProductSelection from "../../components/Product/ProductSelection.jsx"
-import OrderSummary from "../../components/Product/OrderSummary.jsx"
-import useCategoriesWithProducts from "../../Hook/useCategoriesWithProducts";
+import ProductSelection from "../../components/Product/ProductSelection.jsx";
+import OrderSummary from "../../components/Product/OrderSummary.jsx";
+
+import useCategoriesWithProducts from './../../Hook/useCategoriesWithProducts';
+
 
 const CollectOrder = () => {
     const { state: routeState } = useLocation();
@@ -36,16 +38,41 @@ const CollectOrder = () => {
     const [isOrderTypeModalOpen, setIsOrderTypeModalOpen] = useState(true);
     const [isTableSelectionModalOpen, setIsTableSelectionModalOpen] = useState(false);
     const [isDeliveryProviderModalOpen, setIsDeliveryProviderModalOpen] = useState(false);
-    
-    // REMOVED: isReceiptModalOpen state is no longer needed.
-    // const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
-
     const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
     const [customDateTime, setCustomDateTime] = useState("");
     const receiptRef = useRef();
     const kitchenReceiptRef = useRef();
     const { companies } = useCompanyHook();
+
+    // --- PAYMENT STATE & HANDLERS ---
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
+    const [selectedSubMethod, setSelectedSubMethod] = useState('');
+    const [selectedCardIcon, setSelectedCardIcon] = useState(null);
+
+    const handleMainPaymentButtonClick = (method) => {
+        if (selectedPaymentMethod === method) {
+            setSelectedPaymentMethod('');
+            setSelectedSubMethod('');
+            setSelectedCardIcon(null);
+        } else {
+            setSelectedPaymentMethod(method);
+            setSelectedSubMethod('');
+            if (method !== 'Card') {
+                setSelectedCardIcon(null);
+            }
+        }
+    };
+
+    const handleSubPaymentButtonClick = (subMethod, iconComponent = null) => {
+        setSelectedSubMethod(subMethod);
+        // The main method for the invoice should be the specific sub-method now
+        setSelectedPaymentMethod(subMethod);
+        if (subMethod.includes("Card")) {
+            setSelectedCardIcon(iconComponent);
+        } else {
+            setSelectedCardIcon(null);
+        }
+    };
 
     useEffect(() => {
         const tableFromLobby = routeState?.selectedTable;
@@ -75,9 +102,7 @@ const CollectOrder = () => {
             setDeliveryProvider("");
         }
     };
-
-    const handlePaymentMethodSelect = (method) => setSelectedPaymentMethod(method);
-
+    
     const handleOrderTypeChange = (type) => {
         setOrderType(type);
         setSelectedTable("");
@@ -112,12 +137,12 @@ const CollectOrder = () => {
         }
     };
 
-    const updateCookStatus = (productId, status) => {
-        setAddedProducts(currentProducts =>
-            currentProducts.map(p => p._id === productId ? { ...p, cookStatus: status } : p)
-        );
-        toast.info(`Product status updated to ${status}`);
-    };
+    // const updateCookStatus = (productId, status) => {
+    //     setAddedProducts(currentProducts =>
+    //         currentProducts.map(p => p._id === productId ? { ...p, cookStatus: status } : p)
+    //     );
+    //     toast.info(`Product status updated to ${status}`);
+    // };
 
     const incrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id ? { ...p, quantity: p.quantity + 1 } : p)));
     const decrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id && p.quantity > 1 ? { ...p, quantity: p.quantity - 1 } : p)));
@@ -195,19 +220,12 @@ const CollectOrder = () => {
         const sd = nonComplimentaryProducts.reduce((total, p) => total + ((p.sd || 0) * p.quantity), 0);
         const discount = parseFloat(invoiceSummary.discount || 0);
         const payable = subtotal + vat + sd - discount;
-        return {
-            subtotal: roundAmount(subtotal),
-            vat: roundAmount(vat),
-            sd: roundAmount(sd),
-            discount: roundAmount(discount),
-            payable: roundAmount(payable),
-        };
+        return { subtotal, vat, sd, discount, payable: roundAmount(payable) };
     };
 
     const printInvoice = async (isPrintAction) => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
-        // ... (invoiceDetails calculation remains the same)
         const { subtotal, vat, sd, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
@@ -237,7 +255,6 @@ const CollectOrder = () => {
         if (orderType === "dine-in") invoiceDetails.tableName = TableName;
         if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
 
-
         try {
             let response;
             if (currentInvoiceId) {
@@ -248,14 +265,11 @@ const CollectOrder = () => {
                 toast.success("Invoice saved successfully!");
             }
             const data = response.data;
-            const finalInvoiceDetails = { ...invoiceDetails, ...data };
-            const dataForPrint = { ...finalInvoiceDetails, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || data._id };
+            const dataForPrint = { ...invoiceDetails, ...data, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || data._id };
             setPrint(dataForPrint);
             setCurrentInvoiceId(data.invoiceId || data._id);
             
-            // CHANGE: Instead of opening a modal, we now call the print function on the hidden component.
             if (isPrintAction && companies[0] && data) {
-                // Use a short timeout to allow React to update the state and render the hidden receipt
                 setTimeout(() => {
                     if (receiptRef.current) {
                         receiptRef.current.printReceipt();
@@ -288,19 +302,64 @@ const CollectOrder = () => {
             {!isOrderTypeModalOpen && !isTableSelectionModalOpen && !isDeliveryProviderModalOpen && (
                 <div className="flex flex-col lg:flex-row p-1 gap-1">
                     <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} />
-                    <ProductSelection products={products} categories={categories} selectedCategory={selectedCategory} setSelectedCategory={setSelectedCategory} addProduct={addProduct} loading={loadingProducts} />
-                    <OrderSummary user={user} customDateTime={customDateTime} setCustomDateTime={setCustomDateTime} customer={customer} mobile={mobile} setMobile={setMobile} handleCustomerSearch={handleCustomerSearch} orderType={orderType} handleOrderTypeChange={handleOrderTypeChange} TableName={TableName} deliveryProvider={deliveryProvider} addedProducts={addedProducts} incrementQuantity={incrementQuantity} decrementQuantity={decrementQuantity} removeProduct={removeProduct} invoiceSummary={invoiceSummary} setInvoiceSummary={setInvoiceSummary} subtotal={subtotal} vat={vat} sd={sd} payable={payable} paid={paid} change={change} printInvoice={printInvoice} handleKitchenClick={handleKitchenClick} resetOrder={resetOrder} isProcessing={isProcessing} selectedPaymentMethod={selectedPaymentMethod} handlePaymentMethodSelect={handlePaymentMethodSelect} updateCookStatus={updateCookStatus} toggleComplimentaryStatus={toggleComplimentaryStatus} />
+                    
+                    <ProductSelection
+                        products={products}
+                        categories={categories}
+                        selectedCategory={selectedCategory}
+                        setSelectedCategory={setSelectedCategory}
+                        addProduct={addProduct}
+                        loading={loadingProducts}
+                        // Pass Payment Props for UI
+                        isProcessing={isProcessing}
+                        selectedPaymentMethod={selectedPaymentMethod}
+                        selectedSubMethod={selectedSubMethod}
+                        selectedCardIcon={selectedCardIcon}
+                        handleMainPaymentButtonClick={handleMainPaymentButtonClick}
+                        handleSubPaymentButtonClick={handleSubPaymentButtonClick}
+                    />
+
+                    <OrderSummary
+                        user={user}
+                        customDateTime={customDateTime}
+                        setCustomDateTime={setCustomDateTime}
+                        customer={customer}
+                        mobile={mobile}
+                        setMobile={setMobile}
+                        handleCustomerSearch={handleCustomerSearch}
+                        orderType={orderType}
+                        handleOrderTypeChange={handleOrderTypeChange}
+                        TableName={TableName}
+                        deliveryProvider={deliveryProvider}
+                        addedProducts={addedProducts}
+                        incrementQuantity={incrementQuantity}
+                        decrementQuantity={decrementQuantity}
+                        removeProduct={removeProduct}
+                        invoiceSummary={invoiceSummary}
+                        setInvoiceSummary={setInvoiceSummary}
+                        subtotal={subtotal}
+                        vat={vat}
+                        sd={sd}
+                        payable={payable}
+                        paid={paid}
+                        change={change}
+                        printInvoice={printInvoice}
+                        handleKitchenClick={handleKitchenClick}
+                        resetOrder={resetOrder}
+                        isProcessing={isProcessing}
+                        toggleComplimentaryStatus={toggleComplimentaryStatus}
+                        // Pass Payment State for Validation Logic
+                        selectedPaymentMethod={selectedPaymentMethod}
+                        selectedSubMethod={selectedSubMethod}
+                    />
                 </div>
             )}
 
-            {/* REMOVED: The on-screen receipt modal is no longer needed. */}
-
-            {/* CHANGE: Added a hidden div to contain the receipt component for printing. */}
             <div style={{ display: 'none' }}>
                 {print && companies[0] && (
                     <ReceiptTemplate
                         ref={receiptRef}
-                        onPrintComplete={resetOrder} // After printing is complete, reset the order.
+                        onPrintComplete={resetOrder}
                         profileData={companies[0]}
                         invoiceData={print}
                     />
