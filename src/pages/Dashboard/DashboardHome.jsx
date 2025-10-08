@@ -11,9 +11,7 @@ import CookingAnimation from "../../components/CookingAnimation";
 import SummaryCards from "./../../components/Dashboard/SummaryCards";
 import RecentlyPlacedOrders from "./../../components/Dashboard/RecentlyPlacedOrders";
 import Mtitle from '../../components library/Mtitle';
-import moment from 'moment';
-import { motion } from 'framer-motion';
-import { FaCode } from 'react-icons/fa';
+
 const DashboardHome = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -95,36 +93,6 @@ const DashboardHome = () => {
         </div>
 
 
-<div className="col-span-12">
-  <motion.footer
-    className="footer footer-center p-8 bg-blue-800 text-blue-100 rounded-lg mt-6 shadow-xl"
-    initial={{ opacity: 0, y: 20 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ duration: 0.5, delay: 0.3 }}
-  >
-    <aside>
-      <p className="font-bold text-base text-white">
-        RESTAURANT MANAGEMENT SYSTEM 1.00
-      </p>
-      <p className="text-sm opacity-70">
-        &copy; {moment().format("YYYY")} - All Rights Reserved
-      </p>
-      <div className="flex items-center gap-1.5 mt-2 text-sm">
-        <span className="opacity-70">Designed & Developed by</span>
-        <motion.a
-          href="https://www.sadatkhan.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-white font-semibold flex items-center gap-1 hover:underline decoration-blue-300 underline-offset-4 transition-all"
-          whileHover={{ scale: 1.05, letterSpacing: '0.25px' }}
-          whileTap={{ scale: 0.95 }}
-        >
-          Sadat Khan <FaCode />
-        </motion.a>
-      </div>
-    </aside>
-  </motion.footer>
-</div>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 // Component for Displaying an Empty or Error State
 const MEmptyState = ({ message, details }) => (
@@ -83,7 +84,7 @@ const ReviewInsights = () => {
     const [summary, setSummary] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const fetchSummary = useCallback(async () => {
         if (!branch) return;
         setIsLoading(true);

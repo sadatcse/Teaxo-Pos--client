@@ -12,6 +12,7 @@ import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import Preloader from "../../components/Shortarea/Preloader";
 import { useDebounce } from 'use-debounce'; // Use this new hook
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const Product = () => {
     const { categoryNames, loading: categoriesLoading, error: categoriesError } = CategroieHook();
@@ -44,7 +45,7 @@ const Product = () => {
     const [loading, setLoading] = useState(false);
     const [vatInput, setVatInput] = useState("");
     const [sdInput, setSdInput] = useState("");
-    
+       const { canPerform, loading: permissionsLoading } = useActionPermissions();
     // Debounce the search term to improve performance
     const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
 

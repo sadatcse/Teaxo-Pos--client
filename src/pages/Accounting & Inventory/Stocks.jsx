@@ -11,6 +11,7 @@ import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import useIngredientCategories from "../../Hook/useIngredientCategories";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const PaginationControls = ({ currentPage, totalPages, onPageChange, totalDocuments, rowsPerPage }) => {
     if (totalPages <= 1) return null;
@@ -191,7 +192,7 @@ const Stocks = () => {
     const [isAlertModalOpen, setAlertModalOpen] = useState(false);
     const [isAdjustmentModalOpen, setAdjustmentModalOpen] = useState(false);
     const [selectedStock, setSelectedStock] = useState(null);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const fetchStocks = useCallback(async () => {
         if (!branch) return;
         setTableLoading(true);
@@ -248,13 +249,19 @@ const Stocks = () => {
                                                     <td className="p-3 text-slate-700 border-b border-slate-200">{s.ingredient?.stockAlert || 0}</td>
                                                     <td className="p-3 text-slate-500 border-b border-slate-200">{s.ingredient?.sku || 'N/A'}</td>
                                                     <td className="p-3 text-sm text-slate-500 border-b border-slate-200">{new Date(s.updatedAt).toLocaleString()}</td>
-                                                    <td className="p-3 border-b border-slate-200">
-                                                        <div className="flex items-center justify-center gap-2">
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleViewDetails(s)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Details"><FaEye /></motion.button>
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenAlertModal(s)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Update Stock Alert"><FiBell /></motion.button>
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenAdjustmentModal(s)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Stock Adjustment"><FiSliders /></motion.button>
-                                                        </div>
-                                                    </td>
+      <td className="p-3 border-b border-slate-200">
+    <div className="flex items-center justify-center gap-2">
+        {canPerform("Stock Management", "view") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleViewDetails(s)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Details"><FaEye /></motion.button>
+        )}
+        {canPerform("Stock Management", "edit") && (
+            <>
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenAlertModal(s)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Update Stock Alert"><FiBell /></motion.button>
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenAdjustmentModal(s)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Stock Adjustment"><FiSliders /></motion.button>
+            </>
+        )}
+    </div>
+</td>
                                                 </motion.tr>
                                             );
                                         })}

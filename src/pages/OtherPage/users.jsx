@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useContext, useMemo } from "react";
 import { FiEdit, FiTrash2, FiX } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { TfiSearch } from "react-icons/tfi";
@@ -11,6 +11,7 @@ import ImageUpload from "../../config/ImageUploadcpanel";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import Preloader from "../../components/Shortarea/Preloader";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 // Updated initial form data with a neutral default role
 const INITIAL_FORM_DATA = {
@@ -35,7 +36,7 @@ const Users = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isPageLoading, setPageLoading] = useState(true);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
 
     // useEffect now fetches both users and roles concurrently for efficiency
@@ -58,7 +59,7 @@ const Users = () => {
             }
         };
         loadData();
-    }, [axiosSecure,axiosSecure, branch]);
+    }, [axiosSecure, branch]);
 
     const filteredUsers = useMemo(() => {
         return users.filter(user =>
@@ -160,7 +161,7 @@ const Users = () => {
 
     return (
         <div className="p-4 min-h-screen bg-gray-50">
-            <Mtitle title="User Management" rightcontent={
+            <Mtitle title="Staff Management" rightcontent={
                 <div className='flex md:mt-0 mt-3 justify-end items-center gap-4'>
                     <div className='md:w-64 border shadow-sm py-2 px-3 bg-white rounded-xl'>
                         <div className='flex items-center gap-2'>

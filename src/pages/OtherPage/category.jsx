@@ -9,6 +9,7 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const Category = () => {
     const axiosSecure = UseAxiosSecure();
@@ -27,7 +28,7 @@ const Category = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const LOCAL_STORAGE_KEY = `categories_${branch}`;
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const clearLocalStorage = useCallback(() => {
         localStorage.removeItem(LOCAL_STORAGE_KEY);
     }, [LOCAL_STORAGE_KEY]);

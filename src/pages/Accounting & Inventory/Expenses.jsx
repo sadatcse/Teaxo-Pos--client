@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { FiDollarSign, FiEdit, FiTrash2, FiEye, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiDollarSign, FiEdit, FiTrash2, FiEye, FiChevronLeft, FiChevronRight, FiLock } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { TfiSearch } from "react-icons/tfi";
 import { GoPlus } from "react-icons/go";
@@ -14,11 +14,12 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const Expenses = () => {
     const axiosSecure = UseAxiosSecure();
     const { branch, user } = useContext(AuthContext);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     // States
     const [expenses, setExpenses] = useState([]);
     const [vendors, setVendors] = useState([]);
@@ -94,6 +95,11 @@ const Expenses = () => {
     }, [formData.totalAmount, formData.paidAmount]);
 
     const handleAddOrEditExpense = async () => {
+            const requiredPermission = editId ? "edit" : "add";
+    if (!canPerform("Expense Management", requiredPermission)) {
+        Swal.fire("Access Denied", `You do not have permission to ${requiredPermission} expenses.`, "error");
+        return;
+    }
         setIsFormLoading(true);
         const payload = { 
             ...formData, 
@@ -116,6 +122,10 @@ const Expenses = () => {
     };
     
     const openCreateModal = () => {
+           if (!canPerform("Expense Management", "add")) {
+        Swal.fire("Access Denied", "You do not have permission to add expenses.", "error");
+        return;
+    }
         setEditId(null);
         setFormData({
             title: "", category: "Utility", vendorName: "", totalAmount: "", paidAmount: "",
@@ -126,13 +136,20 @@ const Expenses = () => {
     };
 
     const handleEdit = (expense) => {
+            if (!canPerform("Expense Management", "edit")) {
+        Swal.fire("Access Denied", "You do not have permission to edit expenses.", "error");
+        return;
+    }
         setEditId(expense._id);
         setFormData({ ...expense, date: new Date(expense.date) });
         setIsModalOpen(true);
     };
     
     const handleRemove = (expense) => {
-        // ... (This function is already correct from the previous step)
+       if (!canPerform("Expense Management", "delete")) {
+        Swal.fire("Access Denied", "You do not have permission to delete expenses.", "error");
+        return;
+    }
         if (expense.purchaseId && user?.role !== 'admin') {
             Swal.fire({ icon: 'warning', title: 'Action Restricted', text: 'This expense is linked to a purchase and can only be deleted by an administrator.' });
             return;
@@ -157,6 +174,10 @@ const Expenses = () => {
     };
     
     const openPayVendorModal = async () => {
+            if (!canPerform("Expense Management", "add")) {
+        Swal.fire("Access Denied", "You do not have permission to pay vendors.", "error");
+        return;
+    }
         setIsFormLoading(true);
         try {
             const { data } = await axiosSecure.get(`/purchase/vendor-balances/${branch}`);
@@ -210,7 +231,11 @@ const Expenses = () => {
     };
     const renderRowsInfo = () => { if (!paginationInfo || paginationInfo.totalDocuments === 0) { return "No records found."; } const start = (currentPage - 1) * paginationInfo.limit + 1; const end = start - 1 + expenses.length; return `Showing ${start}-${end} of ${paginationInfo.totalDocuments} records`; };
     const renderStatusBadge = (status) => { const styles = { Paid: "bg-green-100 text-green-800", Unpaid: "bg-red-100 text-red-800", Partial: "bg-yellow-100 text-yellow-800", }; return (<span className={`px-3 py-1 text-xs font-semibold rounded-full ${styles[status] || 'bg-gray-100 text-gray-800'}`}>{status}</span>); };
-    
+       if (permissionsLoading) {
+        return <MtableLoading />;
+    }
+
+
     return (
         <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
             <Mtitle title="Expense Management" rightcontent={
@@ -218,8 +243,12 @@ const Expenses = () => {
                     <DatePicker selected={fromDate} onChange={(date) => setFromDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full" placeholderText="From Date" isClearable />
                     <DatePicker selected={toDate} onChange={(date) => setToDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full" placeholderText="To Date" isClearable />
                     <div className='relative md:w-64'><TfiSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400' /><input type="text" className='input input-bordered w-full pl-10' placeholder='Search...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={openPayVendorModal} className="btn bg-green-600 text-white hover:bg-green-700"><FiDollarSign className="text-xl" /> Pay Vendor</motion.button>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={openCreateModal} className="btn bg-blue-600 text-white hover:bg-blue-700"><GoPlus className="text-xl" /> New Expense</motion.button>
+           {canPerform("Expense Management", "add") && (
+                        <>
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={openPayVendorModal} className="btn bg-green-600 text-white hover:bg-green-700"><FiDollarSign /> Pay Vendor</motion.button>
+                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={openCreateModal} className="btn bg-blue-600 text-white hover:bg-blue-700"><GoPlus /> New Expense</motion.button>
+                        </>
+                    )}
                 </div>
             } />
 
@@ -236,13 +265,19 @@ const Expenses = () => {
                                         {expenses.map((expense) => (
                                             <motion.tr key={expense._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 last:border-b-0 text-sm text-slate-700">
                                                 <td className="p-3 font-medium">{expense.title}</td><td className="p-3">{expense.category}</td><td className="p-3">{expense.totalAmount?.toLocaleString()} BDT</td><td className="p-3">{expense.paidAmount?.toLocaleString()} BDT</td><td className="p-3">{renderStatusBadge(expense.paymentStatus)}</td><td className="p-3">{new Date(expense.date).toLocaleDateString()}</td>
-                                                <td className="p-3">
-                                                    <div className="flex justify-center items-center gap-2">
-                                                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setIsViewModalOpen(true)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white"><FiEye /></motion.button>
-                                                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(expense)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" disabled={expense.purchaseId}><FiEdit /></motion.button>
-                                                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(expense)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white"><FiTrash2 /></motion.button>
-                                                    </div>
-                                                </td>
+<td className="p-3">
+    <div className="flex justify-center items-center gap-2">
+        {canPerform("Expense Management", "view") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => { setSelectedExpense(expense); setIsViewModalOpen(true); }} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white"><FiEye /></motion.button>
+        )}
+        {canPerform("Expense Management", "edit") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(expense)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" disabled={expense.purchaseId}><FiEdit /></motion.button>
+        )}
+        {canPerform("Expense Management", "delete") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(expense)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white"><FiTrash2 /></motion.button>
+        )}
+    </div>
+</td>
                                             </motion.tr>
                                         ))}
                                     </AnimatePresence>

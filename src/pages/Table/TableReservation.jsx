@@ -8,10 +8,12 @@ import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import Mpagination from "../../components library/Mpagination";
 import MtableLoading from "../../components library/MtableLoading";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const TableReservation = () => {
     const axiosSecure = UseAxiosSecure();
     const { branch, user } = useContext(AuthContext);
+       const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const [reservations, setReservations] = useState([]);
     const [availableTables, setAvailableTables] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -78,6 +80,11 @@ const TableReservation = () => {
     };
 
     const handleAddOrEditReservation = async () => {
+            const requiredPermission = editId ? "edit" : "add";
+    if (!canPerform("Table Reservations", requiredPermission)) {
+        Swal.fire("Access Denied", `You do not have permission to ${requiredPermission} reservations.`, "error");
+        return;
+    }
         setIsLoading(true);
         try {
             const reservationData = {
@@ -110,6 +117,10 @@ const TableReservation = () => {
     };
 
     const handleEdit = (id) => {
+            if (!canPerform("Table Reservations", "edit")) {
+        Swal.fire("Access Denied", "You do not have permission to edit reservations.", "error");
+        return;
+    }
         const reservation = reservations.find((r) => r._id === id);
         if (reservation) {
             setEditId(id);
@@ -132,6 +143,10 @@ const TableReservation = () => {
     };
 
     const handleRemove = (id) => {
+           if (!canPerform("Table Reservations", "delete")) {
+        Swal.fire("Access Denied", "You do not have permission to delete reservations.", "error");
+        return;
+    }
         Swal.fire({
             title: "Are you sure?",
             text: "You won't be able to revert this!",
@@ -187,6 +202,7 @@ const TableReservation = () => {
     />
   }
   rightcontent={
+     canPerform("Table Reservations", "add") && (
     <motion.button
       whileHover={{ scale: 1.05 }}
       whileTap={{ scale: 0.95 }}
@@ -194,7 +210,7 @@ const TableReservation = () => {
       className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300"
     >
       <GoPlus className="text-xl" /> Add New
-    </motion.button>
+    </motion.button>)
   }
 />
 
@@ -234,12 +250,16 @@ const TableReservation = () => {
                                                     <td className="p-3"><p>{reservation.customerPhone}</p>{reservation.customerEmail && <p className="text-xs text-slate-500">{reservation.customerEmail}</p>}</td>
                                                     <td className="p-3">{new Date(reservation.startTime).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })} - <br />{new Date(reservation.endTime).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td>
                                                     <td className="p-3"><span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${reservation.status === 'Confirmed' ? 'bg-green-100 text-green-800' : reservation.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : reservation.status === 'Cancelled' ? 'bg-red-100 text-red-800' : reservation.status === 'Completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{reservation.status}</span></td>
-                                                    <td className="p-3 text-center">
-                                                        <div className="flex justify-center items-center gap-2">
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(reservation._id)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit Reservation"><FiEdit /></motion.button>
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(reservation._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete Reservation"><FiTrash2 /></motion.button>
-                                                        </div>
-                                                    </td>
+                                            <td className="p-3 text-center">
+    <div className="flex justify-center items-center gap-2">
+        {canPerform("Table Reservations", "edit") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(reservation._id)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit Reservation"><FiEdit /></motion.button>
+        )}
+        {canPerform("Table Reservations", "delete") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(reservation._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete Reservation"><FiTrash2 /></motion.button>
+        )}
+    </div>
+</td>
                                                 </motion.tr>
                                             ))
                                         )}

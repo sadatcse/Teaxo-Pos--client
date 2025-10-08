@@ -25,6 +25,7 @@ import useCompanyHook from "../../Hook/useCompanyHook";
 import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
 import MtableLoading from "../../components library/MtableLoading"; // Changed import
 import QRCodeGenerator from "../../components/QRCodeGenerator";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 // Custom hook for debouncing input
 const useDebounce = (value, delay) => {
@@ -45,6 +46,7 @@ const OrdersHistory = () => {
   const { companies, loading: companyLoading } = useCompanyHook();
   const receiptRef = useRef();
   const { user, branch } = useContext(AuthContext);
+    const { canPerform, loading: permissionsLoading } = useActionPermissions();
 
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -303,12 +305,14 @@ const OrdersHistory = () => {
                       </td>
                       <td className="p-3 text-sm text-gray-700">{order.loginUserName}</td>
                       <td className="p-3">
-                        <div className="flex justify-center items-center gap-3">
-                          <button onClick={() => handleViewOrder(order)} className="text-blue-600 hover:text-blue-800 transition" title="View Order"><FaEye size={18} /></button>
-                          {user && user.role === 'admin' && (
-                            <button onClick={() => handleDeleteOrder(order._id)} className="text-red-600 hover:text-red-800 transition" title="Delete Order"><FaTrash size={16} /></button>
-                          )}
-                        </div>
+                                         <div className="flex justify-center items-center gap-3">
+                                                {canPerform("Orders History", "view") && (
+                                                    <button onClick={() => handleViewOrder(order)} className="text-blue-600 hover:text-blue-800 transition" title="View Order"><FaEye size={18} /></button>
+                                                )}
+                                                {canPerform("Orders History", "delete") && (
+                                                    <button onClick={() => handleDeleteOrder(order._id)} className="text-red-600 hover:text-red-800 transition" title="Delete Order"><FaTrash size={16} /></button>
+                                                )}
+                                            </div>
                       </td>
                     </tr>
                   ))

@@ -13,6 +13,7 @@ import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
 import MtableLoading from "../../components library/MtableLoading";
 import { useNavigate } from "react-router-dom";
 import QRCodeGenerator from "../../components/QRCodeGenerator";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 // Define items per page as a constant
 const ITEMS_PER_PAGE = 10;
@@ -38,6 +39,7 @@ const PendingOrders = () => {
     const receiptRef = useRef();
     const { user, branch } = useContext(AuthContext);
     const navigate = useNavigate();
+    const { canPerform, loading: permissionsLoading } = useActionPermissions();
 
     const [orders, setOrders] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -298,50 +300,13 @@ const PendingOrders = () => {
                                                     
                                                     {/* MODIFIED ACTION BUTTONS SECTION */}
                                                     <td className="px-4 py-3 whitespace-nowrap text-right text-sm font-medium">
-                                                        <div className="flex justify-end items-center flex-wrap gap-2">
-                                                            <button
-                                                                onClick={() => handleViewOrder(order)}
-                                                                title="View Order"
-                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-blue-600 hover:bg-blue-700 transition-colors duration-200"
-                                                            >
-                                                                <FiEye size={14} />
-                                                                <span>View</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleEditClick(order._id)}
-                                                                title="Edit Order"
-                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-yellow-600 hover:bg-yellow-700 transition-colors duration-200"
-                                                            >
-                                                                <FiEdit size={14} />
-                                                                <span>Edit</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handlePrintOrder(order._id)}
-                                                                title="Print Order"
-                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-gray-600 hover:bg-gray-700 transition-colors duration-200"
-                                                            >
-                                                                <FiPrinter size={14} />
-                                                                <span>Print</span>
-                                                            </button>
-                                                            <button
-                                                                onClick={() => handleCompleteClick(order._id)}
-                                                                title="Complete Order"
-                                                                className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-green-600 hover:bg-green-700 transition-colors duration-200"
-                                                            >
-                                                                <FiCheckCircle size={14} />
-                                                                <span>Complete</span>
-                                                            </button>
-                                                            {user?.role === "admin" && (
-                                                                <button
-                                                                    onClick={() => handleRemove(order._id)}
-                                                                    title="Delete Order"
-                                                                    className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-red-600 hover:bg-red-700 transition-colors duration-200"
-                                                                >
-                                                                    <FiTrash2 size={14} />
-                                                                    <span>Delete</span>
-                                                                </button>
-                                                            )}
-                                                        </div>
+                                                              <div className="flex justify-end items-center flex-wrap gap-2">
+                                            {canPerform('Pending Orders', 'view') && <button onClick={() => handleViewOrder(order)} title="View Order" className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-blue-600 hover:bg-blue-700"><FiEye size={14} /><span>View</span></button>}
+                                            {canPerform('Pending Orders', 'edit') && <button onClick={() => handleEditClick(order._id)} title="Edit Order" className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-yellow-600 hover:bg-yellow-700"><FiEdit size={14} /><span>Edit</span></button>}
+                                            {canPerform('Pending Orders', 'view') && <button onClick={() => handlePrintOrder(order._id)} title="Print Order" className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-gray-600 hover:bg-gray-700"><FiPrinter size={14} /><span>Print</span></button>}
+                                            {canPerform('Pending Orders', 'edit') && <button onClick={() => handleCompleteClick(order._id)} title="Complete Order" className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-green-600 hover:bg-green-700"><FiCheckCircle size={14} /><span>Complete</span></button>}
+                                            {canPerform('Pending Orders', 'delete') && <button onClick={() => handleRemove(order._id)} title="Delete Order" className="flex items-center gap-2 px-3 py-1.5 rounded-md text-white text-xs font-semibold bg-red-600 hover:bg-red-700"><FiTrash2 size={14} /><span>Delete</span></button>}
+                                        </div>
                                                     </td>
                                                 </tr>
                                             ))

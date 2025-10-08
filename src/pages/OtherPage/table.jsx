@@ -12,6 +12,7 @@ import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import QRCodeGenerator from "../../components/QRCodeGenerator";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 
 const TableManagement = () => {
@@ -25,7 +26,7 @@ const TableManagement = () => {
     const [loading, setLoading] = useState(false);
     const [isQrModalOpen, setIsQrModalOpen] = useState(false);
     const [selectedTable, setSelectedTable] = useState(null);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const fetchTables = useCallback(async () => {
         setLoading(true);
         try {
@@ -42,6 +43,11 @@ const TableManagement = () => {
     }, [fetchTables]);
 
     const handleAddOrEditTable = async () => {
+          const requiredPermission = editId ? "edit" : "add";
+    if (!canPerform("Table Management", requiredPermission)) {
+        Swal.fire("Access Denied", `You do not have permission to ${requiredPermission} tables.`, "error");
+        return;
+    }
         setIsLoading(true);
         try {
             if (editId) {
@@ -62,6 +68,10 @@ const TableManagement = () => {
     };
 
     const handleEdit = (id) => {
+            if (!canPerform("Table Management", "edit")) {
+        Swal.fire("Access Denied", "You do not have permission to edit tables.", "error");
+        return;
+    }
         const table = tables.find((t) => t._id === id);
         setEditId(id);
         setFormData({ ...table, branch });
@@ -69,6 +79,10 @@ const TableManagement = () => {
     };
 
     const handleRemove = (id) => {
+          if (!canPerform("Table Management", "delete")) {
+        Swal.fire("Access Denied", "You do not have permission to delete tables.", "error");
+        return;
+    }
         Swal.fire({
             title: "Are you sure?", text: "You won't be able to revert this!", icon: "warning",
             showCancelButton: true, confirmButtonColor: "#3085d6", cancelButtonColor: "#d33", confirmButtonText: "Yes, delete it!",
@@ -96,9 +110,12 @@ const TableManagement = () => {
     return (
         <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
             <Mtitle title="Table Management" rightcontent={
+                                canPerform("Table Management", "add") && (
+
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300">
                     <GoPlus className="text-xl" /> Add New Table
-                </motion.button>
+                 </motion.button>
+                )
             } />
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
@@ -121,13 +138,19 @@ const TableManagement = () => {
                                             paginatedData.map((table) => (
                                                 <motion.tr key={table._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
                                                     <td className="p-3 font-medium">{table.tableName}</td>
-                                                    <td className="p-3">
-                                                        <div className="flex justify-center items-center gap-2">
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenQrModal(table)} className="btn btn-circle btn-sm bg-slate-600 hover:bg-slate-700 text-white" title="Generate QR Code"><BsQrCode /></motion.button>
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(table._id)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit Table"><FiEdit /></motion.button>
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(table._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete Table"><FiTrash2 /></motion.button>
-                                                        </div>
-                                                    </td>
+                                <td className="p-3">
+    <div className="flex justify-center items-center gap-2">
+        {canPerform("Table Management", "view") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenQrModal(table)} className="btn btn-circle btn-sm bg-slate-600 hover:bg-slate-700 text-white" title="Generate QR Code"><BsQrCode /></motion.button>
+        )}
+        {canPerform("Table Management", "edit") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(table._id)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit Table"><FiEdit /></motion.button>
+        )}
+        {canPerform("Table Management", "delete") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(table._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete Table"><FiTrash2 /></motion.button>
+        )}
+    </div>
+</td>
                                                 </motion.tr>
                                             ))
                                         )}

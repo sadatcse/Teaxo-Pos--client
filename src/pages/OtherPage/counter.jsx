@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
-import { FaPlus, FaPencilAlt, FaTrash } from "react-icons/fa";
-import { FiX, FiEdit, FiTrash2 } from 'react-icons/fi';
+import  { useState, useEffect, useContext, useCallback } from "react";
+import { FaPlus, } from "react-icons/fa";
+import { FiEdit, FiTrash2 } from 'react-icons/fi';
 import { motion, AnimatePresence } from "framer-motion";
 import Swal from 'sweetalert2';
 
@@ -11,6 +11,7 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const Counter = () => {
     const axiosSecure = UseAxiosSecure();
@@ -25,7 +26,7 @@ const Counter = () => {
     const [editId, setEditId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [loading, setLoading] = useState(false);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const fetchCounters = useCallback(async () => {
         setLoading(true);
         try {

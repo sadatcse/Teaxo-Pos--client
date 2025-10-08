@@ -19,13 +19,14 @@ import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
 import CustomReportPrint from "../../components/Receipt/CustomReportPrint";
 import { generatePdf } from "../../components/utils/generateCustomPdfReport";
 import { generateExcel } from "../../components/utils/generateCustomExcelReport";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const CustomOrder = () => {
     const { branch } = useContext(AuthContext);
     const { companies } = useCompanyHook();
     const { tables, users } = useCustomerTableSearch();
     const axiosSecure = UseAxiosSecure();
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const receiptRef = useRef();
     const customReportPrintRef = useRef();
 

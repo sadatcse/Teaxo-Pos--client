@@ -12,6 +12,7 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const Vendors = () => {
     const axiosSecure = UseAxiosSecure();
@@ -27,6 +28,7 @@ const Vendors = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isFormLoading, setIsFormLoading] = useState(false);
     const [isTableLoading, setIsTableLoading] = useState(false);
+       const { canPerform, loading: permissionsLoading } = useActionPermissions();
 
     useEffect(() => {
         if (!branch) return;
@@ -64,6 +66,11 @@ const Vendors = () => {
     };
 
     const handleAddOrEditVendor = async () => {
+            const requiredPermission = editId ? "edit" : "add";
+    if (!canPerform("Vendor Management", requiredPermission)) {
+        Swal.fire("Access Denied", `You do not have permission to ${requiredPermission} vendors.`, "error");
+        return;
+    }
         setIsFormLoading(true);
         const payload = { ...formData, branch: formData.branch || branch, };
         try {
@@ -80,6 +87,10 @@ const Vendors = () => {
     };
 
     const handleEdit = (vendorToEdit) => {
+            if (!canPerform("Vendor Management", "edit")) {
+        Swal.fire("Access Denied", "You do not have permission to edit vendors.", "error");
+        return;
+    }
         setEditId(vendorToEdit._id);
         setFormData(vendorToEdit);
         setIsModalOpen(true);
@@ -95,6 +106,10 @@ const Vendors = () => {
     }
 
 const handleRemove = (id) => {
+        if (!canPerform("Vendor Management", "delete")) {
+        Swal.fire("Access Denied", "You do not have permission to delete vendors.", "error");
+        return;
+    }
     Swal.fire({
         title: 'Are you sure?',
         text: "This vendor might have associated transactions.",
@@ -141,9 +156,11 @@ const handleRemove = (id) => {
                         <TfiSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gray-400' />
                         <input type="text" className={`${inputClass} pl-10`} placeholder='Search by Name or ID...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
+                    {canPerform("Vendor Management", "add") && (
                     <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300">
                         <GoPlus className="text-xl" /> Create Vendor
                     </motion.button>
+                      )}
                 </div>
             } />
 
@@ -160,21 +177,26 @@ const handleRemove = (id) => {
                                             paginatedData.map((vendor) => (
                                                 <motion.tr key={vendor._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
                                                     <td className="p-3 font-medium">{vendor.vendorID}</td><td className="p-3">{vendor.vendorName}</td><td className="p-3">{vendor.primaryPhone}</td><td className="p-3">{vendor.primaryEmail || 'N/A'}</td><td className="p-3">{renderStatusBadge(vendor.status)}</td>
-                                           <td className="p-3 text-center">
-  <div className="flex justify-center items-center gap-2">
-    {/* 3. Add this Link and Button */}
-    <Link to={`/dashboard/vendor-ledger/${vendor._id}`}>
-        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Ledger">
-            <FiBookOpen />
-        </motion.button>
-    </Link>
-    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(vendor)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit">
-        <FiEdit />
-    </motion.button>
-    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(vendor._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete">
-        <FiTrash2 />
-    </motion.button>
-  </div>
+<td className="p-3 text-center">
+    <div className="flex justify-center items-center gap-2">
+        {canPerform("Vendor Management", "view") && (
+            <Link to={`/dashboard/vendor-ledger/${vendor._id}`}>
+                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Ledger">
+                    <FiBookOpen />
+                </motion.button>
+            </Link>
+        )}
+        {canPerform("Vendor Management", "edit") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(vendor)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit">
+                <FiEdit />
+            </motion.button>
+        )}
+        {canPerform("Vendor Management", "delete") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(vendor._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete">
+                <FiTrash2 />
+            </motion.button>
+        )}
+    </div>
 </td>
                                                 </motion.tr>
                                             ))

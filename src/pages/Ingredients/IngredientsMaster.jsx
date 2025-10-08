@@ -8,6 +8,7 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
     if (totalPages <= 1) return null;
@@ -99,7 +100,7 @@ const Ingredients = () => {
     const [isIngredientFormLoading, setIngredientFormLoading] = useState(false);
     const [ingredientPage, setIngredientPage] = useState(1);
     const [ingredientPagination, setIngredientPagination] = useState({});
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const [categories, setCategories] = useState([]);
     const [activeCategories, setActiveCategories] = useState([]);
     const [isCategoryModalOpen, setCategoryModalOpen] = useState(false);
@@ -232,6 +233,10 @@ const Ingredients = () => {
     };
 
     const handleRemoveIngredient = (id) => {
+           if (!canPerform("Ingredient Management", "delete")) {
+        Swal.fire("Access Denied", "You do not have permission to delete ingredients.", "error");
+        return;
+    }
         Swal.fire({
             title: 'Are you sure?', text: "This action cannot be undone!", icon: 'warning', showCancelButton: true,
             confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Yes, delete it!'
@@ -245,6 +250,11 @@ const Ingredients = () => {
     };
 
     const handleAddOrEditCategory = async () => {
+            const requiredPermission = editCategoryId ? "edit" : "add";
+    if (!canPerform("Ingredient Management", requiredPermission)) {
+        Swal.fire("Access Denied", `You do not have permission to ${requiredPermission} categories.`, "error");
+        return;
+    }
         setCategoryFormLoading(true);
         const payload = { ...categoryFormData, branch: categoryFormData.branch || branch };
         try {
@@ -264,12 +274,20 @@ const Ingredients = () => {
     };
 
     const handleEditCategory = (category) => {
+          if (!canPerform("Ingredient Management", "edit")) {
+        Swal.fire("Access Denied", "You do not have permission to edit categories.", "error");
+        return;
+    }
         setEditCategoryId(category._id);
         setCategoryFormData({ categoryName: category.categoryName, isActive: category.isActive, branch: category.branch });
         setCategoryModalOpen(true);
     };
 
     const handleRemoveCategory = (id) => {
+            if (!canPerform("Ingredient Management", "delete")) {
+        Swal.fire("Access Denied", "You do not have permission to delete categories.", "error");
+        return;
+    }
         Swal.fire({
             title: 'Are you sure?', text: "Deleting a category will also affect ingredients using it.", icon: 'warning',
             showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Yes, delete it!'
@@ -294,16 +312,17 @@ const Ingredients = () => {
                         <TfiSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400' />
                         <input type="text" className={`${inputClass} pl-10`} placeholder='Search...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
-                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setCategoryModalOpen(true)} className="flex items-center gap-2 bg-green-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-green-700 transition duration-300">
+                    {canPerform("Ingredient Management", "add") && (
+                        <>      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setCategoryModalOpen(true)} className="flex items-center gap-2 bg-green-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-green-700 transition duration-300">
                             <FiPlusCircle className="text-lg" /> Add Category
                         </motion.button>
                         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIngredientModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300">
                             <GoPlus className="text-xl" /> Add Ingredient
-                        </motion.button>
-                        
-                    </div>
-                } 
-            />
+                        </motion.button>           </>
+            )}
+        </div>
+    } 
+/>
 
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
                 <div className="card-body p-4 sm:p-6 lg:p-8">
@@ -315,7 +334,17 @@ const Ingredients = () => {
                                 <div className="overflow-x-auto">
                                     <table className="table w-full">
                                         <thead className="bg-blue-600 text-white uppercase text-xs font-medium tracking-wider"><tr><th className="p-3 rounded-tl-lg">Name</th><th className="p-3">Category</th><th className="p-3">Unit</th><th className="p-3">SKU</th><th className="p-3">Status</th><th className="p-3 rounded-tr-lg text-center">Actions</th></tr></thead>
-                                        <tbody><AnimatePresence>{ingredients.length === 0 ? (<tr><td colSpan="6" className="text-center py-8 text-slate-700">No ingredients found.</td></tr>) : (ingredients.map((item) => (<motion.tr key={item._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700"><td className="p-3 font-medium">{item.name}</td><td className="p-3">{item.category?.categoryName || <span className="text-red-500">N/A</span>}</td><td className="p-3">{item.unit}</td><td className="p-3">{item.sku}</td><td className="p-3"><span className={`px-3 py-1 text-xs font-medium rounded-full ${item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{item.isActive ? 'Active' : 'Inactive'}</span></td><td className="p-3 text-center"><div className="flex justify-center items-center gap-2"><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEditIngredient(item)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white"><FiEdit /></motion.button><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemoveIngredient(item._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white"><FiTrash2 /></motion.button></div></td></motion.tr>)))}</AnimatePresence></tbody>
+                                        <tbody><AnimatePresence>{ingredients.length === 0 ? (<tr><td colSpan="6" className="text-center py-8 text-slate-700">No ingredients found.</td></tr>) : (ingredients.map((item) => (<motion.tr key={item._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700"><td className="p-3 font-medium">{item.name}</td><td className="p-3">{item.category?.categoryName || <span className="text-red-500">N/A</span>}</td><td className="p-3">{item.unit}</td><td className="p-3">{item.sku}</td><td className="p-3"><span className={`px-3 py-1 text-xs font-medium rounded-full ${item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{item.isActive ? 'Active' : 'Inactive'}</span></td>
+                                       <td className="p-3 text-center">
+    <div className="flex justify-center items-center gap-2">
+        {canPerform("Ingredient Management", "edit") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEditIngredient(item)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit Ingredient"><FiEdit /></motion.button>
+        )}
+        {canPerform("Ingredient Management", "delete") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemoveIngredient(item._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete Ingredient"><FiTrash2 /></motion.button>
+        )}
+    </div>
+</td></motion.tr>)))}</AnimatePresence></tbody>
                                     </table>
                                     <PaginationControls currentPage={ingredientPage} totalPages={ingredientPagination.totalPages} onPageChange={setIngredientPage} />
                                 </div>
@@ -327,7 +356,16 @@ const Ingredients = () => {
                                 <div className="overflow-x-auto">
                                     <table className="table w-full">
                                         <thead className="bg-blue-600 text-white uppercase text-xs font-medium tracking-wider"><tr><th className="p-3 rounded-tl-lg">Category Name</th><th className="p-3">Status</th><th className="p-3 rounded-tr-lg text-center">Actions</th></tr></thead>
-                                        <tbody><AnimatePresence>{categories.length === 0 ? (<tr><td colSpan="3" className="text-center py-8 text-slate-700">No categories found.</td></tr>) : (categories.map((cat) => (<motion.tr key={cat._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700"><td className="p-3 font-medium">{cat.categoryName}</td><td className="p-3"><span className={`px-3 py-1 text-xs font-medium rounded-full ${cat.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{cat.isActive ? 'Active' : 'Inactive'}</span></td><td className="p-3 text-center"><div className="flex justify-center items-center gap-2"><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEditCategory(cat)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white"><FiEdit /></motion.button><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemoveCategory(cat._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white"><FiTrash2 /></motion.button></div></td></motion.tr>)))}</AnimatePresence></tbody>
+                                        <tbody><AnimatePresence>{categories.length === 0 ? (<tr><td colSpan="3" className="text-center py-8 text-slate-700">No categories found.</td></tr>) : (categories.map((cat) => (<motion.tr key={cat._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700"><td className="p-3 font-medium">{cat.categoryName}</td><td className="p-3"><span className={`px-3 py-1 text-xs font-medium rounded-full ${cat.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{cat.isActive ? 'Active' : 'Inactive'}</span></td><td className="p-3 text-center">
+    <div className="flex justify-center items-center gap-2">
+        {canPerform("Ingredient Management", "edit") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEditCategory(cat)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit Category"><FiEdit /></motion.button>
+        )}
+        {canPerform("Ingredient Management", "delete") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemoveCategory(cat._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete Category"><FiTrash2 /></motion.button>
+        )}
+    </div>
+</td></motion.tr>)))}</AnimatePresence></tbody>
                                     </table>
                                     <PaginationControls currentPage={categoryPage} totalPages={categoryPagination.totalPages} onPageChange={setCategoryPage} />
                                 </div>

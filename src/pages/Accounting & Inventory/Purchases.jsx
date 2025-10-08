@@ -10,6 +10,7 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const formatDate = (isoString) => {
     if (!isoString) return '';
@@ -23,7 +24,7 @@ const formatDate = (isoString) => {
 const Purchases = () => {
     const axiosSecure = UseAxiosSecure();
     const { branch, user } = useContext(AuthContext);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     // Data and Loading States
     const [purchases, setPurchases] = useState([]);
     const [isTableLoading, setTableLoading] = useState(false);
@@ -264,9 +265,11 @@ const Purchases = () => {
                         <TfiSearch className='absolute top-1/2 left-3 -translate-y-1/2 text-gray-400' />
                         <input type="text" className='input input-bordered w-full pl-10' placeholder='Search...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={openCreateModal} className="btn bg-blue-600 text-white hover:bg-blue-700 w-full md:w-auto justify-center">
-                        <GoPlus className="text-xl" /> Create Purchase
-                    </motion.button>
+                   {canPerform("Purchase Management", "add") && (
+                        <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={openCreateModal} className="btn bg-blue-600 text-white hover:bg-blue-700 w-full md:w-auto justify-center">
+                            <GoPlus className="text-xl" /> Create Purchase
+                        </motion.button>
+                    )}
                 </div>
             } />
 
@@ -289,15 +292,19 @@ const Purchases = () => {
                                                     <td className="p-3">{p.paidAmount.toFixed(2)} BDT</td>
                                                     <td className="p-3">{renderStatusBadge(p.paymentStatus)}</td>
                                                     <td className="p-3">{formatDate(p.purchaseDate)}</td>
-                                                    <td className="p-3">
-                                                        <div className="flex justify-center items-center gap-2">
-                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => openViewModal(p)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View"><FiEye /></motion.button>
-                                                            {user?.role === 'admin' && (<>
-                                                                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => openEditModal(p)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit"><FiEdit /></motion.button>
-                                                                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleDelete(p._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete"><FiTrash2 /></motion.button>
-                                                            </>)}
-                                                        </div>
-                                                    </td>
+                                  <td className="p-3">
+    <div className="flex justify-center items-center gap-2">
+        {canPerform("Purchase Management", "view") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => openViewModal(p)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View"><FiEye /></motion.button>
+        )}
+        {canPerform("Purchase Management", "edit") && (
+            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => openEditModal(p)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit"><FiEdit /></motion.button>
+        )}
+        {canPerform("Purchase Management", "delete") && (
+             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleDelete(p._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete"><FiTrash2 /></motion.button>
+        )}
+    </div>
+</td>
                                                 </motion.tr>
                                             ))
                                         )}

@@ -71,6 +71,7 @@ import UserProfile from "../pages/OtherPage/UserProfile";
 import NewBranchWizard from "../pages/Admin/NewBranchWizard";
 import UserPermission from "../pages/OtherPage/UserPermission";
 import UserRoleManagement from "../pages/OtherPage/userrolemanagement";
+import RoleActionPermission from "../pages/ExtraPage/RoleActionPermission";
 // import DeviceManagement from "../pages/Door/device-management";
 // import UserSync from "../pages/Door/user-sync";
 // import AttendanceReport from "../pages/Door/attendance-report";
@@ -318,6 +319,12 @@ export const router = createBrowserRouter([
                 path: 'userrolemanagement',
                 element: <PermissionPrivateRoute><UserRoleManagement /></PermissionPrivateRoute>,
             },
+                                    {
+                path: "action-permission",
+                element: (
+                    <PrivateRoot> <RoleActionPermission /></PrivateRoot>
+                ),
+            },
             //    {
             //     path: 'device-management',
             //     element: <DeviceManagement />,
@@ -400,6 +407,7 @@ export const router = createBrowserRouter([
                     <SuperAdminPrivateRoute> <Worklog /></SuperAdminPrivateRoute>
                 ),
             },
+
         ],
     },
 ]);

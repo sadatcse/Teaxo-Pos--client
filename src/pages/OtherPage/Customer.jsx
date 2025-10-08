@@ -1,5 +1,5 @@
 import React, { useState, useContext, useEffect, useCallback } from "react";
-import { FiEdit, FiSend, FiTrash2, FiEye, FiGift } from 'react-icons/fi';
+import { FiEdit, FiSend, FiTrash2, FiEye, FiGift, FiLock } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { GoPlus } from "react-icons/go";
 import moment from 'moment';
@@ -9,12 +9,14 @@ import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import Preloader from "../../components/Shortarea/Preloader";
 import { MdNavigateBefore, MdNavigateNext } from "react-icons/md";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const CustomerManagement = () => {
     const axiosSecure = UseAxiosSecure();
     const { branch, user } = useContext(AuthContext); // Get the user object
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSmsModalOpen, setIsSmsModalOpen] = useState(false);
+       const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isRedeemModalOpen, setIsRedeemModalOpen] = useState(false);
     const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -134,6 +136,10 @@ const CustomerManagement = () => {
     };
 
     const handleEdit = (id) => {
+            if (!canPerform("Customer Management", "edit")) {
+        Swal.fire("Access Denied", "You do not have permission to edit customers.", "error");
+        return;
+    }
         const customer = customers.find((c) => c._id === id);
         if (!customer) {
             Swal.fire({
@@ -149,6 +155,10 @@ const CustomerManagement = () => {
     };
 
     const handleRemove = (id) => {
+            if (!canPerform("Customer Management", "delete")) {
+        Swal.fire("Access Denied", "You do not have permission to delete customers.", "error");
+        return;
+    }
         Swal.fire({
             title: "Are you sure?",
             text: "You won't be able to revert this!",
@@ -403,17 +413,32 @@ const CustomerManagement = () => {
     const invoiceTotalPages = Math.ceil((selectedCustomer?.invoices?.length || 0) / invoiceItemsPerPage);
     const redeemTotalPages = Math.ceil((selectedCustomer?.redeemHistory?.length || 0) / redeemItemsPerPage);
 
+        if (permissionsLoading) {
+        return <Preloader />;
+    }
+
+
+
     return (
         <div className="p-4 bg-gray-50 min-h-screen font-sans">
             <Mtitle title="Customer Management" rightcontent={
-                <div className="flex justify-end gap-4">
-                    <button
-                        onClick={() => setIsModalOpen(true)}
-                        className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105"
-                    >
-                        <GoPlus className="text-xl" /> Add New
-                    </button>
-                </div>
+                canPerform("Customer Management", "add") && (
+                    <div className="flex justify-end gap-4">
+                        <button
+                            onClick={() => {
+                                setEditId(null);
+                                setFormData({
+                                    name: "", address: "", mobile: "", email: "", dateOfBirth: "", anniversary: "",
+                                    dateOfFirstVisit: new Date().toISOString().split("T")[0], branch: branch,
+                                });
+                                setIsModalOpen(true);
+                            }}
+                            className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-full shadow-md hover:bg-blue-700 transition duration-300 transform hover:scale-105"
+                        >
+                            <GoPlus className="text-xl" /> Add New
+                        </button>
+                    </div>
+                )
             } />
 
             <div className="bg-white p-6 rounded-xl shadow-lg mt-6">
@@ -450,51 +475,62 @@ const CustomerManagement = () => {
                                             <td className="p-4 whitespace-nowrap text-sm text-gray-600">{customer.numberOfOrders || 0}</td>
                                             <td className="p-4 whitespace-nowrap text-sm text-gray-600">৳ <span></span>{(customer.totalAmountSpent || 0).toFixed(2)}</td>
                                             <td className="p-4 whitespace-nowrap text-sm text-blue-600 font-bold">{customer.currentPoints || 0}</td>
-                                            <td className="p-4 whitespace-nowrap text-center text-sm font-medium">
-                                                <div className="flex justify-center items-center space-x-4">
-                                                    <button
-                                                        onClick={() => fetchCustomerDetails(customer._id)}
-                                                        className="text-blue-500 hover:text-blue-700 transition duration-150 transform hover:scale-110"
-                                                        title="View Details"
-                                                    >
-                                                        <FiEye className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleEdit(customer._id)}
-                                                        className="text-indigo-500 hover:text-indigo-700 transition duration-150 transform hover:scale-110"
-                                                        title="Edit"
-                                                    >
-                                                        <FiEdit className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleRemove(customer._id)}
-                                                        className="text-red-500 hover:text-red-700 transition duration-150 transform hover:scale-110"
-                                                        title="Delete"
-                                                    >
-                                                        <FiTrash2 className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setSmsMobile(customer.mobile);
-                                                            setIsSmsModalOpen(true);
-                                                        }}
-                                                        className="text-blue-500 hover:text-blue-700 transition duration-150 transform hover:scale-110"
-                                                        title="Send SMS"
-                                                    >
-                                                        <FiSend className="w-5 h-5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedCustomer(customer);
-                                                            setIsRedeemModalOpen(true);
-                                                        }}
-                                                        className="text-purple-500 hover:text-purple-700 transition duration-150 transform hover:scale-110"
-                                                        title="Redeem Points"
-                                                    >
-                                                        <FiGift className="w-5 h-5" />
-                                                    </button>
-                                                </div>
-                                            </td>
+                                         <td className="p-4 whitespace-nowrap text-center text-sm font-medium">
+    <div className="flex justify-center items-center space-x-4">
+        {canPerform("Customer Management", "view") && (
+            <button
+                onClick={() => fetchCustomerDetails(customer._id)}
+                className="text-blue-500 hover:text-blue-700 transition duration-150 transform hover:scale-110"
+                title="View Details"
+            >
+                <FiEye className="w-5 h-5" />
+            </button>
+        )}
+        {canPerform("Customer Management", "edit") && (
+            <button
+                onClick={() => handleEdit(customer._id)}
+                className="text-indigo-500 hover:text-indigo-700 transition duration-150 transform hover:scale-110"
+                title="Edit"
+            >
+                <FiEdit className="w-5 h-5" />
+            </button>
+        )}
+        {canPerform("Customer Management", "delete") && (
+            <button
+                onClick={() => handleRemove(customer._id)}
+                className="text-red-500 hover:text-red-700 transition duration-150 transform hover:scale-110"
+                title="Delete"
+            >
+                <FiTrash2 className="w-5 h-5" />
+            </button>
+        )}
+        {/* Assuming 'Send SMS' and 'Redeem' require edit permissions */}
+        {canPerform("Customer Management", "edit") && (
+            <>
+                <button
+                    onClick={() => {
+                        setSmsMobile(customer.mobile);
+                        setIsSmsModalOpen(true);
+                    }}
+                    className="text-green-500 hover:text-green-700 transition duration-150 transform hover:scale-110"
+                    title="Send SMS"
+                >
+                    <FiSend className="w-5 h-5" />
+                </button>
+                <button
+                    onClick={() => {
+                        setSelectedCustomer(customer);
+                        setIsRedeemModalOpen(true);
+                    }}
+                    className="text-purple-500 hover:text-purple-700 transition duration-150 transform hover:scale-110"
+                    title="Redeem Points"
+                >
+                    <FiGift className="w-5 h-5" />
+                </button>
+            </>
+        )}
+    </div>
+</td>
                                         </tr>
                                     ))
                                 )}

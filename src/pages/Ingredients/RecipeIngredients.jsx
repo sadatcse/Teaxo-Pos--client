@@ -8,6 +8,7 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from './../../Hook/useActionPermissions';
 
 const RecipeIngredients = () => {
     const axiosSecure = UseAxiosSecure();
@@ -36,7 +37,7 @@ const RecipeIngredients = () => {
     const [newIngredientData, setNewIngredientData] = useState({ name: '', unit: '', category: '' });
     const [ingredientModalCategoryFilter, setIngredientModalCategoryFilter] = useState('all');
     const [activeIngredientIndex, setActiveIngredientIndex] = useState(null);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const fetchProducts = useCallback(async (page, limit, category, status, search) => {
         setLoading(true);
         try {

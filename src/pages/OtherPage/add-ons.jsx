@@ -8,6 +8,7 @@ import Mtitle from "../../components library/Mtitle";
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading"; 
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const Addons = () => {
     const axiosSecure = UseAxiosSecure();
@@ -25,7 +26,7 @@ const Addons = () => {
     const [filteredAddons, setFilteredAddons] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [loading, setLoading] = useState(false);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const fetchAddons = useCallback(async () => {
         setLoading(true);
         try {

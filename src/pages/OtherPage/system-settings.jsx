@@ -1,14 +1,14 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
-import { FiEdit,  FiPlus } from 'react-icons/fi';
+import { FiEdit, FiPlus } from 'react-icons/fi';
 import Swal from 'sweetalert2';
 import { motion, AnimatePresence } from "framer-motion";
-
 
 import Mtitle from "../../components library/Mtitle";
 import ImageUpload from "../../config/ImageUploadcpanel";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
 import { AuthContext } from "../../providers/AuthProvider";
-import MtableLoading from "../../components library/MtableLoading"; 
+import MtableLoading from "../../components library/MtableLoading";
+import useActionPermissions from "../../Hook/useActionPermissions";
 
 const CompanySettings = () => {
     const axiosSecure = UseAxiosSecure();
@@ -16,13 +16,13 @@ const CompanySettings = () => {
     const [companies, setCompanies] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [formData, setFormData] = useState({
-        name: "", phone: "", email: "", address: "", logo: "",
+        name: "", phone: "", email: "", ownerEmail: "", address: "", logo: "",
         otherInformation: "", branch: branch || "", website: "", binNumber: "", tinNumber: "",
     });
     const [editId, setEditId] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [loading, setLoading] = useState(true);
-
+   const { canPerform, loading: permissionsLoading } = useActionPermissions();
     const fetchCompanies = useCallback(async () => {
         if (!branch) return;
         setLoading(true);
@@ -47,7 +47,7 @@ const CompanySettings = () => {
         setIsModalOpen(false);
         setEditId(null);
         setFormData({
-            name: "", phone: "", email: "", address: "", logo: "",
+            name: "", phone: "", email: "", ownerEmail: "", address: "", logo: "",
             otherInformation: "", branch: branch || "", website: "", binNumber: "", tinNumber: "",
         });
     };
@@ -78,8 +78,6 @@ const CompanySettings = () => {
         setFormData(company);
         setIsModalOpen(true);
     };
-
-
 
     const ProfileDetail = ({ label, value }) => (
         <div>
@@ -127,6 +125,7 @@ const CompanySettings = () => {
                                     <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 border-t md:border-t-0 md:border-l border-slate-200 pt-6 md:pt-0 md:pl-6">
                                         <ProfileDetail label="Phone" value={companyProfile.phone} />
                                         <ProfileDetail label="Email" value={companyProfile.email} />
+                                        <ProfileDetail label="Owner Email" value={companyProfile.ownerEmail} />
                                         <ProfileDetail label="Website" value={companyProfile.website} />
                                         <ProfileDetail label="Address" value={companyProfile.address} />
                                         <ProfileDetail label="BIN Number" value={companyProfile.binNumber} />
@@ -157,8 +156,9 @@ const CompanySettings = () => {
                                 <div><label className="label-text text-slate-700">Company Name *</label><input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={`${inputClass} mt-1`} placeholder="Your Company LLC" /></div>
                                 <div><label className="label-text text-slate-700">Branch Name *</label><input type="text" value={formData.branch} onChange={(e) => setFormData({ ...formData, branch: e.target.value })} className={`${inputClass} mt-1`} placeholder="e.g., Main Branch" /></div>
                                 <div><label className="label-text text-slate-700">Phone *</label><input type="text" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className={`${inputClass} mt-1`} placeholder="Contact number" /></div>
-                                <div><label className="label-text text-slate-700">Email</label><input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`${inputClass} mt-1`} placeholder="contact@example.com" /></div>
-                                <div className="md:col-span-2"><label className="label-text text-slate-700">Address</label><input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className={`${inputClass} mt-1`} placeholder="Full company address" /></div>
+                                <div><label className="label-text text-slate-700">Company Email *</label><input type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className={`${inputClass} mt-1`} placeholder="contact@example.com" /></div>
+                                <div><label className="label-text text-slate-700">Owner's Email *</label><input type="email" value={formData.ownerEmail} onChange={(e) => setFormData({ ...formData, ownerEmail: e.target.value })} className={`${inputClass} mt-1`} placeholder="owner@example.com" /></div>
+                                <div><label className="label-text text-slate-700">Address</label><input type="text" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className={`${inputClass} mt-1`} placeholder="Full company address" /></div>
                                 <div><label className="label-text text-slate-700">Website</label><input type="url" value={formData.website} onChange={(e) => setFormData({ ...formData, website: e.target.value })} className={`${inputClass} mt-1`} placeholder="https://example.com" /></div>
                                 <div><label className="label-text text-slate-700">BIN Number</label><input type="text" value={formData.binNumber} onChange={(e) => setFormData({ ...formData, binNumber: e.target.value })} className={`${inputClass} mt-1`} placeholder="Business Identification Number" /></div>
                                 <div className="md:col-span-2"><label className="label-text text-slate-700">TIN Number</label><input type="text" value={formData.tinNumber} onChange={(e) => setFormData({ ...formData, tinNumber: e.target.value })} className={`${inputClass} mt-1`} placeholder="Taxpayer Identification Number" /></div>
