@@ -14,6 +14,9 @@ const EditSummary = ({
     invoiceSummary, setInvoiceSummary, subtotal, vat, sd, payable, paid, change,
     printInvoice, handleFinalizeOrder, handleKitchenClick, resetOrder, isProcessing,
     toggleComplimentaryStatus,
+    // --- New Props for Discount ---
+    discountType,
+    setDiscountType
 }) => {
     const [activeTab, setActiveTab] = useState('invoiceDetails');
 
@@ -45,101 +48,101 @@ const EditSummary = ({
                             </div>
                         </div>
 
-           {/* Redesigned Product List Section */}
-<div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar pr-2">
-  <AnimatePresence>
-    {addedProducts.length === 0 ? (
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center py-10 px-4"
-      >
-        <p className="text-gray-500 italic">Your order is empty.</p>
-        <p className="text-gray-400 text-sm mt-1">Add products to get started!</p>
-      </motion.div>
-    ) : (
-      addedProducts.map((product) => (
-        <motion.div
-          key={product.productId}
-          layout
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0, x: -50 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className={`flex items-center p-3 rounded-xl transition-all duration-300 ${
-            product.isOriginal ? 'bg-slate-50 border border-slate-200' : 'bg-white shadow-sm'
-          }`}
-        >
-          {/* Product Name & Badges */}
-          <div className="flex-grow">
-            <p className="font-bold text-gray-800 text-sm md:text-base">
-              {product.productName}
-            </p>
-            <div className="flex items-center gap-2 mt-1">
-              {product.isOriginal && (
-                <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
-                  Original
-                </span>
-              )}
-              {product.isComplimentary && (
-                <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
-                  FREE
-                </span>
-              )}
-            </div>
-          </div>
+                        {/* Product List Section */}
+                        <div className="space-y-3 max-h-96 overflow-y-auto custom-scrollbar pr-2">
+                          <AnimatePresence>
+                            {addedProducts.length === 0 ? (
+                              <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="text-center py-10 px-4"
+                              >
+                                <p className="text-gray-500 italic">Your order is empty.</p>
+                                <p className="text-gray-400 text-sm mt-1">Add products to get started!</p>
+                              </motion.div>
+                            ) : (
+                              addedProducts.map((product) => (
+                                <motion.div
+                                  key={product.productId}
+                                  layout
+                                  initial={{ opacity: 0, scale: 0.9 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, x: -50 }}
+                                  transition={{ type: "spring", stiffness: 300, damping: 25 }}
+                                  className={`flex items-center p-3 rounded-xl transition-all duration-300 ${
+                                    product.isOriginal ? 'bg-slate-50 border border-slate-200' : 'bg-white shadow-sm'
+                                  }`}
+                                >
+                                  {/* Product Name & Badges */}
+                                  <div className="flex-grow">
+                                    <p className="font-bold text-gray-800 text-sm md:text-base">
+                                      {product.productName}
+                                    </p>
+                                    <div className="flex items-center gap-2 mt-1">
+                                      {product.isOriginal && (
+                                        <span className="text-xs font-semibold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full">
+                                          Original
+                                        </span>
+                                      )}
+                                      {product.isComplimentary && (
+                                        <span className="text-xs font-semibold text-green-700 bg-green-100 px-2 py-0.5 rounded-full">
+                                          FREE
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
 
-          {/* Quantity Controls & Price */}
-          <div className="flex items-center gap-4">
-            {!product.isComplimentary && (
-                 <div className="flex items-center justify-center gap-2 bg-slate-100 rounded-full p-1">
-                 <button
-                   onClick={() => decrementQuantity(product.productId)}
-                   className="w-7 h-7 flex items-center justify-center bg-white rounded-full text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                   disabled={product.isOriginal && product.quantity <= product.originalQuantity}
-                 >
-                   <FaMinus className="text-xs" />
-                 </button>
-                 <span className="font-extrabold text-sm text-gray-900 w-5 text-center">{product.quantity}</span>
-                 <button
-                   onClick={() => incrementQuantity(product.productId)}
-                   className="w-7 h-7 flex items-center justify-center bg-white rounded-full text-slate-600 hover:bg-slate-200 transition-colors"
-                 >
-                   <FaPlus className="text-xs" />
-                 </button>
-               </div>
-            )}
-            <p className="w-20 text-right font-bold text-sm md:text-base text-gray-800">
-              {product.isComplimentary ? '0.00' : (product.price * product.quantity).toFixed(2)} TK
-            </p>
-          </div>
+                                  {/* Quantity Controls & Price */}
+                                  <div className="flex items-center gap-4">
+                                    {!product.isComplimentary && (
+                                         <div className="flex items-center justify-center gap-2 bg-slate-100 rounded-full p-1">
+                                         <button
+                                           onClick={() => decrementQuantity(product.productId)}
+                                           className="w-7 h-7 flex items-center justify-center bg-white rounded-full text-slate-600 hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                           disabled={product.isOriginal && product.quantity <= product.originalQuantity}
+                                         >
+                                           <FaMinus className="text-xs" />
+                                         </button>
+                                         <span className="font-extrabold text-sm text-gray-900 w-5 text-center">{product.quantity}</span>
+                                         <button
+                                           onClick={() => incrementQuantity(product.productId)}
+                                           className="w-7 h-7 flex items-center justify-center bg-white rounded-full text-slate-600 hover:bg-slate-200 transition-colors"
+                                         >
+                                           <FaPlus className="text-xs" />
+                                         </button>
+                                       </div>
+                                     )}
+                                    <p className="w-20 text-right font-bold text-sm md:text-base text-gray-800">
+                                      {product.isComplimentary ? '0.00' : (product.price * product.quantity).toFixed(2)} TK
+                                    </p>
+                                  </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2 ml-4">
-            <button
-              onClick={() => toggleComplimentaryStatus(product.productId)}
-              className={`w-8 h-8 flex items-center justify-center rounded-lg text-white transition-colors ${
-                product.isComplimentary ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-slate-300 hover:bg-slate-400'
-              }`}
-              title="Toggle Complimentary"
-            >
-              <FaGift className="text-sm" />
-            </button>
-            {product.isOriginal ? (
-              <span title="Original items cannot be removed" className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 cursor-help">
-                <FaInfoCircle />
-              </span>
-            ) : (
-              <button onClick={() => removeProduct(product.productId)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors" title="Remove Item">
-                <FaTrash className="text-sm" />
-              </button>
-            )}
-          </div>
-        </motion.div>
-      ))
-    )}
-  </AnimatePresence>
-</div>
+                                  {/* Action Buttons */}
+                                  <div className="flex items-center gap-2 ml-4">
+                                    <button
+                                      onClick={() => toggleComplimentaryStatus(product.productId)}
+                                      className={`w-8 h-8 flex items-center justify-center rounded-lg text-white transition-colors ${
+                                        product.isComplimentary ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-slate-300 hover:bg-slate-400'
+                                      }`}
+                                      title="Toggle Complimentary"
+                                    >
+                                      <FaGift className="text-sm" />
+                                    </button>
+                                    {product.isOriginal ? (
+                                      <span title="Original items cannot be removed" className="w-8 h-8 flex items-center justify-center rounded-lg bg-slate-100 text-slate-400 cursor-help">
+                                        <FaInfoCircle />
+                                      </span>
+                                    ) : (
+                                      <button onClick={() => removeProduct(product.productId)} className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-500 text-white hover:bg-red-600 transition-colors" title="Remove Item">
+                                        <FaTrash className="text-sm" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </motion.div>
+                              ))
+                            )}
+                          </AnimatePresence>
+                        </div>
 
                         <div className="mt-6">
                             <table className="w-full border-collapse">
@@ -147,15 +150,38 @@ const EditSummary = ({
                                     <tr className="border-b border-gray-200"><td className="px-4 py-2 text-sm text-gray-700">Sub Total (TK):</td><td className="px-4 py-2 text-right font-bold">{subtotal.toFixed(2)}</td></tr>
                                     <tr className="border-b border-gray-200"><td className="px-4 py-2 text-sm text-gray-700">VAT (TK):</td><td className="px-4 py-2 text-right font-bold">{vat.toFixed(2)}</td></tr>
                                     <tr className="border-b border-gray-200"><td className="px-4 py-2 text-sm text-gray-700">SD (TK):</td><td className="px-4 py-2 text-right font-bold">{sd.toFixed(2)}</td></tr>
-                                    <tr className="border-b border-gray-200"><td className="px-4 py-2 text-sm text-gray-700">Discount (TK):</td><td className="px-4 py-2 text-right"><input type="number" className="border border-gray-300 px-3 py-1.5 w-28 text-right rounded-lg" value={invoiceSummary.discount} onChange={(e) => setInvoiceSummary({ ...invoiceSummary, discount: parseFloat(e.target.value) || 0 })} min="0"/></td></tr>
+                                    
+                                    {/* --- UPDATED DISCOUNT ROW --- */}
+                                    <tr className="border-b border-gray-200">
+                                        <td className="px-4 py-2 text-sm text-gray-700">Discount:</td>
+                                        <td className="px-4 py-2 text-right">
+                                            <div className="flex items-center justify-end gap-1">
+                                                <input 
+                                                    type="number" 
+                                                    className="border border-gray-300 px-2 py-1.5 w-20 text-right rounded-l-lg focus:outline-none focus:ring-1 focus:ring-blue-500" 
+                                                    value={invoiceSummary.discount} 
+                                                    onChange={(e) => setInvoiceSummary({ ...invoiceSummary, discount: parseFloat(e.target.value) || 0 })} 
+                                                    min="0"
+                                                    placeholder={discountType === 'Percent' ? '%' : 'TK'}
+                                                />
+                                                <select 
+                                                    value={discountType} 
+                                                    onChange={(e) => setDiscountType(e.target.value)}
+                                                    className="border border-gray-300 border-l-0 bg-gray-100 px-1 py-1.5 rounded-r-lg text-sm focus:outline-none"
+                                                >
+                                                    <option value="Percent">%</option>
+                                                    <option value="Fixed">TK</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    
                                     <tr className="border-b border-blue-300 bg-blue-50"><td className="px-4 py-3 font-extrabold text-blue-800">Total Amount (TK):</td><td className="px-4 py-3 text-right font-extrabold text-blue-800">{payable.toFixed(2)}</td></tr>
                                     <tr className="border-b border-gray-200"><td className="px-4 py-2 text-sm text-gray-700">Paid Amount (TK):</td><td className="px-4 py-2 text-right"><input type="number" className="border border-gray-300 px-3 py-1.5 w-28 text-right rounded-lg" value={invoiceSummary.paid} onChange={(e) => setInvoiceSummary({ ...invoiceSummary, paid: parseFloat(e.target.value) || 0 })} min="0"/></td></tr>
                                     <tr><td className="px-4 py-2 text-sm text-gray-700">Change Amount (TK):</td><td className="px-4 py-2 text-right font-bold">{change.toFixed(2)}</td></tr>
                                 </tbody>
                             </table>
                             
-                            {/* --- PAYMENT UI REMOVED --- */}
-
                             <div className="grid grid-cols-2 gap-4 mt-6">
                                 <button onClick={() => printInvoice(false)} className="bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-bold flex items-center justify-center gap-2" disabled={isProcessing}>
                                     <FaSave /> {isProcessing ? "Saving..." : "Save Changes"}

@@ -12,14 +12,12 @@ import useCategoriesWithProducts from "../../Hook/useCategoriesWithProducts";
 
 // --- Components ---
 import ProductSelection from "../../components/Product/ProductSelection.jsx";
-import EditSummary from "../../components/Product/EditSummary.jsx"; // Renamed for clarity
+import EditSummary from "../../components/Product/EditSummary.jsx";
 import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
 import KitchenReceiptTemplate from "../../components/Receipt/KitchenReceiptTemplate";
 import NewCustomerModal from "../../components/Modal/NewCustomerModal";
 import TableSelectionModal from "../../components/Modal/TableSelectionModal";
 import DeliveryProviderSelectionModal from "../../components/Modal/DeliveryProviderSelectionModal";
-
-
 
 const EditOrderPage = () => {
     // --- Hooks for Routing and Data Fetching ---
@@ -49,10 +47,13 @@ const EditOrderPage = () => {
     const [deliveryProvider, setDeliveryProvider] = useState("");
     const [mobile, setMobile] = useState("");
     const [invoiceSummary, setInvoiceSummary] = useState({ discount: 0, paid: 0 });
+    
+    // --- NEW STATE: Discount Type ---
+    const [discountType, setDiscountType] = useState("Percent"); 
+
     const [print, setPrint] = useState(null);
     const [currentInvoiceId, setCurrentInvoiceId] = useState(orderId);
-    const [orderDateTime, setOrderDateTime] = useState(new Date().toISOString().slice(0, 16));
-
+    
     // --- Payment State ---
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState("Cash");
     const [selectedSubMethod, setSelectedSubMethod] = useState('');
@@ -112,10 +113,12 @@ const EditOrderPage = () => {
                 setOrderType(orderData.orderType);
                 setTableName(orderData.tableName || "");
                 setDeliveryProvider(orderData.deliveryProvider || "");
+                // Note: We load the existing discount as a fixed amount initially because we don't know the original %
                 setInvoiceSummary({ discount: orderData.discount || 0, paid: 0 });
+                setDiscountType("Fixed"); // Default to fixed when loading existing data
+
                 setSelectedPaymentMethod(orderData.paymentMethod || "Cash");
                 setCurrentInvoiceId(orderData._id);
-                setOrderDateTime(orderData.dateTime ? new Date(orderData.dateTime).toISOString().slice(0, 16) : new Date().toISOString().slice(0, 16));
 
                 if (orderData.customerMobile && orderData.customerMobile !== "n/a") {
                     setMobile(orderData.customerMobile);
@@ -133,8 +136,6 @@ const EditOrderPage = () => {
     }, [orderId, axiosSecure, navigate, setCustomer]);
 
     const allOrderItems = useMemo(() => [...originalOrderItems, ...newOrderItems], [originalOrderItems, newOrderItems]);
-
-    const handleDateTimeChange = (e) => setOrderDateTime(e.target.value);
 
     // --- Core Logic Functions (Handlers) ---
     const addProduct = (product) => {
@@ -265,14 +266,25 @@ const EditOrderPage = () => {
 
     const roundAmount = (amount) => Math.round(amount);
 
+    // --- UPDATED CALCULATE TOTAL LOGIC ---
     const calculateTotal = () => {
         const nonComplimentaryProducts = allOrderItems.filter(p => !p.isComplimentary);
         const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
         const vat = nonComplimentaryProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
         const sd = nonComplimentaryProducts.reduce((total, p) => total + ((p.sd || 0) * p.quantity), 0);
-        const discount = parseFloat(invoiceSummary.discount || 0);
-        const payable = subtotal + vat + sd - discount;
-        return { subtotal: roundAmount(subtotal), vat: roundAmount(vat), sd: roundAmount(sd), discount: roundAmount(discount), payable: roundAmount(payable) };
+        
+        let discountAmount = 0;
+        const discountInput = parseFloat(invoiceSummary.discount || 0);
+        
+        if (discountType === 'Percent') {
+            const totalBeforeDiscount = subtotal + vat + sd;
+            discountAmount = (totalBeforeDiscount * discountInput) / 100;
+        } else {
+            discountAmount = discountInput;
+        }
+
+        const payable = subtotal + vat + sd - discountAmount;
+        return { subtotal: roundAmount(subtotal), vat: roundAmount(vat), sd: roundAmount(sd), discount: roundAmount(discountAmount), payable: roundAmount(payable) };
     };
 
     const getInvoicePayload = () => {
@@ -284,7 +296,6 @@ const EditOrderPage = () => {
             loginUserEmail, loginUserName,
             customerName: customer?.name || "Guest", customerMobile: customer?.mobile || "n/a",
             counter: "Counter 1", branch: branch, totalAmount: payable, paymentMethod: selectedPaymentMethod,
-            dateTime: new Date(orderDateTime).toISOString(),
         };
         if (orderType === "dine-in") invoiceDetails.tableName = TableName;
         if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
@@ -376,7 +387,6 @@ const EditOrderPage = () => {
                     setSelectedCategory={setSelectedCategory}
                     addProduct={addProduct}
                     loading={loadingProducts}
-                    // --- Pass Payment Props to ProductSelection ---
                     isProcessing={isProcessing}
                     selectedPaymentMethod={selectedPaymentMethod}
                     selectedSubMethod={selectedSubMethod}
@@ -386,8 +396,6 @@ const EditOrderPage = () => {
                 />
                 <EditSummary
                     user={user}
-                    orderDateTime={orderDateTime}
-                    handleDateTimeChange={handleDateTimeChange}
                     title={`Editing Order: ${currentInvoiceId.slice(-6)}`}
                     customer={customer} mobile={mobile} setMobile={setMobile} handleCustomerSearch={handleCustomerSearch}
                     isCustomerModalOpen={isCustomerModalOpen} setCustomerModalOpen={setCustomerModalOpen}
@@ -396,6 +404,11 @@ const EditOrderPage = () => {
                     addedProducts={allOrderItems}
                     incrementQuantity={incrementQuantity} decrementQuantity={decrementQuantity} removeProduct={removeProduct}
                     invoiceSummary={invoiceSummary} setInvoiceSummary={setInvoiceSummary}
+                    
+                    // PASSING DISCOUNT PROPS
+                    discountType={discountType}
+                    setDiscountType={setDiscountType}
+                    
                     subtotal={subtotal} vat={vat} sd={sd} payable={payable} paid={paid} change={change}
                     printInvoice={saveOrUpdateInvoice} 
                     handleFinalizeOrder={handleFinalizeOrder}

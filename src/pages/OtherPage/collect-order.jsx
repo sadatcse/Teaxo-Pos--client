@@ -14,9 +14,7 @@ import DeliveryProviderSelectionModal from "../../components/Modal/DeliveryProvi
 import { toast } from "react-toastify";
 import ProductSelection from "../../components/Product/ProductSelection.jsx";
 import OrderSummary from "../../components/Product/OrderSummary.jsx";
-
 import useCategoriesWithProducts from './../../Hook/useCategoriesWithProducts';
-
 
 const CollectOrder = () => {
     const { state: routeState } = useLocation();
@@ -32,6 +30,10 @@ const CollectOrder = () => {
     const [TableName, setTableName] = useState("");
     const [deliveryProvider, setDeliveryProvider] = useState("");
     const [invoiceSummary, setInvoiceSummary] = useState({ discount: 0, paid: 0 });
+    
+    // --- NEW STATE: Discount Type (Percent or Fixed) ---
+    const [discountType, setDiscountType] = useState("Percent"); 
+
     const [print, setPrint] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [currentInvoiceId, setCurrentInvoiceId] = useState(null);
@@ -65,7 +67,6 @@ const CollectOrder = () => {
 
     const handleSubPaymentButtonClick = (subMethod, iconComponent = null) => {
         setSelectedSubMethod(subMethod);
-        // The main method for the invoice should be the specific sub-method now
         setSelectedPaymentMethod(subMethod);
         if (subMethod.includes("Card")) {
             setSelectedCardIcon(iconComponent);
@@ -137,13 +138,6 @@ const CollectOrder = () => {
         }
     };
 
-    // const updateCookStatus = (productId, status) => {
-    //     setAddedProducts(currentProducts =>
-    //         currentProducts.map(p => p._id === productId ? { ...p, cookStatus: status } : p)
-    //     );
-    //     toast.info(`Product status updated to ${status}`);
-    // };
-
     const incrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id ? { ...p, quantity: p.quantity + 1 } : p)));
     const decrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id && p.quantity > 1 ? { ...p, quantity: p.quantity - 1 } : p)));
     const removeProduct = (id) => setAddedProducts(addedProducts.filter((p) => p._id !== id));
@@ -182,6 +176,7 @@ const CollectOrder = () => {
     const resetOrder = () => {
         setAddedProducts([]);
         setInvoiceSummary({ discount: 0, paid: 0 });
+        setDiscountType("Percent"); // Reset discount type
         setMobile("");
         setSelectedTable("");
         setTableName("");
@@ -213,25 +208,44 @@ const CollectOrder = () => {
         return true;
     };
 
+    // --- UPDATED CALCULATE TOTAL ---
     const calculateTotal = () => {
         const nonComplimentaryProducts = addedProducts.filter(p => !p.isComplimentary);
         const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
         const vat = nonComplimentaryProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
         const sd = nonComplimentaryProducts.reduce((total, p) => total + ((p.sd || 0) * p.quantity), 0);
-        const discount = parseFloat(invoiceSummary.discount || 0);
-        const payable = subtotal + vat + sd - discount;
-        return { subtotal, vat, sd, discount, payable: roundAmount(payable) };
+        
+        // Calculate Discount Amount based on Type
+        let discountAmount = 0;
+        const discountInput = parseFloat(invoiceSummary.discount || 0);
+        
+        if (discountType === 'Percent') {
+            // Calculate % on (Subtotal + VAT + SD)
+            const totalBeforeDiscount = subtotal + vat + sd;
+            discountAmount = (totalBeforeDiscount * discountInput) / 100;
+        } else {
+            // Fixed Amount
+            discountAmount = discountInput;
+        }
+
+        const payable = subtotal + vat + sd - discountAmount;
+        
+        // Return derived values. Note: 'discount' here is the final money amount.
+        return { subtotal, vat, sd, discount: discountAmount, payable: roundAmount(payable) };
     };
 
     const printInvoice = async (isPrintAction) => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
+        
+        // Destructure values including the calculated discount money amount
         const { subtotal, vat, sd, discount, payable } = calculateTotal();
+        
         const invoiceDetails = {
             orderType,
             products: addedProducts.map((p) => ({ productId: p._id, productName: p.productName, qty: p.quantity, rate: p.price, subtotal: roundAmount(p.price * p.quantity), vat: p.vat || 0, sd: p.sd || 0, cookStatus: p.cookStatus || 'PENDING', isComplimentary: p.isComplimentary, })),
             subtotal: roundAmount(subtotal),
-            discount: roundAmount(discount),
+            discount: roundAmount(discount), // Send the actual Money Amount to backend
             vat: roundAmount(vat),
             sd: roundAmount(sd),
             loginUserEmail,
@@ -243,6 +257,7 @@ const CollectOrder = () => {
             totalAmount: payable,
             paymentMethod: selectedPaymentMethod,
         };
+        
         if (user?.role === 'admin' && customDateTime) {
             invoiceDetails.dateTime = customDateTime;
             const customDate = new Date(customDateTime);
@@ -310,7 +325,6 @@ const CollectOrder = () => {
                         setSelectedCategory={setSelectedCategory}
                         addProduct={addProduct}
                         loading={loadingProducts}
-                        // Pass Payment Props for UI
                         isProcessing={isProcessing}
                         selectedPaymentMethod={selectedPaymentMethod}
                         selectedSubMethod={selectedSubMethod}
@@ -337,6 +351,11 @@ const CollectOrder = () => {
                         removeProduct={removeProduct}
                         invoiceSummary={invoiceSummary}
                         setInvoiceSummary={setInvoiceSummary}
+                        
+                        // Pass discount props
+                        discountType={discountType}
+                        setDiscountType={setDiscountType}
+                        
                         subtotal={subtotal}
                         vat={vat}
                         sd={sd}
@@ -348,7 +367,6 @@ const CollectOrder = () => {
                         resetOrder={resetOrder}
                         isProcessing={isProcessing}
                         toggleComplimentaryStatus={toggleComplimentaryStatus}
-                        // Pass Payment State for Validation Logic
                         selectedPaymentMethod={selectedPaymentMethod}
                         selectedSubMethod={selectedSubMethod}
                     />

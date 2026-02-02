@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
 
-// --- SVG Icons (Replaced react-icons for a self-contained component) ---
+// --- SVG Icons ---
 
 const CloseIcon = ({ size = 20, className = "" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -61,14 +61,23 @@ const TableSelectionModal = ({
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {tables.map((table) => {
               const isSelected = selectedTable === table._id;
+              
+              // Status Flags
               const isPending = table.status === 'pending';
+              const isCooking = table.status === 'cooking';
+              const isServed = table.status === 'served';
               const isReserved = table.status === 'reserved';
-              const isDisabled = isPending || isReserved;
+              
+              // Disable if any status is active (occupied)
+              const isDisabled = isPending || isReserved || isCooking || isServed;
 
               // Helper to determine button classes based on status and selection
               const getButtonClasses = () => {
                 if (isPending) return 'border-red-400 bg-red-50 text-red-700 cursor-not-allowed shadow-inner';
+                if (isCooking) return 'border-orange-400 bg-orange-50 text-orange-700 cursor-not-allowed shadow-inner';
+                if (isServed) return 'border-purple-400 bg-purple-50 text-purple-700 cursor-not-allowed shadow-inner';
                 if (isReserved) return 'border-yellow-400 bg-yellow-50 text-yellow-800 cursor-not-allowed shadow-inner';
+                
                 if (isSelected) return 'border-blue-600 bg-blue-50 shadow-md';
                 return 'border-gray-200 hover:border-blue-400 hover:shadow-sm';
               };
@@ -76,7 +85,10 @@ const TableSelectionModal = ({
               // Helper to determine icon and text colors
               const getDynamicColor = (type) => {
                 if (isPending) return type === 'icon' ? 'text-red-400' : 'text-red-700';
+                if (isCooking) return type === 'icon' ? 'text-orange-400' : 'text-orange-700';
+                if (isServed) return type === 'icon' ? 'text-purple-400' : 'text-purple-700';
                 if (isReserved) return type === 'icon' ? 'text-yellow-500' : 'text-yellow-800';
+                
                 if (isSelected) return type === 'icon' ? 'text-blue-600' : 'text-blue-800';
                 return type === 'icon' ? 'text-gray-400' : 'text-gray-700';
               };
@@ -96,8 +108,10 @@ const TableSelectionModal = ({
                     <CheckCircleIcon className="absolute top-2 right-2 text-blue-600" size={24} />
                   )}
                   
-                  {/* Status Indicator for unavailable tables */}
+                  {/* Status Indicator Badges */}
                   {isPending && <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full">Occupied</div>}
+                  {isCooking && <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full">Cooking</div>}
+                  {isServed && <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-purple-500 text-white text-[10px] font-bold rounded-full">Served</div>}
                   {isReserved && <div className="absolute top-1.5 left-1.5 px-2 py-0.5 bg-yellow-500 text-white text-[10px] font-bold rounded-full">Reserved</div>}
                   
                   <ArmchairIcon
