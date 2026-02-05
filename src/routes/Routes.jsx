@@ -72,6 +72,9 @@ import NewBranchWizard from "../pages/Admin/NewBranchWizard";
 import UserPermission from "../pages/OtherPage/UserPermission";
 import UserRoleManagement from "../pages/OtherPage/userrolemanagement";
 import RoleActionPermission from "../pages/ExtraPage/RoleActionPermission";
+import DemoLogin from "../pages/Login/DemoLogin";
+
+
 // import DeviceManagement from "../pages/Door/device-management";
 // import UserSync from "../pages/Door/user-sync";
 // import AttendanceReport from "../pages/Door/attendance-report";
@@ -90,6 +93,10 @@ export const router = createBrowserRouter([
             {
                 path: 'review/:route/:tableId',
                 element: <ReviewCustomer />,
+            },
+            {
+                path: "demo", 
+                element: <DemoLogin />, 
             },
         ],
     },

@@ -52,24 +52,36 @@ const NewBranchWizard = () => {
         }
     };
 
-    const handleSubmit = async () => {
+const handleSubmit = async () => {
         setIsSubmitting(true);
         try {
             // The wizardData object now includes the 'roles' array
             await axiosSecure.post('/branch/setup-wizard', wizardData);
+            
             Swal.fire({
                 icon: 'success',
                 title: 'Branch Created!',
-                text: `${wizardData.company.name} has been set up successfully.`,
+                text: `${wizardData.company.name || 'Branch'} has been set up successfully.`,
             });
+            
             // Reset state to initial values
             setCurrentStep(0);
             setWizardData({ company: {}, categories: [], products: [], tables: [], roles: [], users: [] });
+            
         } catch (error) {
+            console.error("Wizard Submission Error:", error); // Check console for details
+
+            // Robust error message extraction
+            const errorMessage = 
+                error.response?.data?.message || // 1. Message from backend
+                error.response?.data?.error ||   // 2. Alternative backend key
+                error.message ||                 // 3. Axios network error (e.g., "Network Error")
+                "Something went wrong! Please try again.";
+
             Swal.fire({
                 icon: 'error',
-                title: 'Oops...',
-                text: error.response?.data?.message || 'Something went wrong!',
+                title: 'Submission Failed',
+                text: errorMessage,
             });
         } finally {
             setIsSubmitting(false);

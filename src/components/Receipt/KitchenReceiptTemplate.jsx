@@ -1,240 +1,193 @@
-import React, { forwardRef, useEffect, useState } from "react";
+import React, { forwardRef, useImperativeHandle, useRef, useCallback, useEffect } from "react";
 
-// KitchenReceiptTemplate is a functional component that displays a simplified receipt for kitchen staff.
-// It receives profileData (company info) and invoiceData (order details) as props.
-// It's forwardRef'd to allow parent components to access its DOM node for potential printing.
-// It also accepts an onPrintComplete prop to notify the parent when printing is done.
 const KitchenReceiptTemplate = forwardRef(({ profileData, invoiceData, onPrintComplete }, ref) => {
-  const [printed, setPrinted] = useState(false); // Flag to prevent double printing
+    // Internal ref to access the DOM element for printing
+    const internalPrintRef = useRef();
 
-  // Function to get the current date and time in a formatted string.
-  const getCurrentDateTime = () => {
-    return new Date().toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-  };
-
-  // Function to trigger the printing of the receipt.
-  const printReceipt = () => {
-    // Prevent duplicate printing if already printed or ref is not available.
-    if (!ref.current || printed) return;
-    setPrinted(true); // Set printed flag to true to prevent re-printing
-
-    // Create a hidden iframe to handle printing.
-    const iframe = document.createElement("iframe");
-    iframe.style.position = "absolute";
-    iframe.style.top = "-10000px"; // Position off-screen
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) {
-        console.error("Could not get iframe document for printing.");
-        return;
-    }
-
-    doc.open();
-    // Write the HTML content of the component to the iframe for printing.
-    doc.write(`
-      <html>
-        <head>
-          <title>Kitchen Order Ticket</title>
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              margin: auto;
-              padding: 0;
-              width: 75mm; /* Standard thermal printer width */
-            }
-            .container {
-              margin: auto;
-              padding: 16px;
-              font-size: 14px; /* Increased base font size */
-              color: #000;
-              background-color: #fff;
-              page-break-after: always; /* Ensures each KOT prints on a new page if multiple are ever generated */
-            }
-            .header {
-              text-align: center;
-              margin-bottom: 16px;
-            }
-            .header h2 {
-              font-size: 24px; /* Increased header font size */
-              font-weight: bold;
-              margin-bottom: 2px;
-            }
-            .header p {
-              font-size: 16px; /* Increased paragraph font size in header */
-              margin: 0;
-            }
-            .table {
-              width: 100%;
-              border-collapse: collapse;
-              font-size: 16px; /* Increased table font size */
-            }
-            .dashed-line {
-              margin: 5px 0;
-              border-top: 1px dashed #000;
-            }
-            .footer {
-              text-align: center;
-              margin-top: 10px;
-            }
-            .footer p {
-              font-size: 12px; /* Increased footer font size */
-            }
-          </style>
-        </head>
-        <body>
-          ${ref.current.outerHTML}
-        </body>
-      </html>
-    `);
-    doc.close();
-
-    // Focus the iframe and trigger the print dialog.
-    iframe.contentWindow?.focus();
-    iframe.contentWindow?.print();
-
-    // Clean up the iframe after printing is complete.
-    iframe.onload = () => {
-      document.body.removeChild(iframe);
-      if (onPrintComplete) {
-        onPrintComplete(); // Notify the parent component that printing is complete
-      }
+    // Helper: Get formatted date time
+    const getCurrentDateTime = () => {
+        const options = {
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit",
+            hour12: true, 
+        };
+        return new Date().toLocaleString("en-GB", options);
     };
-  };
 
-  // useEffect hook to trigger printing when the component mounts.
-  useEffect(() => {
-    // Only attempt to print if the invoiceData is available and it hasn't been printed yet.
-    if (invoiceData && !printed) {
-      printReceipt();
-    }
-  }, [invoiceData, printed]); // Dependencies ensure this runs when invoiceData changes or printed status is reset.
+    // --- PRINTING LOGIC ---
+    const printReceipt = useCallback(() => {
+        const node = internalPrintRef.current;
+        if (!node) return;
 
-  // Define inline styles for the receipt for consistent rendering.
-  const styles = {
-    container: {
-      fontFamily: "Arial, sans-serif",
-      width: "72mm", // Standard thermal printer width
-      margin: "auto",
-      padding: "16px",
-      fontSize: "14px", // Increased base font size
-      color: "#000",
-      backgroundColor: "#fff",
-    },
-    header: {
-      textAlign: "center",
-      marginBottom: "16px",
-    },
-    h2: { // Added specific style for h2
-      fontSize: "24px", // Increased header font size
-      fontWeight: "bold",
-      marginBottom: "2px",
-    },
-    pHeader: { // Added specific style for paragraphs in header
-      fontSize: "16px", // Increased paragraph font size in header
-      margin: 0,
-    },
-    table: {
-      width: "100%",
-      borderCollapse: "collapse",
-      fontSize: "16px", // Increased table font size
-    },
-    dashedLine: {
-      margin: "5px 0",
-      borderTop: "1px dashed #000",
-    },
-    footer: {
-      textAlign: "center",
-      marginTop: "10px",
-    },
-    pFooter: { // Added specific style for paragraphs in footer
-      fontSize: "12px", // Increased footer font size
-      marginTop: "5px",
-    }
-  };
+        const iframe = document.createElement("iframe");
+        iframe.style.position = "absolute";
+        iframe.style.top = "-10000px";
+        document.body.appendChild(iframe);
 
-  // Display a loading message if essential data is not yet available.
-  if (!profileData || !invoiceData) {
-    return <p>Loading kitchen order...</p>;
-  }
+        const doc = iframe.contentDocument || iframe.contentWindow?.document;
+        if (!doc) return;
 
-  return (
-    // The ref is attached to the main container div to allow parent components to reference this element.
-    <div ref={ref} style={styles.container}>
-      {/* Header Section for Kitchen */}
-      <div style={styles.header}>
-        <h2 style={styles.h2}>
-          {profileData?.name || "Restaurant Name"}
-        </h2>
-        <p style={styles.pHeader}>
-          Kitchen Order Ticket (KOT)
-        </p>
-        <hr style={styles.dashedLine} />
+        doc.open();
+        doc.write(`
+            <html>
+                <head>
+                    <title>Kitchen Order Ticket</title>
+                    <style>
+                        /* GLOBAL RESET for Thermal Printer */
+                        * {
+                            font-weight: bold !important;
+                            color: #000 !important;
+                        }
+                        @media print {
+                            @page { margin: 0; size: 72mm auto; }
+                            body { 
+                                margin: 0; 
+                                /* ARIAL FONT FOR CLARITY */
+                                font-family: Arial, Helvetica, sans-serif; 
+                                font-size: 14px;
+                                font-weight: bold;
+                            }
+                            table { width: 100%; border-collapse: collapse; }
+                            td, th { padding: 4px 0; }
+                            /* Ensure text is black */
+                            h1, h2, h3, h4, p, span, td, th {
+                                -webkit-print-color-adjust: exact;
+                            }
+                        }
+                    </style>
+                </head>
+                <body>
+                    ${node.outerHTML}
+                </body>
+            </html>
+        `);
+        doc.close();
 
-        {/* Display Order Type and Table Name/Delivery Provider */}
-        <p style={styles.pHeader}>
-          Order Type: {invoiceData?.orderType || "Unknown"}
-        </p>
-        {invoiceData?.orderType === "dine-in" && invoiceData?.tableName && (
-          <p style={styles.pHeader}>
-            Table: {invoiceData.tableName}
-          </p>
-        )}
-        {invoiceData?.orderType === "delivery" && invoiceData?.deliveryProvider && (
-          <p style={styles.pHeader}>
-            Delivery By: {invoiceData.deliveryProvider}
-          </p>
-        )}
-        <p style={styles.pHeader}>
-          Order ID: {invoiceData?.invoiceSerial || "N/A"}
-        </p>
-        <p style={styles.pHeader}>
-          Time: {getCurrentDateTime()}
-        </p>
-        <hr style={styles.dashedLine} />
-      </div>
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
 
-      {/* Items Table - Focus on Product Name and Quantity */}
-      {Array.isArray(invoiceData?.products) && invoiceData.products.length > 0 ? (
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Item</th>
-              <th>Qty</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoiceData.products.map((item, index) => (
-              <tr key={index}>
-                <td>{index + 1}</td>
-                <td>{item.productName || "Unknown Item"}</td>
-                <td>{item.qty || 0}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <p style={{ textAlign: "center" }}>No items to display.</p>
-      )}
-      <hr style={styles.dashedLine} />
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+            if (onPrintComplete) onPrintComplete();
+        }, 500);
+    }, [onPrintComplete]);
 
-      {/* Footer Section for Kitchen */}
-      <div style={styles.footer}>
-        <p style={{ fontWeight: "bold", fontSize: "16px" }}>-- End of Order --</p> {/* Increased font size here */}
-        <p style={styles.pFooter}>
-          Prepared by: {invoiceData?.loginUserName || "Staff"}
-        </p>
-      </div>
-    </div>
-  );
+    // Expose the print function
+    useImperativeHandle(ref, () => ({
+        printReceipt,
+    }));
+
+    // --- AUTO PRINT ---
+    useEffect(() => {
+        if (invoiceData) {
+            const timer = setTimeout(() => printReceipt(), 500);
+            return () => clearTimeout(timer);
+        }
+    }, [invoiceData, printReceipt]);
+
+
+    if (!profileData || !invoiceData) return <p>Loading...</p>;
+
+    // --- STYLES ---
+    const styles = {
+        container: { 
+            fontFamily: "Arial, Helvetica, sans-serif", 
+            width: "72mm", 
+            margin: "auto", 
+            padding: "10px", 
+            fontSize: "14px", 
+            color: "#000", 
+            backgroundColor: "#fff",
+            fontWeight: "bold"
+        },
+        header: { textAlign: "center", marginBottom: "10px" },
+        table: { width: "100%", borderCollapse: "collapse", fontWeight: "bold" },
+        tableHeaderCell: { textAlign: "left", padding: "4px 0", borderBottom: "2px dashed #000", fontWeight: "bold" },
+        tableDataCell: { textAlign: "left", padding: "4px 0", fontWeight: "bold" },
+        dashedLine: { margin: "8px 0", borderTop: "2px dashed #000" },
+        footer: { textAlign: "center", marginTop: "10px" },
+        companyName: { fontSize: "20px", fontWeight: "bold", marginBottom: "2px" },
+        kotTitle: { fontSize: "18px", fontWeight: "bold", border: "3px solid #000", display:"inline-block", padding: "4px 8px", margin: "5px 0" },
+        infoText: { fontSize: "14px", margin: "2px 0", fontWeight: "bold" },
+        largeText: { fontSize: "16px", fontWeight: "bold" },
+        normalText: { fontSize: "14px", margin: "2px 0", textAlign: "left", fontWeight: "bold" },
+    };
+
+    return (
+        <div ref={internalPrintRef} style={styles.container}>
+            {/* Header */}
+            <div style={styles.header}>
+                <h2 style={styles.companyName}>{profileData?.name || "Restaurant Name"}</h2>
+                <div style={styles.kotTitle}>KITCHEN TICKET</div>
+            </div>
+
+            <div style={styles.dashedLine}></div>
+
+            {/* Info */}
+            <div>
+                <p style={styles.normalText}><strong>Ticket #:</strong> {invoiceData?.invoiceSerial || "N/A"}</p>
+                <p style={styles.normalText}><strong>Date:</strong> {getCurrentDateTime()}</p>
+                
+                {invoiceData?.orderType === "dine-in" && invoiceData?.tableName && (
+                    <p style={{...styles.normalText, fontSize: "18px"}}>
+                        Table: {invoiceData.tableName}
+                    </p>
+                )}
+                
+                {invoiceData?.orderType === "delivery" && (
+                    <p style={styles.normalText}><strong>Delivery:</strong> {invoiceData?.deliveryProvider || "General"}</p>
+                )}
+                
+                <p style={styles.normalText}><strong>Type:</strong> {invoiceData?.orderType?.toUpperCase()}</p>
+            </div>
+
+            <div style={styles.dashedLine}></div>
+
+            {/* Items */}
+            {Array.isArray(invoiceData?.products) && invoiceData.products.length > 0 ? (
+                <table style={styles.table}>
+                    <thead>
+                        <tr>
+                            <th style={{...styles.tableHeaderCell, width: "15%"}}>Qty</th>
+                            <th style={styles.tableHeaderCell}>Item Name</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {invoiceData.products.map((item, index) => (
+                            <tr key={index}>
+                                <td style={{...styles.tableDataCell, verticalAlign: 'top', fontSize: "18px"}}>
+                                    {item.qty || 0}
+                                </td>
+                                <td style={styles.tableDataCell}>
+                                    {item.productName || "Unknown"}
+                                    {item.cookStatus && (
+                                        <div style={{fontSize: "12px", fontStyle: "italic"}}>
+                                            [{item.cookStatus}]
+                                        </div>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            ) : (
+                <p style={{ textAlign: "center", fontWeight: "bold" }}>No items.</p>
+            )}
+
+            <div style={styles.dashedLine}></div>
+
+            {/* Footer */}
+            <div style={styles.footer}>
+                <p style={styles.infoText}>Prepared By: {invoiceData?.loginUserName || "Server"}</p>
+                <p style={{ fontSize: "14px", marginTop: "10px", fontWeight: "bold" }}>*** END OF ORDER ***</p>
+            </div>
+        </div>
+    );
 });
 
+KitchenReceiptTemplate.displayName = 'KitchenReceiptTemplate';
 export default KitchenReceiptTemplate;

@@ -1,10 +1,11 @@
-// src/layouts/Sidebar.js
-import React, { useState, useEffect, useMemo, memo } from 'react';
+import React, { useState, useEffect, useMemo, memo, useContext } from 'react'; // Added useContext
 import { Link, useLocation } from "react-router-dom";
 import { MdChevronRight } from "react-icons/md";
-import menuItems from "./MenuItems";
+// Rename import to represent it is a hook
+import useMenuItems from "./MenuItems"; 
 import useCompanyHook from "../../Hook/useCompanyHook";
-import useUserPermissions from '../../Hook/useUserPermissions'; // 1. IMPORT the new hook
+import useUserPermissions from '../../Hook/useUserPermissions';
+import { AuthContext } from '../../providers/AuthProvider'; // Import AuthContext
 
 // Helper for skeleton loading UI
 const SidebarSkeleton = ({ isSidebarOpen }) => (
@@ -17,7 +18,6 @@ const SidebarSkeleton = ({ isSidebarOpen }) => (
         ))}
     </div>
 );
-
 
 const AccordionItem = memo(({ item, isSidebarOpen }) => {
     const [isOpen, setIsOpen] = useState(false);
@@ -36,7 +36,6 @@ const AccordionItem = memo(({ item, isSidebarOpen }) => {
         }
     }, [location.pathname, item.list]);
     
-
     const linkClasses = useMemo(() => `flex p-3 my-1 rounded-md gap-3 items-center transition-colors ${
         location.pathname === item.path
             ? "bg-blue-600 text-white shadow-md"
@@ -89,16 +88,30 @@ const AccordionItem = memo(({ item, isSidebarOpen }) => {
     );
 });
 
-
 const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
     const { companies } = useCompanyHook();
-    // 2. FETCH the user's allowed routes and loading status
+    const { user } = useContext(AuthContext); // Get User to check Role
+    
+    // FETCH the user's allowed routes and loading status
     const { allowedRoutes, loading: permissionsLoading } = useUserPermissions();
+    
+    // Call the menu items hook at the top level
+    const allItems = useMenuItems();
 
-    // 3. FILTER the menu based on permissions
+    // FILTER the menu based on permissions
     const filteredMenuItems = useMemo(() => {
-        if (permissionsLoading) return []; // Return empty while loading
-        const allItems = menuItems();
+        if (permissionsLoading) return []; 
+
+        // === ADMIN FAILSAFE LOGIC ===
+        // If user is Admin AND (allowedRoutes is undefined or empty)
+        // We show ALL items to prevent locking the admin out.
+        const isAdmin = user?.role === 'admin';
+        const hasPermissions = allowedRoutes && allowedRoutes.length > 0;
+
+        if (isAdmin && !hasPermissions) {
+            return allItems;
+        }
+        // ============================
 
         return allItems.reduce((acc, item) => {
             if (item.path) { // Direct link
@@ -115,7 +128,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
             }
             return acc;
         }, []);
-    }, [allowedRoutes, permissionsLoading]);
+    }, [allowedRoutes, permissionsLoading, allItems, user]); // Added user and allItems to dependency
 
     const sidebarClasses = useMemo(() => `fixed top-0 left-0 h-full bg-white shadow-lg z-30 transition-all duration-300 flex flex-col ${
         isSidebarOpen
@@ -137,7 +150,6 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
                 </div>
 
                 <nav className="flex-1 overflow-y-auto p-2">
-                    {/* 4. RENDER skeleton or the filtered menu */}
                     {permissionsLoading ? (
                         <SidebarSkeleton isSidebarOpen={isSidebarOpen} />
                     ) : (

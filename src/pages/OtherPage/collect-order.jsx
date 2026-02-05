@@ -384,20 +384,60 @@ const CollectOrder = () => {
                 )}
             </div>
 
-            {isKitchenModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setIsKitchenModalOpen(false)}>
-                    <div className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-                        <button className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700" onClick={() => setIsKitchenModalOpen(false)}>
-                            Close
-                        </button>
-                        <KitchenReceiptTemplate
-                            ref={kitchenReceiptRef}
-                            profileData={companies[0]}
-                            invoiceData={print}
-                        />
-                    </div>
-                </div>
-            )}
+{isKitchenModalOpen && (
+    <div 
+        className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" 
+        onClick={() => setIsKitchenModalOpen(false)}
+    >
+        <div 
+            className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm flex flex-col items-center" 
+            onClick={(e) => e.stopPropagation()}
+        >
+            {/* 1. Header with Close (X) Button */}
+            <button 
+                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors p-1" 
+                onClick={() => setIsKitchenModalOpen(false)}
+                title="Close without printing"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+
+            <h3 className="text-lg font-bold text-gray-800 mb-4">Kitchen Order Ticket</h3>
+
+            {/* 2. The Receipt Preview Area */}
+            {/* We add a border and scroll to make it look like a preview */}
+            <div className="border-2 border-dashed border-gray-300 rounded p-2 mb-5 bg-gray-50 max-h-[60vh] overflow-y-auto">
+                <KitchenReceiptTemplate
+                    ref={kitchenReceiptRef}
+                    profileData={companies[0]}
+                    invoiceData={print}
+                    // This ensures the modal closes automatically after a successful print
+                    onPrintComplete={() => setIsKitchenModalOpen(false)}
+                />
+            </div>
+
+            {/* 3. The Manual "Print & Close" Button (Fallback) */}
+            <button 
+                onClick={() => {
+                    // Manually trigger the print function exposed by the child component
+                    if (kitchenReceiptRef.current) {
+                        kitchenReceiptRef.current.printReceipt();
+                    }
+                }}
+                className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print & Close
+            </button>
+            
+        
+        </div>
+    </div>
+)}
         </div>
     );
 };

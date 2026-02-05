@@ -3,10 +3,11 @@ import { FiEdit, FiTrash2, FiPlus } from 'react-icons/fi';
 import { useDebounce } from "use-debounce";
 import Swal from 'sweetalert2';
 
+// Ensure these paths are correct for your project structure
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import Mtitle from '../../components library/Mtitle';
 import Preloader from '../../components/Shortarea/Preloader';
-import CompanyModal from './CompanyModal'; // Adjust path if needed
+import CompanyModal from './CompanyModal'; 
 
 const ACompany = () => {
     const axiosSecure = UseAxiosSecure();
@@ -28,8 +29,11 @@ const ACompany = () => {
             const response = await axiosSecure.get(`/company/superadmin/all?${params.toString()}`);
             setCompanies(response.data.data);
             setPagination(response.data.pagination);
-        } catch (error) { console.error("Error fetching companies:", error); } 
-        finally { setLoading(false); }
+        } catch (error) { 
+            console.error("Error fetching companies:", error); 
+        } finally { 
+            setLoading(false); 
+        }
     }, [axiosSecure, currentPage, debouncedSearch]);
 
     useEffect(() => { fetchCompanies(); }, [fetchCompanies]);
@@ -59,7 +63,7 @@ const ACompany = () => {
 
     const handleDelete = (id) => {
         Swal.fire({
-            title: 'Are you sure?', text: "This will delete the branch and all its associated data!",
+            title: 'Are you sure?', text: "This will delete the branch and all associated data!",
             icon: 'warning', showCancelButton: true, confirmButtonText: 'Yes, delete it!'
         }).then(result => {
             if (result.isConfirmed) {
@@ -84,11 +88,12 @@ const ACompany = () => {
                 <div className="overflow-x-auto bg-white rounded-lg shadow-md mt-6">
                     <table className="table w-full">
                         <thead className="bg-blue-600 text-white">
-                            <tr><th>Logo</th><th>Company Name</th><th>Branch</th><th>Contact</th><th>Actions</th></tr>
+                            <tr><th>Logo</th><th>Company Name & IDs</th><th>Branch</th><th>Contact Info</th><th>Actions</th></tr>
                         </thead>
                         <tbody>
                             {companies.map(company => (
                                 <tr key={company._id} className="hover">
+                                    {/* Logo */}
                                     <td>
                                         <div className="avatar">
                                             <div className="mask mask-squircle w-12 h-12">
@@ -96,12 +101,36 @@ const ACompany = () => {
                                             </div>
                                         </div>
                                     </td>
-                                    <td>{company.name}</td>
+
+                                    {/* Name & BIN/TIN (New Fields Display) */}
+                                    <td>
+                                        <div className="font-bold text-gray-800">{company.name}</div>
+                                        <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1">
+                                            {company.binNumber && <span className="badge badge-ghost badge-sm border-gray-300">BIN: {company.binNumber}</span>}
+                                            {company.tinNumber && <span className="badge badge-ghost badge-sm border-gray-300">TIN: {company.tinNumber}</span>}
+                                        </div>
+                                    </td>
+
+                                    {/* Branch */}
                                     <td><span className="badge badge-neutral">{company.branch}</span></td>
-                                    <td>{company.email}<br/><span className="text-sm opacity-70">{company.phone}</span></td>
+
+                                    {/* Contact & Owner (New Owner Email Display) */}
+                                    <td>
+                                        <div className="text-sm font-semibold">Co: {company.email}</div>
+                                        {company.ownerEmail && (
+                                            <div className="text-sm text-blue-600 font-medium">Owner: {company.ownerEmail}</div>
+                                        )}
+                                        <div className="text-xs opacity-70 mt-1">{company.phone}</div>
+                                    </td>
+
+                                    {/* Actions */}
                                     <td className="space-x-2">
-                                        <button onClick={() => handleOpenModal(company)} className="btn btn-ghost btn-sm"><FiEdit/></button>
-                                        <button onClick={() => handleDelete(company._id)} className="btn btn-ghost btn-sm text-red-500"><FiTrash2/></button>
+                                        <button onClick={() => handleOpenModal(company)} className="btn btn-ghost btn-sm tooltip" data-tip="Edit">
+                                            <FiEdit size={16} />
+                                        </button>
+                                        <button onClick={() => handleDelete(company._id)} className="btn btn-ghost btn-sm text-red-500 tooltip" data-tip="Delete">
+                                            <FiTrash2 size={16} />
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -111,11 +140,11 @@ const ACompany = () => {
             )}
             
             <div className="flex justify-between items-center mt-6">
-                <p>Total Branches: {pagination.totalDocuments}</p>
+                <p className="text-sm text-gray-500">Total Branches: {pagination.totalDocuments || 0}</p>
                 <div className="join">
-                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={pagination.currentPage === 1} className="join-item btn">«</button>
-                    <button className="join-item btn">Page {pagination.currentPage}</button>
-                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={pagination.currentPage === pagination.totalPages} className="join-item btn">»</button>
+                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={pagination.currentPage === 1} className="join-item btn btn-sm">«</button>
+                    <button className="join-item btn btn-sm">Page {pagination.currentPage}</button>
+                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={pagination.currentPage === pagination.totalPages} className="join-item btn btn-sm">»</button>
                 </div>
             </div>
 
