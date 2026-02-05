@@ -16,7 +16,7 @@ import Preloader from "../../components/Shortarea/Preloader";
 import ImageUpload from "../../config/ImageUploadcpanel";
 import CategroieHook from "../../Hook/Categroie";
 import UseAxiosSecure from "../../Hook/UseAxioSecure";
-import useActionPermissions from "../../Hook/useActionPermissions"; // Imported your hook
+import useActionPermissions from "../../Hook/useActionPermissions"; 
 import { AuthContext } from "../../providers/AuthProvider";
 
 const Product = () => {
@@ -24,8 +24,6 @@ const Product = () => {
     const { categoryNames, loading: categoriesLoading, error: categoriesError } = CategroieHook();
     const axiosSecure = UseAxiosSecure();
     const { branch } = useContext(AuthContext);
-    
-    // Permission Hook
     const { canPerform } = useActionPermissions(); 
 
     // --- STATE MANAGEMENT ---
@@ -52,7 +50,7 @@ const Product = () => {
         vatType: "amount", 
         sdType: "amount", 
         status: "available", 
-        productDetails: "", // Already existed here, now mapped to UI
+        productDetails: "", 
         branch: branch, 
         photo: "",
         flavour: false, 
@@ -146,6 +144,7 @@ const Product = () => {
         const product = products.find((p) => p._id === id);
         setEditId(id);
         
+        // Note: Backend stores result as Amount, so we default types to 'amount' for edit
         setFormData({ 
             ...initialFormData, 
             ...product, 
@@ -344,6 +343,9 @@ const Product = () => {
                                 <th className="p-3 rounded-l-xl">Product Name</th>
                                 <th className="p-3">Category</th>
                                 <th className="p-3">Price</th>
+                                {/* --- NEW COLUMNS ADDED HERE --- */}
+                                <th className="p-3">VAT</th>
+                                <th className="p-3">SD</th>
                                 <th className="p-3">Status</th>
                                 <th className="p-3 rounded-r-xl text-right px-8">Action</th>
                             </tr>
@@ -354,6 +356,9 @@ const Product = () => {
                                     <td className="px-4 py-4 font-medium text-gray-800">{product.productName}</td>
                                     <td className="px-4 py-4 text-gray-600">{product.category}</td>
                                     <td className="px-4 py-4 text-gray-600">৳{product.price}</td>
+                                    {/* --- NEW DATA ROWS ADDED HERE --- */}
+                                    <td className="px-4 py-4 text-gray-600">৳{product.vat || 0}</td>
+                                    <td className="px-4 py-4 text-gray-600">৳{product.sd || 0}</td>
                                     <td className="px-4 py-4"><span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${product.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.status}</span></td>
                                     <td className="py-4 px-6 flex justify-end gap-3 text-lg">
                                         {canPerform('Product List', 'edit') && (
@@ -383,7 +388,6 @@ const Product = () => {
 
                         {/* --- TOP CONTROLS --- */}
                         <div className="px-6 pt-6 pb-2 grid grid-cols-1 md:grid-cols-3 gap-6">
-                             {/* Category */}
                              <div className="form-control">
                                 <label className="label pt-0"><span className="label-text font-bold text-gray-700">Category (All Items)</span></label>
                                 <select className="select select-bordered w-full" value={bulkCategory} onChange={(e) => setBulkCategory(e.target.value)}>
@@ -392,7 +396,6 @@ const Product = () => {
                                 </select>
                              </div>
 
-                             {/* Auto-Fill VAT */}
                              <div className="form-control">
                                 <label className="label pt-0"><span className="label-text font-bold text-gray-700 flex items-center gap-1"><FaMagic className="text-blue-500 text-xs"/> Auto-Fill VAT</span></label>
                                 <div className="flex gap-2">
@@ -404,7 +407,6 @@ const Product = () => {
                                 </div>
                              </div>
 
-                             {/* Auto-Fill SD */}
                              <div className="form-control">
                                 <label className="label pt-0"><span className="label-text font-bold text-gray-700 flex items-center gap-1"><FaMagic className="text-blue-500 text-xs"/> Auto-Fill SD</span></label>
                                 <div className="flex gap-2">
@@ -538,7 +540,6 @@ const Product = () => {
                                    </div>
                                </div>
 
-                               {/* --- ADDED PRODUCT DETAILS FIELD HERE --- */}
                                <div className="md:col-span-2">
                                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Details</label>
                                    <textarea
