@@ -4,14 +4,21 @@ import { AuthContext } from '../../providers/AuthProvider';
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import io from 'socket.io-client';
 
-// --- React Icons ---
-import { IoRestaurant, IoTimeOutline, IoVolumeMuteOutline, IoVolumeHighOutline } from "react-icons/io5";
-import { MdDeliveryDining, MdOutlineFoodBank, MdSoupKitchen } from "react-icons/md";
+// --- Icons ---
+import { 
+    IoRestaurant, IoTimeOutline, IoVolumeMuteOutline, 
+    IoVolumeHighOutline, IoBeerOutline 
+} from "react-icons/io5";
+import { 
+    MdDeliveryDining, MdOutlineFoodBank, MdSoupKitchen, MdFastfood, MdHistory 
+} from "react-icons/md";
 import { BsHandbagFill } from "react-icons/bs";
-import { FaCheckCircle, FaUtensils } from "react-icons/fa";
+import { FaCheckCircle, FaUtensils, FaFire, FaClock } from "react-icons/fa";
+
+// Audio
 import ding from "../../assets/ding.mp3";
 
-// --- Helper Hook for Live Timer ---
+// --- Time Ago Hook ---
 const useTimeAgo = (startTime) => {
     const [timeAgo, setTimeAgo] = useState('');
     useEffect(() => {
@@ -35,242 +42,384 @@ const useTimeAgo = (startTime) => {
     return timeAgo;
 };
 
-// --- Order Card Component ---
-const OrderCard = ({ order, onUpdate, isProcessing }) => {
+// --- Product Batch Component ---
+const ProductBatchRow = ({ batch, productName, isDrink, onStatusChange }) => {
+    // Style based on status
+    const getStatusStyle = (status) => {
+        switch (status) {
+            case 'PENDING': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
+            case 'COOKING': return 'bg-orange-50 border-orange-200 text-orange-800';
+            case 'SERVED': return 'bg-gray-50 border-gray-100 text-gray-400 opacity-60';
+            default: return 'bg-gray-50';
+        }
+    };
+
+    return (
+        <div className={`flex items-center justify-between p-2 mb-1 rounded-md border ${getStatusStyle(batch.cookStatus)}`}>
+            {/* Left: Info */}
+            <div className="flex items-center gap-3">
+                <div className={`text-xs font-bold px-2 py-1 rounded border ${isDrink ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-white border-gray-200'}`}>
+                    +{batch.qty}
+                </div>
+                <div className="flex flex-col">
+                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                        <MdHistory /> {moment(batch.updateTime).format('h:mm:ss A')}
+                    </span>
+                    <span className={`text-xs font-semibold uppercase ${batch.cookStatus === 'SERVED' ? 'line-through' : ''}`}>
+                        {batch.cookStatus}
+                    </span>
+                </div>
+            </div>
+
+            {/* Right: Actions */}
+            <div className="flex items-center gap-1">
+                {batch.cookStatus === 'PENDING' && (
+                    <button 
+                        onClick={() => onStatusChange(batch._id, 'COOKING')}
+                        className="btn btn-xs btn-warning text-white"
+                    >
+                        <FaFire /> Cook
+                    </button>
+                )}
+                {batch.cookStatus === 'COOKING' && (
+                    <button 
+                        onClick={() => onStatusChange(batch._id, 'SERVED')}
+                        className="btn btn-xs btn-success text-white"
+                    >
+                        <FaUtensils /> Serve
+                    </button>
+                )}
+                {batch.cookStatus === 'SERVED' && (
+                    <FaCheckCircle className="text-green-500" />
+                )}
+            </div>
+        </div>
+    );
+};
+
+// --- Parent Product Container ---
+const ProductItem = ({ product, onUpdateHistory }) => {
+    // 1. Calculate Batches from History
+    // The history 'qty' is cumulative (1, 2, 3...). We need the diff.
+    const batches = React.useMemo(() => {
+        if (!product.history || product.history.length === 0) {
+            // Fallback for old data without history
+            return [{
+                _id: product._id, // use product ID as pseudo-history ID
+                qty: product.qty,
+                cookStatus: product.cookStatus,
+                updateTime: product.updatedAt,
+                isParent: true 
+            }];
+        }
+
+        // Sort by updateNumber (0, 1, 2...)
+        const sortedHistory = [...product.history].sort((a, b) => a.updateNumber - b.updateNumber);
+
+        return sortedHistory.map((item, index) => {
+            const prevQty = index > 0 ? sortedHistory[index - 1].qty : 0;
+            const batchQty = item.qty - prevQty;
+            return { ...item, batchQty }; // Add the calculated 'increment'
+        }).filter(b => b.batchQty > 0) // Remove 0 qty updates if any
+          .reverse(); // Show NEWEST (Pending) updates at the top!
+    }, [product]);
+
+    const isDrink = product.drinkBar === true;
+
+    return (
+        <li className="flex flex-col w-full py-3 border-b border-base-200 last:border-none">
+            {/* Header: Total Product Summary */}
+            <div className="flex items-center gap-3 mb-2">
+                <div className={`p-2 rounded-lg ${isDrink ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                    {isDrink ? <IoBeerOutline size={22} /> : <MdFastfood size={22} />}
+                </div>
+                <div>
+                    <div className="flex items-center gap-2">
+                        <span className="font-extrabold text-lg">Total: {product.qty}x</span>
+                        <span className="font-bold text-base text-gray-700">{product.productName}</span>
+                    </div>
+                </div>
+            </div>
+
+            {/* Batches List */}
+            <div className="pl-2 sm:pl-12 w-full">
+                {batches.map(batch => (
+                    <ProductBatchRow 
+                        key={batch._id}
+                        batch={{...batch, qty: batch.batchQty || batch.qty}} // Ensure we pass the increment qty
+                        productName={product.productName}
+                        isDrink={isDrink}
+                        onStatusChange={(historyId, status) => onUpdateHistory(product._id, historyId, status)}
+                    />
+                ))}
+            </div>
+        </li>
+    );
+};
+
+// --- Main Order Card ---
+const OrderCard = ({ order, onUpdate }) => {
     const timeAgo = useTimeAgo(order.dateTime);
 
     const getOrderTypeDetails = (type) => {
         switch (type) {
-            case 'dine-in': return { className: 'bg-red-600 text-white', icon: <IoRestaurant size={24} /> };
-            case 'delivery': return { className: 'bg-green-600 text-white', icon: <MdDeliveryDining size={24} /> };
-            case 'takeaway': return { className: 'bg-orange-500 text-white', icon: <BsHandbagFill size={20} /> };
-            default: return { className: 'bg-gray-500 text-white', icon: <MdSoupKitchen size={24} /> };
+            case 'dine-in': return { className: 'bg-rose-600 text-white', icon: <IoRestaurant size={24} /> };
+            case 'delivery': return { className: 'bg-emerald-600 text-white', icon: <MdDeliveryDining size={24} /> };
+            case 'takeaway': return { className: 'bg-amber-500 text-white', icon: <BsHandbagFill size={20} /> };
+            default: return { className: 'bg-slate-500 text-white', icon: <MdSoupKitchen size={24} /> };
         }
     };
 
-   const handleStatusChange = (productId, newStatus) => {
-        const updatedProducts = order.products.map(p =>
-            p._id === productId ? { ...p, cookStatus: newStatus } : p
-        );
-        const isCooking = updatedProducts.some(p => p.cookStatus === 'COOKING');
-        const allServed = updatedProducts.every(p => p.cookStatus === 'SERVED');
-        let newOrderStatus = allServed ? 'served' : (isCooking ? 'cooking' : order.orderStatus);
+    // --- Core Logic: Handling Status Update ---
+    const handleHistoryUpdate = (productId, historyId, newStatus) => {
+        // 1. Clone Order
+        const updatedProducts = order.products.map(p => {
+            if (p._id !== productId) return p;
+
+            // 2. Find the product, then update the specific history item
+            let updatedHistory;
+            
+            if (p.history && p.history.length > 0) {
+                 updatedHistory = p.history.map(h => 
+                    h._id === historyId ? { ...h, cookStatus: newStatus } : h
+                );
+            } else {
+                // Fallback: If no history exists, update parent (legacy)
+                return { ...p, cookStatus: newStatus };
+            }
+
+            // 3. Derive Parent CookStatus based on History
+            // If ANY history is cooking -> Parent Cooking.
+            // If ALL history served -> Parent Served.
+            const allServed = updatedHistory.every(h => h.cookStatus === 'SERVED');
+            const anyCooking = updatedHistory.some(h => h.cookStatus === 'COOKING');
+            const parentStatus = allServed ? 'SERVED' : (anyCooking ? 'COOKING' : 'PENDING');
+
+            return { ...p, history: updatedHistory, cookStatus: parentStatus };
+        });
+
+        // 4. Derive Order Status
+        const orderAllServed = updatedProducts.every(p => p.cookStatus === 'SERVED');
+        const orderAnyCooking = updatedProducts.some(p => p.cookStatus === 'COOKING');
+        const newOrderStatus = orderAllServed ? 'served' : (orderAnyCooking ? 'cooking' : order.orderStatus);
+
         const updatedOrder = { ...order, products: updatedProducts, orderStatus: newOrderStatus };
         onUpdate(updatedOrder);
     };
 
-const handleCookAll = () => {
-        const updatedProducts = order.products.map(p =>
-            p.cookStatus === 'PENDING' ? { ...p, cookStatus: 'COOKING' } : p
-        );
+    const handleCookAllPending = () => {
+        // Find all history items across all products that are PENDING and set to COOKING
+        const updatedProducts = order.products.map(p => {
+            if(!p.history || p.history.length === 0) {
+                return p.cookStatus === 'PENDING' ? {...p, cookStatus: 'COOKING'} : p;
+            }
+
+            const updatedHistory = p.history.map(h => 
+                h.cookStatus === 'PENDING' ? { ...h, cookStatus: 'COOKING' } : h
+            );
+            
+            // Recalculate parent status
+            const anyCooking = updatedHistory.some(h => h.cookStatus === 'COOKING');
+            const parentStatus = anyCooking ? 'COOKING' : p.cookStatus;
+
+            return { ...p, history: updatedHistory, cookStatus: parentStatus };
+        });
+
         const updatedOrder = { ...order, products: updatedProducts, orderStatus: 'cooking' };
         onUpdate(updatedOrder);
     };
 
     const orderTypeDetails = getOrderTypeDetails(order.orderType);
-    const orderIdentifier = order.orderType === 'dine-in' ? `Table: ${order.tableName}` : `Order: #${order.counter}`;
+    const identifier = order.orderType === 'dine-in' ? `Table: ${order.tableName}` : `Token: ${order.counter}`;
+    
+    // Check if there are ANY pending items in history to enable the "Cook All" button
+    const hasPending = order.products.some(p => {
+        if(p.history?.length > 0) return p.history.some(h => h.cookStatus === 'PENDING');
+        return p.cookStatus === 'PENDING';
+    });
 
     return (
-        <div className="card bg-base-100 shadow-xl border-2 border-base-300 flex flex-col">
-            <div className={`card-title p-3 rounded-t-xl flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 ${orderTypeDetails.className}`}>
-                <div className='flex items-center gap-3 w-full'>
-                    {orderTypeDetails.icon}
+        <div className="card bg-white shadow-xl border border-gray-200 flex flex-col h-full">
+            <div className={`p-4 rounded-t-xl flex justify-between items-start ${orderTypeDetails.className}`}>
+                <div className="flex gap-3">
+                    <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm h-fit">
+                        {orderTypeDetails.icon}
+                    </div>
                     <div>
-                        <h2 className="text-xl font-bold">{order.orderType.toUpperCase()}</h2>
-                        <p className="text-sm font-normal">{orderIdentifier}</p>
+                        <h2 className="text-xl font-bold">{identifier}</h2>
+                        <div className="flex gap-2 mt-1">
+                             <span className="badge badge-sm bg-black/20 border-none text-white">
+                                {order.customerName}
+                             </span>
+                             {order.kotRound > 0 && (
+                                <span className="badge badge-sm bg-yellow-400 text-black border-none font-bold">
+                                    Round {order.kotRound}
+                                </span>
+                             )}
+                        </div>
                     </div>
                 </div>
-                <div className="flex items-center gap-2 text-lg font-semibold w-full sm:w-auto justify-end">
-                    <IoTimeOutline />
-                    <span>{timeAgo}</span>
+                <div className="flex flex-col items-end text-xs font-semibold opacity-90">
+                    <span className="flex items-center gap-1"><FaClock /> {timeAgo}</span>
+                    <span className="mt-1">#{order.invoiceSerial.slice(-4)}</span>
                 </div>
             </div>
-            <div className="card-body p-0 flex-grow">
-                <ul className="menu p-4 text-base-content">
+
+            <div className="card-body p-0 overflow-y-auto max-h-[400px]">
+                <ul className="flex flex-col px-3">
                     {order.products.map(product => (
-                        <li key={product._id} className="flex flex-row items-start justify-between w-full py-2 border-b border-base-200 last:border-none">
-                            <div className="flex items-start gap-3 flex-1 pr-2">
-                                <span className="font-bold text-lg w-8 text-center pt-0.5">{product.qty}x</span>
-                                <span>{product.productName}</span>
-                            </div>
-                            <div className="product-actions">
-                                {product.cookStatus === 'PENDING' && (
-                                    <button className="btn btn-sm btn-error" onClick={() => handleStatusChange(product._id, 'COOKING')}>Cook</button>
-                                )}
-                                {product.cookStatus === 'COOKING' && (
-                                    <button className="btn btn-sm btn-info" onClick={() => handleStatusChange(product._id, 'SERVED')}>Serve</button>
-                                )}
-                                {product.cookStatus === 'SERVED' && (
-                                    <div className="badge badge-success gap-2 text-white">
-                                        <FaCheckCircle /> SERVED
-                                    </div>
-                                )}
-                            </div>
-                        </li>
+                        <ProductItem 
+                            key={product._id} 
+                            product={product} 
+                            onUpdateHistory={handleHistoryUpdate} 
+                        />
                     ))}
                 </ul>
             </div>
-            <div className="card-actions p-3 border-t border-base-200">
-                <button className="btn btn-success w-full text-white" onClick={handleCookAll} disabled={!order.products.some(p => p.cookStatus === 'PENDING')}>
-                    <FaUtensils /> Cook All Pending
+
+            <div className="p-3 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+                <button 
+                    className={`btn btn-block ${hasPending ? 'btn-neutral' : 'btn-disabled'}`}
+                    onClick={handleCookAllPending}
+                    disabled={!hasPending}
+                >
+                    <FaFire className={hasPending ? "text-orange-500" : ""} /> 
+                    {hasPending ? "Cook All New Items" : "All Items Processing"}
                 </button>
             </div>
         </div>
     );
 };
 
-// --- Main Kitchen Display Component ---
+// --- Main Page Component ---
 const Kitchendisplay = () => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isAlertEnabled, setIsAlertEnabled] = useState(true);
     const [showAlert, setShowAlert] = useState(false);
+    
     const audioRef = useRef(new Audio(ding));
     const axiosSecure = UseAxiosSecure();
     const { branch } = useContext(AuthContext);
-    const branchName = branch;
-const [processingOrderId, setProcessingOrderId] = useState(null);
+    const branchName = branch || "demo"; 
+
     useEffect(() => {
         if (!branchName) return;
+
         const fetchOrders = async () => {
             try {
                 const response = await axiosSecure.get(`/invoice/${branchName}/kitchen`);
-                const sortedOrders = response.data.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-                setOrders(sortedOrders);
-                setError(null);
+                const sorted = response.data.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+                setOrders(sorted);
             } catch (err) {
-                console.error("Failed to fetch kitchen orders:", err);
-                setError("Could not load orders. Please check connection.");
+                console.error(err);
+                setError("Waiting for connection...");
             } finally {
                 setLoading(false);
             }
         };
+
         fetchOrders();
 
         const socket = io(process.env.REACT_APP_UPLOAD_URL);
         socket.emit('join-branch', branchName);
 
-        const handleNewOrderAlert = () => {
-            if (isAlertEnabled) {
-                audioRef.current.play().catch(e => console.error("Audio play failed:", e));
-                setShowAlert(true);
-                setTimeout(() => setShowAlert(false), 5000);
-            }
-        };
-
         socket.on('kitchen-update', (updatedOrder) => {
-            if (!updatedOrder || !updatedOrder._id) {
-                console.warn('Received an invalid kitchen-update event. Ignoring.', updatedOrder);
-                return;
-            }
+            if (!updatedOrder?._id) return;
             
-            setOrders(prevOrders => {
-                const existingOrderIndex = prevOrders.findIndex(o => o._id === updatedOrder._id);
-                let newOrders = [...prevOrders];
+            // Play sound for genuinely NEW orders or Rounds
+            if (isAlertEnabled && updatedOrder.orderStatus !== 'served') {
+                // Simple logic: if not in list, or kotRound increased
+                setOrders(prev => {
+                    const exists = prev.find(o => o._id === updatedOrder._id);
+                    if (!exists || (updatedOrder.kotRound > exists.kotRound)) {
+                        audioRef.current.currentTime = 0;
+                        audioRef.current.play().catch(()=>{});
+                        setShowAlert(true);
+                        setTimeout(() => setShowAlert(false), 4000);
+                    }
+                    return prev; 
+                });
+            }
 
-                if (existingOrderIndex !== -1) {
-                    // This is an update to an order already on screen.
-                    newOrders[existingOrderIndex] = updatedOrder;
-                } 
-                // --- THIS IS THE FIX ---
-                // Only add a new order and show an alert if the order is NOT found AND its status isn't 'served'.
-                else if (updatedOrder.orderStatus !== 'served') {
-                    // This is a genuinely new order.
-                    newOrders.push(updatedOrder);
-                    handleNewOrderAlert();
-                }
-                // --- END FIX ---
-
-                // This filter runs last, correctly removing any order that is now 'served'.
-                return newOrders
+            setOrders(prev => {
+                const index = prev.findIndex(o => o._id === updatedOrder._id);
+                let newList = [...prev];
+                if (index !== -1) newList[index] = updatedOrder;
+                else newList.push(updatedOrder);
+                
+                return newList
                     .filter(o => o.orderStatus !== 'served')
                     .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
             });
         });
 
-        return () => {
-            socket.off('kitchen-update');
-            socket.disconnect();
-        };
+        return () => { socket.off('kitchen-update'); socket.disconnect(); };
     }, [branchName, axiosSecure, isAlertEnabled]);
 
-const handleUpdateOrder = async (updatedOrder) => {
-        if (processingOrderId) return; // Prevent new actions while one is in flight
-
-        setProcessingOrderId(updatedOrder._id); // Set the current order as processing
-
-        const originalOrders = [...orders];
-        setOrders(prevOrders => {
-            const updatedList = prevOrders.map(o => o._id === updatedOrder._id ? updatedOrder : o);
-            return updatedList.filter(o => o.orderStatus !== 'served');
-        });
-
+    const handleUpdateOrder = async (updatedOrder) => {
+        // Optimistic UI
+        setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o).filter(o => o.orderStatus !== 'served'));
+        
         try {
+            // Ensure we send the FULL updated structure including the nested history status
             await axiosSecure.put(`/invoice/update/${updatedOrder._id}`, updatedOrder);
         } catch (err) {
-            console.error("Failed to update order:", err);
-            setError("Failed to update order status. Please try again.");
-            setOrders(originalOrders);
-        } finally {
-            setProcessingOrderId(null); // Clear processing state
+            console.error("Update failed", err);
+            // In a real app, you might revert state here or show a toaster
         }
     };
 
-    const toggleAlerts = () => setIsAlertEnabled(prev => !prev);
-
     return (
-        <div className="bg-gray-50 min-h-screen p-4 sm:p-6 lg:p-8">
-            <div className="container mx-auto">
-                <header className="mb-8 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Kitchen Orders</h1>
-                        <p className="text-gray-500">{moment().format("dddd, MMMM D, YYYY")}</p>
+        <div className="bg-base-200 min-h-screen p-4 font-sans">
+            <div className="max-w-[1920px] mx-auto">
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 bg-rose-100 text-rose-600 rounded-xl">
+                            <MdOutlineFoodBank size={32} />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-black text-gray-800 tracking-tight">KITCHEN BOARD</h1>
+                            <p className="text-gray-500 font-medium">Live Orders Management</p>
+                        </div>
                     </div>
-                    <button
-                        onClick={toggleAlerts}
-                        className={`btn btn-sm ${isAlertEnabled ? 'btn-success' : 'btn-error'} text-white`}>
-                        {isAlertEnabled ? <IoVolumeHighOutline size={20} /> : <IoVolumeMuteOutline size={20} />}
-                        {isAlertEnabled ? 'Alerts On' : 'Alerts Off'}
-                    </button>
-                </header>
+                    
+                    <div className="flex items-center gap-4 mt-4 sm:mt-0">
+                        <div className="stat-value text-2xl font-bold text-gray-700 bg-gray-50 px-4 py-2 rounded-lg border">
+                            {orders.length} <span className="text-sm font-normal text-gray-400">Active</span>
+                        </div>
+                        <button 
+                            onClick={() => setIsAlertEnabled(!isAlertEnabled)} 
+                            className={`btn btn-circle ${isAlertEnabled ? 'btn-neutral' : 'btn-ghost'}`}
+                        >
+                            {isAlertEnabled ? <IoVolumeHighOutline size={24} /> : <IoVolumeMuteOutline size={24} />}
+                        </button>
+                    </div>
+                </div>
 
                 {showAlert && (
-                    <div className="fixed top-0 left-0 w-full h-full z-50 flex items-center justify-center bg-black bg-opacity-70 backdrop-blur-sm animate-pulse">
-                        <div className="text-center p-6 sm:p-8 bg-red-600 text-white font-extrabold text-4xl sm:text-6xl lg:text-7xl rounded-xl shadow-2xl w-11/12 max-w-4xl">
-                            NEW ORDER RECEIVED!
+                    <div className="fixed top-20 right-10 z-50 animate-bounce">
+                        <div className="alert alert-error text-white shadow-2xl">
+                            <IoRestaurant size={24} /> <span>New Order / Update Received!</span>
                         </div>
                     </div>
                 )}
 
-                {loading && (
-                    <div className="text-center mt-20">
-                        <span className="loading loading-spinner loading-lg text-primary"></span>
-                        <p className="text-xl mt-4">Loading Kitchen Orders...</p>
+                {loading ? (
+                    <div className="flex justify-center mt-20"><span className="loading loading-bars loading-lg text-primary"></span></div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        {orders.map(order => (
+                            <OrderCard key={order._id} order={order} onUpdate={handleUpdateOrder} />
+                        ))}
+                        {orders.length === 0 && (
+                            <div className="col-span-full text-center py-20 text-gray-400">
+                                <FaCheckCircle size={60} className="mx-auto mb-4 opacity-20" />
+                                <p className="text-xl font-bold">All Orders Cleared</p>
+                            </div>
+                        )}
                     </div>
-                )}
-
-                {error && (
-                    <div role="alert" className="alert alert-error max-w-xl mx-auto">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span>Error! {error}</span>
-                    </div>
-                )}
-
-                {!loading && !error && (
-                    orders.length > 0 ? (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6">
-                            {orders.map(order => (
-                                <OrderCard key={order._id} order={order} onUpdate={handleUpdateOrder} />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center text-gray-500 mt-20">
-                            <MdOutlineFoodBank className="mx-auto text-6xl mb-4" />
-                            <p className="text-2xl font-semibold">No open orders right now.</p>
-                            <p>Enjoy the quiet moment! 🍽️</p>
-                        </div>
-                    )
                 )}
             </div>
         </div>

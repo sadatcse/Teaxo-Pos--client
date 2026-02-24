@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import {
     FaPlus, FaMinus, FaTrash, FaSearch, FaUser, FaUtensils,
     FaTruck, FaSave, FaGift, FaPrint, FaRedo, FaInfoCircle, 
-    FaCheckCircle, FaMobile, FaClock
+    FaCheckCircle, FaMobile, FaClock, FaHistory, FaListAlt, FaLock, FaLockOpen
 } from "react-icons/fa";
 
 const EditSummary = ({
@@ -13,11 +13,57 @@ const EditSummary = ({
     addedProducts, incrementQuantity, decrementQuantity, removeProduct,
     invoiceSummary, setInvoiceSummary, subtotal, vat, sd, payable, paid, change,
     printInvoice, handleFinalizeOrder, handleKitchenClick, resetOrder, isProcessing,
-    toggleComplimentaryStatus,
-    discountType,
-    setDiscountType
+    toggleComplimentaryStatus, discountType, setDiscountType,
+    openHistoryModal
 }) => {
     const [activeTab, setActiveTab] = useState('invoiceDetails');
+    const [isDateEditable, setIsDateEditable] = useState(false);
+
+    // --- Highly Stable BD Timezone Helper Functions ---
+    const formatToDhakaTime = (utcString) => {
+        if (!utcString) return "";
+        const date = new Date(utcString);
+        if (isNaN(date.getTime())) return ""; 
+        
+        // Safely add 6 hours for Dhaka time
+        const dhakaTime = new Date(date.getTime() + 6 * 60 * 60 * 1000);
+        return dhakaTime.toISOString().slice(0, 16);
+    };
+
+    const handleDhakaTimeChange = (e) => {
+        const localValue = e.target.value; 
+        if (!localValue) {
+            handleDateTimeChange(e);
+            return;
+        }
+        
+        // Calculate the new selected time
+        const newDate = new Date(`${localValue}:00+06:00`);
+        const utcValue = newDate.toISOString(); 
+
+        // GUARD CLAUSE: Prevent phantom onChange events when clicking or unlocking
+        if (orderDateTime) {
+            const oldDate = new Date(orderDateTime);
+            if (!isNaN(oldDate.getTime())) {
+                const isExactlySame = 
+                    oldDate.getUTCFullYear() === newDate.getUTCFullYear() &&
+                    oldDate.getUTCMonth() === newDate.getUTCMonth() &&
+                    oldDate.getUTCDate() === newDate.getUTCDate() &&
+                    oldDate.getUTCHours() === newDate.getUTCHours() &&
+                    oldDate.getUTCMinutes() === newDate.getUTCMinutes();
+                    
+                if (isExactlySame) {
+                    return; // Ignore the event, the time didn't actually change!
+                }
+            }
+        }
+        
+        // If it passes the guard, update the parent state
+        handleDateTimeChange({
+            target: { value: utcValue }
+        });
+    };
+    // ----------------------------------------------
 
     return (
         <div className="w-full lg:w-2/6 p-1 md:p-1 font-inter">
@@ -238,20 +284,52 @@ const EditSummary = ({
                                 <p className="font-semibold text-sm md:text-base flex items-center gap-2"><FaMobile className="text-blue-600" /> Customer Mobile: <span className="font-normal">{customer.mobile}</span></p>
                             </div>
                         )}
+                        
                         {user && user.role === 'admin' && (
                             <div className="mb-4">
-                                <label htmlFor="dateTimeInput" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                                    <FaClock className="text-base text-purple-500" /> Change Order Date & Time :
+                                <label htmlFor="dateTimeInput" className="block text-sm font-semibold text-gray-700 mb-2 flex items-center justify-between">
+                                    <span className="flex items-center gap-2">
+                                        <FaClock className="text-base text-purple-500" /> Change Date & Time (BD Time):
+                                    </span>
+                                    {/* Visual Indicator of Lock Status - Now clickable to lock/unlock manually! */}
+                                    <button 
+                                        type="button"
+                                        onClick={() => setIsDateEditable(!isDateEditable)}
+                                        className={`text-xs px-2 py-1 rounded-md flex items-center gap-1 transition-colors border ${isDateEditable ? 'bg-green-50 border-green-200 text-green-700 hover:bg-green-100' : 'bg-red-50 border-red-200 text-red-500 hover:bg-red-100'}`}
+                                    >
+                                        {isDateEditable ? <><FaLockOpen /> Click to Lock</> : <><FaLock /> Double-click to Edit</>}
+                                    </button>
                                 </label>
                                 <input
                                     id="dateTimeInput"
                                     type="datetime-local"
-                                    className="w-full border border-gray-300 px-3 py-2 md:px-4 md:py-3 rounded-xl focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 text-sm md:text-base"
-                                    value={orderDateTime}
-                                    onChange={handleDateTimeChange}
+                                    readOnly={!isDateEditable}
+                                    onDoubleClick={() => setIsDateEditable(true)}
+                                    className={`w-full border px-3 py-2 md:px-4 md:py-3 rounded-xl transition-all duration-300 text-sm md:text-base ${
+                                        isDateEditable 
+                                        ? 'border-purple-500 ring-2 ring-purple-200 bg-white shadow-inner cursor-text' 
+                                        : 'border-gray-300 bg-gray-100 cursor-pointer hover:bg-gray-200 text-gray-500'
+                                    }`}
+                                    value={formatToDhakaTime(orderDateTime)}
+                                    onChange={handleDhakaTimeChange}
+                                    title={!isDateEditable ? "Double-click to unlock and edit" : "Edit Order Date"}
                                 />
                             </div>
                         )}
+
+                        {/* --- UPDATE HISTORY BUTTON --- */}
+                        <div className="mb-4 mt-6 border-t border-gray-200 pt-6">
+                            <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                                <FaHistory className="text-base text-blue-500" /> View Order Logs :
+                            </label>
+                            <button 
+                                onClick={openHistoryModal}
+                                className="w-full bg-indigo-50 border border-indigo-200 text-blue-500 py-3 rounded-xl hover:bg-indigo-100 font-bold flex items-center justify-center gap-2 transition-colors duration-300"
+                            >
+                                <FaListAlt /> Show Update Data List
+                            </button>
+                        </div>
+
                     </div>
                 )}
             </div>

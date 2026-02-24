@@ -19,6 +19,7 @@ import BarReceiptTemplate from "../../components/Receipt/BarReceiptTemplate";
 import NewCustomerModal from "../../components/Modal/NewCustomerModal";
 import TableSelectionModal from "../../components/Modal/TableSelectionModal";
 import DeliveryProviderSelectionModal from "../../components/Modal/DeliveryProviderSelectionModal";
+import UpdateHistoryModal from "../../components/Product/UpdateHistoryModal.jsx";
 
 const EditOrderPage = () => {
     // --- Hooks for Routing and Data Fetching ---
@@ -37,10 +38,9 @@ const EditOrderPage = () => {
     const [originalOrderItems, setOriginalOrderItems] = useState([]);
     const [newOrderItems, setNewOrderItems] = useState([]);
     
-    // Tracks only the newly added items/quantities for the current KOT/BOT print job
     const [kotPrintProducts, setKotPrintProducts] = useState([]);
     
-    // --- NEW: Track KOT Rounds in Edit Mode ---
+    // --- Track KOT Rounds in Edit Mode ---
     const [kotRound, setKotRound] = useState(1);
 
     // --- Custom Hooks for Data & UI ---
@@ -70,6 +70,7 @@ const EditOrderPage = () => {
     const [isTableSelectionModalOpen, setIsTableSelectionModalOpen] = useState(false);
     const [isDeliveryProviderModalOpen, setIsDeliveryProviderModalOpen] = useState(false);
     const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
+    const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
 
     // --- Refs for Printing ---
     const receiptRef = useRef();
@@ -119,21 +120,22 @@ const EditOrderPage = () => {
                 const response = await axiosSecure.get(`/invoice/get-id/${orderId}`);
                 const orderData = response.data;
 
-                // Set upcoming round to current + 1
                 const currentKotRound = orderData.kotRound || 1;
                 setKotRound(currentKotRound + 1);
 
                 const initialOriginalItems = orderData.products.map(p => ({ 
                     ...p, 
-                    productId: p.productId || p._id,
+                    // Safeguard to ensure productId is extracted properly
+                    productId: p.productId?._id || p.productId || p._id,
                     price: p.rate, 
                     quantity: p.qty, 
                     originalQuantity: p.qty,
-                    printedQty: p.printedQty ?? p.qty, // Assume legacy items are printed
+                    printedQty: p.printedQty ?? p.qty,
                     addedInRound: p.addedInRound || 1,
                     isOriginal: true, 
                     isComplimentary: p.isComplimentary || false,
-                    drinkBar: p.drinkBar || false
+                    drinkBar: p.drinkBar || false,
+                    history: p.history || [] 
                 }));
                 
                 setOriginalOrderItems(initialOriginalItems);
@@ -194,7 +196,8 @@ const EditOrderPage = () => {
                 cookStatus: 'PENDING', 
                 isOriginal: false, 
                 isComplimentary: false,
-                drinkBar: product.drinkBar || false 
+                drinkBar: product.drinkBar || false,
+                history: [] 
             };
             setNewOrderItems(current => [...current, itemToAdd]);
             toast.success(`${product.productName} added to order!`);
@@ -214,7 +217,6 @@ const EditOrderPage = () => {
     const decrementQuantity = (productId) => {
         const originalItem = originalOrderItems.find(p => p.productId === productId);
         if (originalItem) {
-            // Allow decrementing original items, but warn if dropping below what's printed
             if (originalItem.quantity > 1) {
                 setOriginalOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p));
                 if (originalItem.quantity - 1 < originalItem.printedQty) {
@@ -286,17 +288,15 @@ const EditOrderPage = () => {
         else Swal.fire("Error", "Please select a table to continue.", "error");
     };
 
-    // --- CRITICAL FIX: Extract only unprinted quantities for KOT/BOT ---
     const getDeltaKOTProducts = useCallback(() => {
         const itemsToPrint = [];
-
         allOrderItems.forEach(item => {
             const unprintedQty = item.quantity - (item.printedQty || 0);
             if (unprintedQty > 0) {
                 itemsToPrint.push({
                     productId: item.productId,
                     productName: item.productName,
-                    qty: unprintedQty, // ONLY the new unprinted difference
+                    qty: unprintedQty, 
                     rate: item.price,
                     subtotal: Math.round(unprintedQty * item.price),
                     vat: item.vat || 0,
@@ -307,18 +307,194 @@ const EditOrderPage = () => {
                 });
             }
         });
-
         return itemsToPrint;
     }, [allOrderItems]);
 
+    // --- SMART HISTORY LOGIC & STATUS HANDLING ---
+    const getInvoicePayload = (markAsPrinted = false, isFinalizing = false) => {
+        const { subtotal, vat, sd, discount, payable } = calculateTotal();
+        const now = new Date();
+        const isPastDate = orderDateTime && new Date(orderDateTime) < now;
+
+        const productsPayload = allOrderItems.map((p) => {
+            let currentHistory = p.history ? [...p.history] : [];
+            
+            const lastHistoryQty = currentHistory.length > 0 ? currentHistory[currentHistory.length - 1].qty : 0;
+            
+            if (p.quantity !== lastHistoryQty) {
+                currentHistory.push({
+                    updateNumber: currentHistory.length,
+                    updateTime: now.toISOString(),
+                    cookStatus: p.cookStatus || 'PENDING',
+                    qty: p.quantity 
+                });
+            }
+
+            let finalCookStatus = p.cookStatus || 'PENDING';
+            if (isFinalizing || (isFinalizing && isPastDate)) {
+                finalCookStatus = 'SERVED';
+                if (currentHistory.length > 0) {
+                    currentHistory[currentHistory.length - 1].cookStatus = 'SERVED';
+                }
+            }
+
+            return { 
+                productId: p.productId, 
+                productName: p.productName, 
+                qty: p.quantity, 
+                printedQty: markAsPrinted ? p.quantity : (p.printedQty || 0), 
+                addedInRound: p.addedInRound || kotRound,
+                rate: p.price, 
+                subtotal: roundAmount(p.price * p.quantity), 
+                vat: p.vat || 0, 
+                sd: p.sd || 0, 
+                cookStatus: finalCookStatus, 
+                isComplimentary: p.isComplimentary || false,
+                drinkBar: p.drinkBar || false,
+                history: currentHistory 
+            };
+        });
+
+        const invoiceDetails = {
+            orderType,
+            orderStatus: isFinalizing ? "completed" : "pending", 
+            kotRound, 
+            products: productsPayload,
+            subtotal, discount, vat, sd,
+            loginUserEmail, loginUserName,
+            customerName: customer?.name || "Guest", customerMobile: customer?.mobile || "n/a",
+            counter: "Counter 1", branch: branch, totalAmount: payable, paymentMethod: selectedPaymentMethod,
+        };
+        
+        if (orderDateTime) invoiceDetails.dateTime = orderDateTime;
+        if (orderType === "dine-in") invoiceDetails.tableName = TableName;
+        if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
+        
+        return invoiceDetails;
+    }
+
+    // --- REWRITTEN saveOrUpdateInvoice TO FIX HISTORY _ID COLLISION ---
+    const saveOrUpdateInvoice = async (isPrintAction = false, markAsPrinted = false) => {
+        if (!validateInputs()) return false;
+        setIsProcessing(true);
+        const invoiceDetails = getInvoicePayload(markAsPrinted, false);
+        
+        try {
+            const response = await axiosSecure.put(`/invoice/update/${currentInvoiceId}`, invoiceDetails);
+            if (!markAsPrinted) toast.success("Invoice updated successfully! ✅");
+            
+            const data = response.data.invoice || response.data; 
+            const backendProducts = data.products || invoiceDetails.products;
+
+            // Sync state with BACKEND response to grab proper Mongoose _ids for history arrays
+            const updatedItems = allOrderItems.map(p => {
+                const bItem = backendProducts.find(i => {
+                    const bId = i.productId?._id || i.productId;
+                    return bId?.toString() === p.productId?.toString();
+                });
+                return {
+                    ...p,
+                    history: bItem ? bItem.history : p.history,
+                    isOriginal: true,
+                    printedQty: markAsPrinted ? p.quantity : (p.printedQty || 0),
+                    originalQuantity: markAsPrinted ? p.quantity : (p.originalQuantity || p.quantity)
+                };
+            });
+
+            setOriginalOrderItems(updatedItems);
+            setNewOrderItems([]);
+
+            const dataForPrint = { 
+                ...invoiceDetails, 
+                ...data, 
+                products: invoiceDetails.products, 
+                dateTime: data.dateTime || new Date().toISOString(), 
+                invoiceSerial: data.invoiceSerial || currentInvoiceId 
+            };
+            setPrint(dataForPrint);
+            
+            if (isPrintAction && companies[0] && data) {
+                setTimeout(() => { receiptRef.current?.printReceipt(); }, 100);
+            }
+            return true;
+        } catch (error) {
+            console.error("Error updating invoice:", error);
+            const errorMessage = error.response?.data?.error || "Failed to update the invoice.";
+            Swal.fire("Error", errorMessage, "error");
+            return false;
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
+    // --- REWRITTEN handleKitchenClick TO REPRINT LAST KOT BATCH CORRECTLY ---
     const handleKitchenClick = async () => {
         const newKotItems = getDeltaKOTProducts();
         
         if (newKotItems.length === 0) {
-            return toast.warn("No new items or changes to send to the kitchen/bar.");
+            let latestTime = 0;
+            allOrderItems.forEach(item => {
+                if (item.history && item.history.length > 0) {
+                    const lastH = item.history[item.history.length - 1];
+                    const hTime = new Date(lastH.updateTime).getTime();
+                    if (hTime > latestTime) latestTime = hTime;
+                }
+            });
+
+            if (latestTime === 0) {
+                return toast.warn("No update history found to reprint.");
+            }
+
+            const reprintItems = [];
+            const tolerance = 2000; 
+            
+            allOrderItems.forEach(item => {
+                if (item.history && item.history.length > 0) {
+                    const lastH = item.history[item.history.length - 1];
+                    const hTime = new Date(lastH.updateTime).getTime();
+                    
+                    if (Math.abs(hTime - latestTime) <= tolerance) {
+                        // Calculate delta difference for accurate reprint quantity
+                        let deltaQty = lastH.qty;
+                        if (item.history.length > 1) {
+                            const prevH = item.history[item.history.length - 2];
+                            deltaQty = lastH.qty - prevH.qty;
+                        }
+                        
+                        // Only reprint items that had a positive increase in that specific round
+                        if (deltaQty > 0) {
+                            reprintItems.push({
+                                productId: item.productId,
+                                productName: item.productName,
+                                qty: deltaQty, 
+                                rate: item.price,
+                                subtotal: Math.round(deltaQty * item.price),
+                                vat: item.vat || 0,
+                                sd: item.sd || 0,
+                                cookStatus: lastH.cookStatus || 'PENDING',
+                                isComplimentary: item.isComplimentary || false,
+                                drinkBar: item.drinkBar || false
+                            });
+                        }
+                    }
+                }
+            });
+
+            if (reprintItems.length === 0) return toast.warn("No valid KOT history found for reprint.");
+
+            toast.info("No new items. Reprinting the latest KOT/BOT updates...");
+            setKotPrintProducts(reprintItems);
+
+            let expectedPrints = 0;
+            if (reprintItems.some(p => !p.drinkBar)) expectedPrints++;
+            if (reprintItems.some(p => p.drinkBar)) expectedPrints++; 
+            
+            setPrintJobs({ expected: expectedPrints, completed: 0 });
+            setIsKitchenModalOpen(true);
+            return;
         }
 
-        // Pass 'true' to mark items as printed in the database immediately
+        // Proceed with saving and printing new items
         const isUpdateSuccessful = await saveOrUpdateInvoice(false, true);
         
         if (isUpdateSuccessful) {
@@ -332,31 +508,52 @@ const EditOrderPage = () => {
             setIsKitchenModalOpen(true);
             toast.info("Order Updated! KOT/BOT are ready.");
             
-            // --- Merge everything as 'Original' and mark as printed locally ---
-            setOriginalOrderItems(prev => prev.map(item => ({ 
-                ...item, 
-                printedQty: item.quantity,
-                originalQuantity: item.quantity 
-            })));
-            
-            if (newOrderItems.length > 0) {
-                 setOriginalOrderItems(prev => [
-                     ...prev, 
-                     ...newOrderItems.map(item => ({
-                         ...item, 
-                         isOriginal: true, 
-                         printedQty: item.quantity,
-                         originalQuantity: item.quantity
-                     }))
-                 ]);
-                 setNewOrderItems([]);
-            }
-
-            // Increment round for the next potential addition
             setKotRound(prev => prev + 1);
         } else {
             toast.error("Could not update order. KOT not printed.");
         }
+    };
+
+    const handleFinalizeOrder = async () => {
+        if (!validateInputs()) return;
+        Swal.fire({
+            title: 'Are you sure?',
+            text: "This will finalize the order and mark it as completed. This action cannot be undone.",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, finalize it!'
+        }).then(async (result) => {
+            if (result.isConfirmed) {
+                setIsProcessing(true);
+                const invoiceDetails = getInvoicePayload(true, true); 
+                try {
+                    const response = await axiosSecure.put(`/invoice/finalize/${currentInvoiceId}`, invoiceDetails);
+                    const data = response.data.invoice;
+                    
+                    const dataForPrint = { 
+                        ...invoiceDetails, 
+                        ...data, 
+                        products: invoiceDetails.products, 
+                        dateTime: data.dateTime || new Date().toISOString(), 
+                        invoiceSerial: data.invoiceSerial || currentInvoiceId 
+                    };
+                    setPrint(dataForPrint);
+
+                    if (companies[0] && data) {
+                        toast.success(response.data.message || "Order finalized successfully! 🎉");
+                        setTimeout(() => { receiptRef.current?.printReceipt(); }, 100);
+                    }
+                } catch (error) {
+                    console.error("Error finalizing invoice:", error);
+                    const errorMessage = error.response?.data?.message || "Failed to finalize the invoice.";
+                    Swal.fire("Error", errorMessage, "error");
+                } finally {
+                    setIsProcessing(false);
+                }
+            }
+        });
     };
 
     const resetOrder = () => {
@@ -401,113 +598,6 @@ const EditOrderPage = () => {
         const payable = subtotal + vat + sd - discountAmount;
         return { subtotal: roundAmount(subtotal), vat: roundAmount(vat), sd: roundAmount(sd), discount: roundAmount(discountAmount), payable: roundAmount(payable) };
     };
-
-    // markAsPrinted flag syncs the printedQty to the backend immediately
-    const getInvoicePayload = (markAsPrinted = false) => {
-        const { subtotal, vat, sd, discount, payable } = calculateTotal();
-        const invoiceDetails = {
-            orderType,
-            kotRound, 
-            products: allOrderItems.map((p) => ({ 
-                productId: p.productId, 
-                productName: p.productName, 
-                qty: p.quantity, 
-                printedQty: markAsPrinted ? p.quantity : (p.printedQty || 0), // Syncs correctly
-                addedInRound: p.addedInRound || kotRound,
-                rate: p.price, 
-                subtotal: roundAmount(p.price * p.quantity), 
-                vat: p.vat || 0, 
-                sd: p.sd || 0, 
-                cookStatus: p.cookStatus || 'PENDING', 
-                isComplimentary: p.isComplimentary || false,
-                drinkBar: p.drinkBar || false
-            })),
-            subtotal, discount, vat, sd,
-            loginUserEmail, loginUserName,
-            customerName: customer?.name || "Guest", customerMobile: customer?.mobile || "n/a",
-            counter: "Counter 1", branch: branch, totalAmount: payable, paymentMethod: selectedPaymentMethod,
-        };
-        
-        if (orderDateTime) invoiceDetails.dateTime = orderDateTime;
-        if (orderType === "dine-in") invoiceDetails.tableName = TableName;
-        if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
-        
-        return invoiceDetails;
-    }
-
-    const saveOrUpdateInvoice = async (isPrintAction = false, markAsPrinted = false) => {
-        if (!validateInputs()) return false;
-        setIsProcessing(true);
-        const invoiceDetails = getInvoicePayload(markAsPrinted);
-        try {
-            const response = await axiosSecure.put(`/invoice/update/${currentInvoiceId}`, invoiceDetails);
-            if (!markAsPrinted) toast.success("Invoice updated successfully! ✅");
-            const data = response.data;
-            
-            const dataForPrint = { 
-                ...invoiceDetails, 
-                ...data, 
-                products: invoiceDetails.products, 
-                dateTime: data.dateTime || new Date().toISOString(), 
-                invoiceSerial: data.invoiceSerial || currentInvoiceId 
-            };
-            setPrint(dataForPrint);
-            
-            if (isPrintAction && companies[0] && data) {
-                setTimeout(() => { receiptRef.current?.printReceipt(); }, 100);
-            }
-            return true;
-        } catch (error) {
-            console.error("Error updating invoice:", error);
-            const errorMessage = error.response?.data?.error || "Failed to update the invoice.";
-            Swal.fire("Error", errorMessage, "error");
-            return false;
-        } finally {
-            setIsProcessing(false);
-        }
-    };
-
-    const handleFinalizeOrder = async () => {
-        if (!validateInputs()) return;
-        Swal.fire({
-            title: 'Are you sure?',
-            text: "This will finalize the order and mark it as completed. This action cannot be undone.",
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#3085d6',
-            cancelButtonColor: '#d33',
-            confirmButtonText: 'Yes, finalize it!'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                setIsProcessing(true);
-                const invoiceDetails = getInvoicePayload(true); // Always push final state
-                try {
-                    const response = await axiosSecure.put(`/invoice/finalize/${currentInvoiceId}`, invoiceDetails);
-                    const data = response.data.invoice;
-                    
-                    const dataForPrint = { 
-                        ...invoiceDetails, 
-                        ...data, 
-                        products: invoiceDetails.products, 
-                        dateTime: data.dateTime || new Date().toISOString(), 
-                        invoiceSerial: data.invoiceSerial || currentInvoiceId 
-                    };
-                    setPrint(dataForPrint);
-
-                    if (companies[0] && data) {
-                        toast.success(response.data.message || "Order finalized successfully! 🎉");
-                        setTimeout(() => { receiptRef.current?.printReceipt(); }, 100);
-                    }
-                } catch (error) {
-                    console.error("Error finalizing invoice:", error);
-                    const errorMessage = error.response?.data?.message || "Failed to finalize the invoice.";
-                    Swal.fire("Error", errorMessage, "error");
-                } finally {
-                    setIsProcessing(false);
-                }
-            }
-        });
-    };
     
     const handlePrintComplete = () => {
         setPrintJobs((prev) => {
@@ -536,7 +626,26 @@ const EditOrderPage = () => {
             <TableSelectionModal isOpen={isTableSelectionModalOpen} tables={tables} selectedTable={selectedTable} handleTableSelect={handleTableSelect} onConfirm={handleTableSelectionConfirm} onClose={() => setIsTableSelectionModalOpen(false)} />
             <DeliveryProviderSelectionModal isOpen={isDeliveryProviderModalOpen} onSelect={handleDeliveryProviderSelect} onClose={() => setIsDeliveryProviderModalOpen(false)} />
             <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} />
-
+            
+            {/* --- NEW UPDATE HISTORY MODAL COMPONENT --- */}
+<UpdateHistoryModal 
+    isOpen={isHistoryModalOpen} 
+    onClose={() => setIsHistoryModalOpen(false)} 
+    allOrderItems={allOrderItems} 
+    // Pass Company info to the modal for receipt generation
+    profileData={companies && companies.length > 0 ? companies[0] : null}
+    // Pass existing print data OR mock up the basic info if it hasn't been saved yet this session
+    invoiceData={print || {
+        orderType,
+        tableName: TableName,
+        deliveryProvider,
+        customerName: customer?.name || "Guest",
+        customerMobile: customer?.mobile || "n/a",
+        invoiceSerial: currentInvoiceId,
+        dateTime: orderDateTime || new Date().toISOString(),
+        loginUserName
+    }}
+/>
             <main className="flex flex-col lg:flex-row p-1 gap-1">
                 <ProductSelection
                     products={products}
@@ -571,11 +680,11 @@ const EditOrderPage = () => {
                     resetOrder={resetOrder}
                     isProcessing={isProcessing}
                     updateCookStatus={updateCookStatus} toggleComplimentaryStatus={toggleComplimentaryStatus}
+                    openHistoryModal={() => setIsHistoryModalOpen(true)}
                 />
             </main>
             
             <div style={{ display: 'none' }}>
-                {/* Main Receipt contains the full list of products */}
                 {print && companies[0] && (
                     <ReceiptTemplate
                         ref={receiptRef}
@@ -609,7 +718,6 @@ const EditOrderPage = () => {
 
                         <div className="w-full max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                             {(() => {
-                                // Extract items utilizing the delta products for KOT/BOT
                                 const kitchenProducts = kotPrintProducts.filter(p => !p.drinkBar);
                                 const barProducts = kotPrintProducts.filter(p => p.drinkBar);
 
@@ -621,7 +729,6 @@ const EditOrderPage = () => {
                                                 <KitchenReceiptTemplate
                                                     ref={kitchenReceiptRef}
                                                     profileData={companies[0]}
-                                                    // Pass the isolated new delta items
                                                     invoiceData={{ ...print, products: kitchenProducts }}
                                                     onPrintComplete={handlePrintComplete}
                                                 />
@@ -634,7 +741,6 @@ const EditOrderPage = () => {
                                                 <BarReceiptTemplate
                                                     ref={barReceiptRef}
                                                     profileData={companies[0]}
-                                                    // Pass the isolated new delta items
                                                     invoiceData={{ ...print, products: barProducts }}
                                                     onPrintComplete={handlePrintComplete}
                                                 />

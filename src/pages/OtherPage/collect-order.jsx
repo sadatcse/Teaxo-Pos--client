@@ -280,6 +280,7 @@ const CollectOrder = () => {
         return { subtotal, vat, sd, discount: discountAmount, payable: roundAmount(payable) };
     };
 
+    // --- UPDATED PRINT INVOICE ---
     const printInvoice = async (isPrintAction) => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
@@ -293,15 +294,22 @@ const CollectOrder = () => {
                 productId: p._id, 
                 productName: p.productName, 
                 qty: p.quantity,
-                printedQty: p.printedQty || 0, // NEW: Pass printed quantity
-                addedInRound: p.addedInRound || kotRound, // NEW: Pass round added
+                printedQty: p.printedQty || 0,
+                addedInRound: p.addedInRound || kotRound,
                 rate: p.price, 
                 subtotal: roundAmount(p.price * p.quantity), 
                 vat: p.vat || 0, 
                 sd: p.sd || 0, 
                 cookStatus: p.cookStatus || 'PENDING', 
                 isComplimentary: p.isComplimentary,
-                drinkBar: p.drinkBar || false
+                drinkBar: p.drinkBar || false,
+                // --- NEW: History tracking initialized for the new model ---
+                history: [{
+                    updateNumber: 0,
+                    updateTime: new Date().toISOString(),
+                    cookStatus: p.cookStatus || 'PENDING',
+                    qty: p.quantity
+                }]
             })),
             subtotal: roundAmount(subtotal),
             discount: roundAmount(discount), 
@@ -321,9 +329,15 @@ const CollectOrder = () => {
             invoiceDetails.dateTime = customDateTime;
             const customDate = new Date(customDateTime);
             const now = new Date();
+            // If it's a past custom date, mark as completed & served
             if (customDate < now) {
                 invoiceDetails.orderStatus = "completed";
-                invoiceDetails.products.forEach(p => p.cookStatus = 'SERVED');
+                invoiceDetails.products.forEach(p => {
+                    p.cookStatus = 'SERVED';
+                    if(p.history && p.history.length > 0) {
+                        p.history[0].cookStatus = 'SERVED';
+                    }
+                });
             }
         }
         if (orderType === "dine-in") invoiceDetails.tableName = TableName;
