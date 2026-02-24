@@ -36,9 +36,11 @@ const Product = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [loading, setLoading] = useState(false);
     
-    // Search State
+    // Search & Filters State
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm] = useDebounce(searchTerm, 300);
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState("");
+    const [selectedAttributeFilter, setSelectedAttributeFilter] = useState(""); // <-- NEW ATTRIBUTE FILTER
 
     // Single Add/Edit Form Data
     const initialFormData = {
@@ -53,9 +55,11 @@ const Product = () => {
         productDetails: "", 
         branch: branch, 
         photo: "",
+        // --- BOOLEAN FIELDS ---
         flavour: false, 
         cFlavor: false, 
-        addOns: false
+        addOns: false,
+        drinkBar: false 
     };
     const [formData, setFormData] = useState(initialFormData);
     const [editId, setEditId] = useState(null);
@@ -96,13 +100,26 @@ const Product = () => {
         fetchProducts(); 
     }, [fetchProducts]);
 
-    // --- SEARCH FILTER ---
+    // --- SEARCH, CATEGORY & ATTRIBUTE FILTER ---
     useEffect(() => {
-        const filtered = products.filter((product) =>
-            product.productName.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
-        );
+        const filtered = products.filter((product) => {
+            // 1. Check Search
+            const matchesSearch = product.productName.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+            
+            // 2. Check Category
+            const matchesCategory = selectedCategoryFilter === "" || product.category === selectedCategoryFilter;
+            
+            // 3. Check Attribute
+            let matchesAttribute = true;
+            if (selectedAttributeFilter === "flavour") matchesAttribute = product.flavour === true;
+            else if (selectedAttributeFilter === "cFlavor") matchesAttribute = product.cFlavor === true;
+            else if (selectedAttributeFilter === "addOns") matchesAttribute = product.addOns === true;
+            else if (selectedAttributeFilter === "drinkBar") matchesAttribute = product.drinkBar === true;
+
+            return matchesSearch && matchesCategory && matchesAttribute;
+        });
         setFilteredProducts(filtered);
-    }, [products, debouncedSearchTerm]);
+    }, [products, debouncedSearchTerm, selectedCategoryFilter, selectedAttributeFilter]);
 
     // --- SINGLE FORM CALCULATION ---
     useEffect(() => {
@@ -144,10 +161,15 @@ const Product = () => {
         const product = products.find((p) => p._id === id);
         setEditId(id);
         
-        // Note: Backend stores result as Amount, so we default types to 'amount' for edit
+        // Safely spread product data and ensure boolean fields fall back to false 
+        // if they are undefined in older products.
         setFormData({ 
             ...initialFormData, 
             ...product, 
+            flavour: product.flavour || false,
+            cFlavor: product.cFlavor || false,
+            addOns: product.addOns || false,
+            drinkBar: product.drinkBar || false,
             vatType: "amount", 
             sdType: "amount" 
         });
@@ -310,23 +332,52 @@ const Product = () => {
         <div className="p-4 min-h-screen bg-gray-50">
             {/* Title Bar */}
             <Mtitle title="Product Management" rightcontent={
-                <div className="flex justify-end gap-4 items-center flex-wrap sm:flex-nowrap">
-                    <div className="flex items-center w-full sm:w-64 border shadow-sm py-2 px-3 bg-white rounded-xl">
+                <div className="flex justify-end gap-3 items-center flex-wrap sm:flex-nowrap">
+                    
+                    {/* --- NEW: ATTRIBUTE FILTER DROPDOWN --- */}
+                    <select 
+                        className="w-full sm:w-40 bg-white border outline-none shadow-sm py-2 px-3 text-sm rounded-xl text-gray-600 focus:border-blue-500 transition duration-200"
+                        value={selectedAttributeFilter}
+                        onChange={(e) => setSelectedAttributeFilter(e.target.value)}
+                    >
+                        <option value="">All Attributes</option>
+                        <option value="flavour">Flavour Only</option>
+                        <option value="cFlavor">C-Flavor Only</option>
+                        <option value="addOns">Add-Ons Only</option>
+                        <option value="drinkBar">Drink Bar Only</option>
+                    </select>
+
+                    {/* Category Filter */}
+                    <select 
+                        className="w-full sm:w-40 bg-white border outline-none shadow-sm py-2 px-3 text-sm rounded-xl text-gray-600 focus:border-blue-500 transition duration-200"
+                        value={selectedCategoryFilter}
+                        onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                    >
+                        <option value="">All Categories</option>
+                        {categoriesLoading ? <option disabled>Loading...</option> : 
+                            categoryNames.map((cat) => (
+                                <option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>
+                            ))
+                        }
+                    </select>
+
+                    {/* Search Input */}
+                    <div className="flex items-center w-full sm:w-48 border shadow-sm py-2 px-3 bg-white rounded-xl">
                         <TfiSearch className="text-xl font-bold text-gray-500" />
-                        <input type="text" className="outline-none w-full ml-2 text-sm" placeholder="Search product..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        <input type="text" className="outline-none w-full ml-2 text-sm" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
                     
                     {/* Bulk Add Button */}
                     {canPerform('Product List', 'add') && (
-                        <button onClick={() => setIsBulkModalOpen(true)} className="flex items-center justify-center gap-2 btn btn-outline text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white rounded-xl shadow transition duration-300">
-                            <span className="font-semibold text-sm">Bulk Add</span><FaLayerGroup />
+                        <button onClick={() => setIsBulkModalOpen(true)} className="flex items-center justify-center gap-2 btn btn-outline text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white rounded-xl shadow transition duration-300 px-4 py-2">
+                            <span className="font-semibold text-sm">Bulk</span><FaLayerGroup />
                         </button>
                     )}
                     
                     {/* Add Product Button */}
                     {canPerform('Product List', 'add') && (
                         <button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-700 transition duration-300">
-                            <span className="font-semibold text-sm">Add Product</span><GoPlus className="text-xl" />
+                            <span className="font-semibold text-sm">Add</span><GoPlus className="text-xl" />
                         </button>
                     )}
                 </div>
@@ -343,7 +394,6 @@ const Product = () => {
                                 <th className="p-3 rounded-l-xl">Product Name</th>
                                 <th className="p-3">Category</th>
                                 <th className="p-3">Price</th>
-                                {/* --- NEW COLUMNS ADDED HERE --- */}
                                 <th className="p-3">VAT</th>
                                 <th className="p-3">SD</th>
                                 <th className="p-3">Status</th>
@@ -356,7 +406,6 @@ const Product = () => {
                                     <td className="px-4 py-4 font-medium text-gray-800">{product.productName}</td>
                                     <td className="px-4 py-4 text-gray-600">{product.category}</td>
                                     <td className="px-4 py-4 text-gray-600">৳{product.price}</td>
-                                    {/* --- NEW DATA ROWS ADDED HERE --- */}
                                     <td className="px-4 py-4 text-gray-600">৳{product.vat || 0}</td>
                                     <td className="px-4 py-4 text-gray-600">৳{product.sd || 0}</td>
                                     <td className="px-4 py-4"><span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${product.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.status}</span></td>
@@ -381,12 +430,13 @@ const Product = () => {
             {isBulkModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
                     <div className="bg-white rounded-2xl shadow-lg w-full max-w-6xl max-h-[90vh] flex flex-col animate-fadeInUp">
+                        {/* Modal Header */}
                         <div className="flex justify-between items-center p-4 border-b">
                             <h2 className="text-xl font-semibold text-blue-600 flex items-center gap-2"><FaLayerGroup /> Bulk Add Products</h2>
                             <button onClick={() => setIsBulkModalOpen(false)} className="text-gray-500 hover:text-red-500 transition"><FiX size={24} /></button>
                         </div>
 
-                        {/* --- TOP CONTROLS --- */}
+                        {/* Top Controls */}
                         <div className="px-6 pt-6 pb-2 grid grid-cols-1 md:grid-cols-3 gap-6">
                              <div className="form-control">
                                 <label className="label pt-0"><span className="label-text font-bold text-gray-700">Category (All Items)</span></label>
@@ -395,7 +445,6 @@ const Product = () => {
                                     {categoryNames.map(cat => (<option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>))}
                                 </select>
                              </div>
-
                              <div className="form-control">
                                 <label className="label pt-0"><span className="label-text font-bold text-gray-700 flex items-center gap-1"><FaMagic className="text-blue-500 text-xs"/> Auto-Fill VAT</span></label>
                                 <div className="flex gap-2">
@@ -406,7 +455,6 @@ const Product = () => {
                                     </select>
                                 </div>
                              </div>
-
                              <div className="form-control">
                                 <label className="label pt-0"><span className="label-text font-bold text-gray-700 flex items-center gap-1"><FaMagic className="text-blue-500 text-xs"/> Auto-Fill SD</span></label>
                                 <div className="flex gap-2">
@@ -419,7 +467,7 @@ const Product = () => {
                              </div>
                         </div>
 
-                        {/* --- TABLE BODY --- */}
+                        {/* Table Body */}
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
                             <table className="min-w-full text-left text-sm">
                                 <thead className="bg-blue-50 text-blue-700 font-semibold uppercase">
@@ -497,6 +545,7 @@ const Product = () => {
                        </div>
                        <div className="p-6 overflow-y-auto custom-scrollbar">
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                               {/* Standard Inputs */}
                                <div>
                                    <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
                                    <input type="text" value={formData.productName} onChange={(e) => setFormData({ ...formData, productName: e.target.value })} className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder="Enter product name" />
@@ -540,8 +589,30 @@ const Product = () => {
                                    </div>
                                </div>
 
+                               <div className="md:col-span-2 mt-2">
+                                   <label className="block text-sm font-medium text-gray-700 mb-3 border-b pb-2">Product Attributes</label>
+                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                       <label className="flex items-center space-x-2 cursor-pointer">
+                                           <input type="checkbox" checked={formData.flavour || false} onChange={(e) => setFormData({ ...formData, flavour: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
+                                           <span className="text-sm font-medium text-gray-700">Flavour</span>
+                                       </label>
+                                       <label className="flex items-center space-x-2 cursor-pointer">
+                                           <input type="checkbox" checked={formData.cFlavor || false} onChange={(e) => setFormData({ ...formData, cFlavor: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
+                                           <span className="text-sm font-medium text-gray-700">C-Flavor</span>
+                                       </label>
+                                       <label className="flex items-center space-x-2 cursor-pointer">
+                                           <input type="checkbox" checked={formData.addOns || false} onChange={(e) => setFormData({ ...formData, addOns: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
+                                           <span className="text-sm font-medium text-gray-700">Add-Ons</span>
+                                       </label>
+                                       <label className="flex items-center space-x-2 cursor-pointer">
+                                           <input type="checkbox" checked={formData.drinkBar || false} onChange={(e) => setFormData({ ...formData, drinkBar: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
+                                           <span className="text-sm font-medium text-gray-700">Drink Bar</span>
+                                       </label>
+                                   </div>
+                               </div>
+
                                <div className="md:col-span-2">
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Product Details</label>
+                                   <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">Product Details</label>
                                    <textarea
                                        value={formData.productDetails}
                                        onChange={(e) => setFormData({ ...formData, productDetails: e.target.value })}

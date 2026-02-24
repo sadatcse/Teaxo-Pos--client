@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, useEffect, useMemo } from "react";
+import React, { useState, useContext, useRef, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from 'react-router-dom';
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
@@ -15,6 +15,7 @@ import ProductSelection from "../../components/Product/ProductSelection.jsx";
 import EditSummary from "../../components/Product/EditSummary.jsx";
 import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
 import KitchenReceiptTemplate from "../../components/Receipt/KitchenReceiptTemplate";
+import BarReceiptTemplate from "../../components/Receipt/BarReceiptTemplate";
 import NewCustomerModal from "../../components/Modal/NewCustomerModal";
 import TableSelectionModal from "../../components/Modal/TableSelectionModal";
 import DeliveryProviderSelectionModal from "../../components/Modal/DeliveryProviderSelectionModal";
@@ -35,6 +36,12 @@ const EditOrderPage = () => {
     const [isProcessing, setIsProcessing] = useState(false);
     const [originalOrderItems, setOriginalOrderItems] = useState([]);
     const [newOrderItems, setNewOrderItems] = useState([]);
+    
+    // Tracks only the items/quantities for the current KOT/BOT print job
+    const [kotPrintProducts, setKotPrintProducts] = useState([]);
+    
+    // --- Track KOT Rounds in Edit Mode ---
+    const [kotRound, setKotRound] = useState(1);
 
     // --- Custom Hooks for Data & UI ---
     const { customer, setCustomer, tables, searchCustomer, selectedTable, isCustomerModalOpen, setSelectedTable, setCustomerModalOpen } = useCustomerTableSearch();
@@ -48,8 +55,8 @@ const EditOrderPage = () => {
     const [mobile, setMobile] = useState("");
     const [invoiceSummary, setInvoiceSummary] = useState({ discount: 0, paid: 0 });
     
-    // --- NEW STATE: Discount Type ---
-    const [discountType, setDiscountType] = useState("Percent"); 
+    const [discountType, setDiscountType] = useState("Fixed"); 
+    const [orderDateTime, setOrderDateTime] = useState("");
 
     const [print, setPrint] = useState(null);
     const [currentInvoiceId, setCurrentInvoiceId] = useState(orderId);
@@ -67,6 +74,10 @@ const EditOrderPage = () => {
     // --- Refs for Printing ---
     const receiptRef = useRef();
     const kitchenReceiptRef = useRef();
+    const barReceiptRef = useRef();
+
+    // --- Track expected vs completed prints for auto-close ---
+    const [printJobs, setPrintJobs] = useState({ expected: 0, completed: 0 });
 
     // --- Payment Handlers ---
     const handleMainPaymentButtonClick = (method) => {
@@ -93,6 +104,8 @@ const EditOrderPage = () => {
         }
     };
 
+    const handleDateTimeChange = (e) => setOrderDateTime(e.target.value);
+
     // --- Data Fetching Effect ---
     useEffect(() => {
         if (!orderId) {
@@ -106,16 +119,36 @@ const EditOrderPage = () => {
                 const response = await axiosSecure.get(`/invoice/get-id/${orderId}`);
                 const orderData = response.data;
 
-                const initialOriginalItems = orderData.products.map(p => ({ ...p, price: p.rate, quantity: p.qty, originalQuantity: p.qty, isOriginal: true, isComplimentary: p.isComplimentary || false }));
+                // Set upcoming round to current + 1
+                const currentKotRound = orderData.kotRound || 1;
+                setKotRound(currentKotRound + 1);
+
+                const initialOriginalItems = orderData.products.map(p => ({ 
+                    ...p, 
+                    productId: p.productId || p._id,
+                    price: p.rate, 
+                    quantity: p.qty, 
+                    originalQuantity: p.qty,
+                    printedQty: p.printedQty ?? p.qty, // Assume legacy items are printed
+                    addedInRound: p.addedInRound || 1,
+                    isOriginal: true, 
+                    isComplimentary: p.isComplimentary || false,
+                    drinkBar: p.drinkBar || false
+                }));
+                
                 setOriginalOrderItems(initialOriginalItems);
                 setNewOrderItems([]);
 
                 setOrderType(orderData.orderType);
                 setTableName(orderData.tableName || "");
                 setDeliveryProvider(orderData.deliveryProvider || "");
-                // Note: We load the existing discount as a fixed amount initially because we don't know the original %
                 setInvoiceSummary({ discount: orderData.discount || 0, paid: 0 });
-                setDiscountType("Fixed"); // Default to fixed when loading existing data
+                setDiscountType("Fixed"); 
+
+                if (orderData.dateTime) {
+                    const formattedDate = new Date(orderData.dateTime).toISOString().slice(0, 16);
+                    setOrderDateTime(formattedDate);
+                }
 
                 setSelectedPaymentMethod(orderData.paymentMethod || "Cash");
                 setCurrentInvoiceId(orderData._id);
@@ -141,31 +174,51 @@ const EditOrderPage = () => {
     const addProduct = (product) => {
         const existingItem = allOrderItems.find(p => p.productId === product._id && !p.isComplimentary);
         if (existingItem) {
-            if (existingItem.isOriginal) {
-                setOriginalOrderItems(items => items.map(p => p.productId === product._id ? { ...p, quantity: p.quantity + 1 } : p));
-            } else {
-                setNewOrderItems(items => items.map(p => p.productId === product._id ? { ...p, quantity: p.quantity + 1 } : p));
-            }
+            const updateFn = p => p.productId === product._id ? { 
+                ...p, 
+                quantity: p.quantity + 1,
+                addedInRound: kotRound 
+            } : p;
+
+            if (existingItem.isOriginal) setOriginalOrderItems(items => items.map(updateFn));
+            else setNewOrderItems(items => items.map(updateFn));
+            
             toast.info(`Quantity for ${product.productName} incremented.`);
         } else {
-            const itemToAdd = { ...product, productId: product._id, quantity: 1, cookStatus: 'PENDING', isOriginal: false, isComplimentary: false };
+            const itemToAdd = { 
+                ...product, 
+                productId: product._id, 
+                quantity: 1, 
+                printedQty: 0, 
+                addedInRound: kotRound,
+                cookStatus: 'PENDING', 
+                isOriginal: false, 
+                isComplimentary: false,
+                drinkBar: product.drinkBar || false 
+            };
             setNewOrderItems(current => [...current, itemToAdd]);
             toast.success(`${product.productName} added to order!`);
         }
     };
     
     const incrementQuantity = (productId) => {
-        setOriginalOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity + 1 } : p));
-        setNewOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity + 1 } : p));
+        const updateFn = p => p.productId === productId ? { 
+            ...p, 
+            quantity: p.quantity + 1,
+            addedInRound: kotRound
+        } : p;
+        setOriginalOrderItems(items => items.map(updateFn));
+        setNewOrderItems(items => items.map(updateFn));
     };
 
     const decrementQuantity = (productId) => {
         const originalItem = originalOrderItems.find(p => p.productId === productId);
         if (originalItem) {
-            if (originalItem.quantity > originalItem.originalQuantity) {
+            if (originalItem.quantity > 1) {
                 setOriginalOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p));
-            } else {
-                toast.warn("Cannot reduce quantity below the original amount.");
+                if (originalItem.quantity - 1 < originalItem.printedQty) {
+                    toast.warn("Warning: Reducing quantity below already printed KOT items.");
+                }
             }
             return;
         }
@@ -232,12 +285,99 @@ const EditOrderPage = () => {
         else Swal.fire("Error", "Please select a table to continue.", "error");
     };
 
+    const getDeltaKOTProducts = useCallback(() => {
+        const itemsToPrint = [];
+
+        allOrderItems.forEach(item => {
+            const unprintedQty = item.quantity - (item.printedQty || 0);
+            if (unprintedQty > 0) {
+                itemsToPrint.push({
+                    productId: item.productId,
+                    productName: item.productName,
+                    qty: unprintedQty, // ONLY the new unprinted difference
+                    rate: item.price,
+                    subtotal: Math.round(unprintedQty * item.price),
+                    vat: item.vat || 0,
+                    sd: item.sd || 0,
+                    cookStatus: item.cookStatus || 'PENDING',
+                    isComplimentary: item.isComplimentary || false,
+                    drinkBar: item.drinkBar || false
+                });
+            }
+        });
+
+        return itemsToPrint;
+    }, [allOrderItems]);
+
+    // --- UPDATED: Kitchen Click now handles reprints smoothly ---
     const handleKitchenClick = async () => {
-        if (allOrderItems.length === 0) return toast.warn("The order is empty.");
-        const isUpdateSuccessful = await saveOrUpdateInvoice(false);
+        let newKotItems = getDeltaKOTProducts();
+        let isReprint = false;
+        
+        // If there are no *new* items, print ALL current items in the order (Reprint)
+        if (newKotItems.length === 0) {
+            newKotItems = allOrderItems.filter(p => p.quantity > 0).map(item => ({
+                productId: item.productId,
+                productName: item.productName,
+                qty: item.quantity, // Print full quantity
+                rate: item.price,
+                subtotal: Math.round(item.quantity * item.price),
+                vat: item.vat || 0,
+                sd: item.sd || 0,
+                cookStatus: item.cookStatus || 'PENDING',
+                isComplimentary: item.isComplimentary || false,
+                drinkBar: item.drinkBar || false
+            }));
+            isReprint = true;
+
+            if (newKotItems.length === 0) {
+                return toast.warn("The order is completely empty.");
+            }
+        }
+
+        // Pass 'true' to mark items as printed in the database immediately
+        const isUpdateSuccessful = await saveOrUpdateInvoice(false, true);
+        
         if (isUpdateSuccessful) {
+            setKotPrintProducts(newKotItems);
+
+            let expectedPrints = 0;
+            if (newKotItems.some(p => !p.drinkBar)) expectedPrints++;
+            if (newKotItems.some(p => p.drinkBar)) expectedPrints++; 
+            
+            setPrintJobs({ expected: expectedPrints, completed: 0 });
             setIsKitchenModalOpen(true);
-            toast.info("Order Updated! KOT is ready for the kitchen.");
+            
+            if (isReprint) {
+                toast.info("Reprinting full KOT/BOT tickets.");
+            } else {
+                toast.info("Order Updated! KOT/BOT are ready.");
+            }
+            
+            // --- Merge everything as 'Original' and mark as printed locally ---
+            setOriginalOrderItems(prev => prev.map(item => ({ 
+                ...item, 
+                printedQty: item.quantity,
+                originalQuantity: item.quantity 
+            })));
+            
+            if (newOrderItems.length > 0) {
+                 setOriginalOrderItems(prev => [
+                     ...prev, 
+                     ...newOrderItems.map(item => ({
+                         ...item, 
+                         isOriginal: true, 
+                         printedQty: item.quantity,
+                         originalQuantity: item.quantity
+                     }))
+                 ]);
+                 setNewOrderItems([]);
+            }
+
+            // Increment round for the next potential addition (Only if we aren't just reprinting)
+            if (!isReprint) {
+                setKotRound(prev => prev + 1);
+            }
         } else {
             toast.error("Could not update order. KOT not printed.");
         }
@@ -266,7 +406,6 @@ const EditOrderPage = () => {
 
     const roundAmount = (amount) => Math.round(amount);
 
-    // --- UPDATED CALCULATE TOTAL LOGIC ---
     const calculateTotal = () => {
         const nonComplimentaryProducts = allOrderItems.filter(p => !p.isComplimentary);
         const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
@@ -287,31 +426,57 @@ const EditOrderPage = () => {
         return { subtotal: roundAmount(subtotal), vat: roundAmount(vat), sd: roundAmount(sd), discount: roundAmount(discountAmount), payable: roundAmount(payable) };
     };
 
-    const getInvoicePayload = () => {
+    // markAsPrinted flag syncs the printedQty to the backend immediately
+    const getInvoicePayload = (markAsPrinted = false) => {
         const { subtotal, vat, sd, discount, payable } = calculateTotal();
         const invoiceDetails = {
             orderType,
-            products: allOrderItems.map((p) => ({ productId: p.productId, productName: p.productName, qty: p.quantity, rate: p.price, subtotal: roundAmount(p.price * p.quantity), vat: p.vat || 0, sd: p.sd || 0, cookStatus: p.cookStatus || 'PENDING', isComplimentary: p.isComplimentary || false })),
+            kotRound, 
+            products: allOrderItems.map((p) => ({ 
+                productId: p.productId, 
+                productName: p.productName, 
+                qty: p.quantity, 
+                printedQty: markAsPrinted ? p.quantity : (p.printedQty || 0), // Syncs correctly
+                addedInRound: p.addedInRound || kotRound,
+                rate: p.price, 
+                subtotal: roundAmount(p.price * p.quantity), 
+                vat: p.vat || 0, 
+                sd: p.sd || 0, 
+                cookStatus: p.cookStatus || 'PENDING', 
+                isComplimentary: p.isComplimentary || false,
+                drinkBar: p.drinkBar || false
+            })),
             subtotal, discount, vat, sd,
             loginUserEmail, loginUserName,
             customerName: customer?.name || "Guest", customerMobile: customer?.mobile || "n/a",
             counter: "Counter 1", branch: branch, totalAmount: payable, paymentMethod: selectedPaymentMethod,
         };
+        
+        if (orderDateTime) invoiceDetails.dateTime = orderDateTime;
         if (orderType === "dine-in") invoiceDetails.tableName = TableName;
         if (orderType === "delivery") invoiceDetails.deliveryProvider = deliveryProvider;
+        
         return invoiceDetails;
     }
 
-    const saveOrUpdateInvoice = async (isPrintAction = false) => {
+    const saveOrUpdateInvoice = async (isPrintAction = false, markAsPrinted = false) => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
-        const invoiceDetails = getInvoicePayload();
+        const invoiceDetails = getInvoicePayload(markAsPrinted);
         try {
             const response = await axiosSecure.put(`/invoice/update/${currentInvoiceId}`, invoiceDetails);
-            toast.success("Invoice updated successfully! ✅");
+            if (!markAsPrinted) toast.success("Invoice updated successfully! ✅");
             const data = response.data;
-            const dataForPrint = { ...data, ...invoiceDetails, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || currentInvoiceId };
+            
+            const dataForPrint = { 
+                ...invoiceDetails, 
+                ...data, 
+                products: invoiceDetails.products, 
+                dateTime: data.dateTime || new Date().toISOString(), 
+                invoiceSerial: data.invoiceSerial || currentInvoiceId 
+            };
             setPrint(dataForPrint);
+            
             if (isPrintAction && companies[0] && data) {
                 setTimeout(() => { receiptRef.current?.printReceipt(); }, 100);
             }
@@ -339,11 +504,18 @@ const EditOrderPage = () => {
         }).then(async (result) => {
             if (result.isConfirmed) {
                 setIsProcessing(true);
-                const invoiceDetails = getInvoicePayload();
+                const invoiceDetails = getInvoicePayload(true); // Always push final state
                 try {
                     const response = await axiosSecure.put(`/invoice/finalize/${currentInvoiceId}`, invoiceDetails);
                     const data = response.data.invoice;
-                    const dataForPrint = { ...data, ...invoiceDetails, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || currentInvoiceId };
+                    
+                    const dataForPrint = { 
+                        ...invoiceDetails, 
+                        ...data, 
+                        products: invoiceDetails.products, 
+                        dateTime: data.dateTime || new Date().toISOString(), 
+                        invoiceSerial: data.invoiceSerial || currentInvoiceId 
+                    };
                     setPrint(dataForPrint);
 
                     if (companies[0] && data) {
@@ -362,7 +534,17 @@ const EditOrderPage = () => {
     };
     
     const handlePrintComplete = () => {
-        toast.info("Print dialog closed.");
+        setPrintJobs((prev) => {
+            const updatedCompleted = prev.completed + 1;
+            if (updatedCompleted >= prev.expected) {
+                setIsKitchenModalOpen(false);
+            }
+            return { ...prev, completed: updatedCompleted };
+        });
+    };
+
+    const handleMainReceiptPrintComplete = () => {
+        toast.info("Receipt printed successfully.");
     };
 
     if (isLoading) {
@@ -397,6 +579,7 @@ const EditOrderPage = () => {
                 <EditSummary
                     user={user}
                     title={`Editing Order: ${currentInvoiceId.slice(-6)}`}
+                    orderDateTime={orderDateTime} handleDateTimeChange={handleDateTimeChange}
                     customer={customer} mobile={mobile} setMobile={setMobile} handleCustomerSearch={handleCustomerSearch}
                     isCustomerModalOpen={isCustomerModalOpen} setCustomerModalOpen={setCustomerModalOpen}
                     orderType={orderType} handleOrderTypeChange={handleOrderTypeChange}
@@ -404,11 +587,7 @@ const EditOrderPage = () => {
                     addedProducts={allOrderItems}
                     incrementQuantity={incrementQuantity} decrementQuantity={decrementQuantity} removeProduct={removeProduct}
                     invoiceSummary={invoiceSummary} setInvoiceSummary={setInvoiceSummary}
-                    
-                    // PASSING DISCOUNT PROPS
-                    discountType={discountType}
-                    setDiscountType={setDiscountType}
-                    
+                    discountType={discountType} setDiscountType={setDiscountType}
                     subtotal={subtotal} vat={vat} sd={sd} payable={payable} paid={paid} change={change}
                     printInvoice={saveOrUpdateInvoice} 
                     handleFinalizeOrder={handleFinalizeOrder}
@@ -420,10 +599,11 @@ const EditOrderPage = () => {
             </main>
             
             <div style={{ display: 'none' }}>
+                {/* Main Receipt contains the full list of products */}
                 {print && companies[0] && (
                     <ReceiptTemplate
                         ref={receiptRef}
-                        onPrintComplete={handlePrintComplete}
+                        onPrintComplete={handleMainReceiptPrintComplete}
                         profileData={companies[0]}
                         invoiceData={print}
                     />
@@ -431,16 +611,76 @@ const EditOrderPage = () => {
             </div>
 
             {isKitchenModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4" onClick={() => setIsKitchenModalOpen(false)}>
-                    <div className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
-                        <button className="absolute top-3 right-3 bg-red-600 text-white rounded-full px-3 py-1 text-sm hover:bg-red-700" onClick={() => setIsKitchenModalOpen(false)}>
-                            Close
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" 
+                    onClick={() => setIsKitchenModalOpen(false)}
+                >
+                    <div 
+                        className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm flex flex-col items-center" 
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button 
+                            className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors p-1" 
+                            onClick={() => setIsKitchenModalOpen(false)}
+                            title="Close without printing"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                         </button>
-                        <KitchenReceiptTemplate
-                            ref={kitchenReceiptRef}
-                            profileData={companies[0]}
-                            invoiceData={print}
-                        />
+
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Print Tickets Preview</h3>
+
+                        <div className="w-full max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                            {(() => {
+                                // Extract items utilizing the delta products for KOT/BOT
+                                const kitchenProducts = kotPrintProducts.filter(p => !p.drinkBar);
+                                const barProducts = kotPrintProducts.filter(p => p.drinkBar);
+
+                                return (
+                                    <>
+                                        {kitchenProducts.length > 0 && (
+                                            <div className="border-2 border-dashed border-gray-300 rounded p-2 mb-4 bg-gray-50">
+                                                <div className="text-center font-bold text-gray-500 text-xs mb-1 uppercase tracking-wider">Kitchen Ticket</div>
+                                                <KitchenReceiptTemplate
+                                                    ref={kitchenReceiptRef}
+                                                    profileData={companies[0]}
+                                                    // Pass the isolated new delta items
+                                                    invoiceData={{ ...print, products: kitchenProducts }}
+                                                    onPrintComplete={handlePrintComplete}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {barProducts.length > 0 && (
+                                            <div className="border-2 border-dashed border-gray-300 rounded p-2 mb-4 bg-gray-50">
+                                                <div className="text-center font-bold text-gray-500 text-xs mb-1 uppercase tracking-wider">Bar Ticket</div>
+                                                <BarReceiptTemplate
+                                                    ref={barReceiptRef}
+                                                    profileData={companies[0]}
+                                                    // Pass the isolated new delta items
+                                                    invoiceData={{ ...print, products: barProducts }}
+                                                    onPrintComplete={handlePrintComplete}
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
+
+                        <button 
+                            onClick={() => {
+                                if (kitchenReceiptRef.current) kitchenReceiptRef.current.printReceipt();
+                                if (barReceiptRef.current) barReceiptRef.current.printReceipt();
+                            }}
+                            className="w-full mt-2 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            Print Active Tickets & Close
+                        </button>
                     </div>
                 </div>
             )}

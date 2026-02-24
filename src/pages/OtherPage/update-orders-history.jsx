@@ -77,16 +77,23 @@ const OrdersHistory = () => {
 
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  const fetchOrders = useCallback(async (pageToFetch) => {
+const fetchOrders = useCallback(async (pageToFetch) => {
     if (!branch) return;
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
       if (debouncedSearchTerm) params.append("search", debouncedSearchTerm);
-      if (startDate) params.append("startDate", startDate.toISOString());
-      if (endDate) params.append("endDate", endDate.toISOString());
+      
+      // --- FIX: Format as YYYY-MM-DD to prevent UTC shift during transit ---
+      const formatDate = (date) => {
+        const d = new Date(date);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      };
+
+      if (startDate) params.append("startDate", formatDate(startDate));
+      if (endDate) params.append("endDate", formatDate(endDate));
+      
       if (filters.orderType) params.append("orderType", filters.orderType);
-      // Removed paymentStatus from API params
       if (filters.orderStatus) params.append("orderStatus", filters.orderStatus);
 
       params.append("page", pageToFetch);

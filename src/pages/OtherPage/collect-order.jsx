@@ -5,6 +5,7 @@ import { AuthContext } from "../../providers/AuthProvider";
 import useCompanyHook from "../../Hook/useCompanyHook";
 import ReceiptTemplate from "../../components/Receipt/ReceiptTemplate ";
 import KitchenReceiptTemplate from "../../components/Receipt/KitchenReceiptTemplate";
+import BarReceiptTemplate from "../../components/Receipt/BarReceiptTemplate";
 import useCustomerTableSearch from "../../Hook/useCustomerTableSearch";
 import NewCustomerModal from "../../components/Modal/NewCustomerModal";
 import Swal from "sweetalert2";
@@ -25,14 +26,18 @@ const CollectOrder = () => {
     const { customer, tables, searchCustomer, selectedTable, isCustomerModalOpen, setSelectedTable, setCustomerModalOpen } = useCustomerTableSearch();
     const axiosSecure = UseAxiosSecure();
     const { products, categories, selectedCategory, setSelectedCategory, loadingProducts } = useCategoriesWithProducts(branch);
+    
     const [addedProducts, setAddedProducts] = useState([]);
     const [orderType, setOrderType] = useState(null);
     const [TableName, setTableName] = useState("");
     const [deliveryProvider, setDeliveryProvider] = useState("");
     const [invoiceSummary, setInvoiceSummary] = useState({ discount: 0, paid: 0 });
     
-    // --- NEW STATE: Discount Type (Percent or Fixed) ---
+    // --- Discount Type (Percent or Fixed) ---
     const [discountType, setDiscountType] = useState("Percent"); 
+
+    // --- NEW: Track KOT Rounds ---
+    const [kotRound, setKotRound] = useState(1);
 
     const [print, setPrint] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
@@ -42,8 +47,15 @@ const CollectOrder = () => {
     const [isDeliveryProviderModalOpen, setIsDeliveryProviderModalOpen] = useState(false);
     const [isKitchenModalOpen, setIsKitchenModalOpen] = useState(false);
     const [customDateTime, setCustomDateTime] = useState("");
+    
+    // --- Print Refs ---
     const receiptRef = useRef();
     const kitchenReceiptRef = useRef();
+    const barReceiptRef = useRef();
+    
+    // --- Track expected vs completed prints for auto-close ---
+    const [printJobs, setPrintJobs] = useState({ expected: 0, completed: 0 });
+    
     const { companies } = useCompanyHook();
 
     // --- PAYMENT STATE & HANDLERS ---
@@ -132,13 +144,29 @@ const CollectOrder = () => {
     const addProduct = (product) => {
         const existingProduct = addedProducts.find((p) => p._id === product._id && !p.isComplimentary);
         if (existingProduct) {
-            setAddedProducts(addedProducts.map((p) => (p._id === product._id ? { ...p, quantity: p.quantity + 1 } : p)));
+            setAddedProducts(addedProducts.map((p) => (p._id === product._id ? { 
+                ...p, 
+                quantity: p.quantity + 1,
+                addedInRound: kotRound // Update round if modified
+            } : p)));
         } else {
-            setAddedProducts([...addedProducts, { ...product, quantity: 1, cookStatus: 'PENDING', isComplimentary: false }]);
+            setAddedProducts([...addedProducts, { 
+                ...product, 
+                quantity: 1, 
+                printedQty: 0, // NEW: Init printed quantity
+                addedInRound: kotRound, // NEW: Init round added
+                cookStatus: 'PENDING', 
+                isComplimentary: false 
+            }]);
         }
     };
 
-    const incrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id ? { ...p, quantity: p.quantity + 1 } : p)));
+    const incrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id ? { 
+        ...p, 
+        quantity: p.quantity + 1,
+        addedInRound: kotRound // Update round if modified
+    } : p)));
+    
     const decrementQuantity = (id) => setAddedProducts(addedProducts.map((p) => (p._id === id && p.quantity > 1 ? { ...p, quantity: p.quantity - 1 } : p)));
     const removeProduct = (id) => setAddedProducts(addedProducts.filter((p) => p._id !== id));
 
@@ -165,9 +193,32 @@ const CollectOrder = () => {
     const handleKitchenClick = async () => {
         if (addedProducts.length === 0) return toast.warn("Please add products before sending to kitchen.");
         const isSaveSuccessful = await printInvoice(false);
+        
         if (isSaveSuccessful) {
+            // Calculate how many print jobs to expect
+            let expectedPrints = 0;
+            // Only expect a print if there are items that actually NEED printing (qty > printedQty)
+            const needsKitchenPrint = addedProducts.some(p => !p.drinkBar && p.quantity > (p.printedQty || 0));
+            const needsBarPrint = addedProducts.some(p => p.drinkBar && p.quantity > (p.printedQty || 0));
+            
+            if (needsKitchenPrint) expectedPrints++;
+            if (needsBarPrint) expectedPrints++; 
+            
+            if (expectedPrints === 0) {
+                return toast.info("All items have already been sent to the kitchen/bar.");
+            }
+
+            setPrintJobs({ expected: expectedPrints, completed: 0 });
+            
+            // --- NEW: Update Local State for the NEXT round ---
+            setAddedProducts(addedProducts.map(p => ({
+                ...p,
+                printedQty: p.quantity // Mark current quantity as printed
+            })));
+            setKotRound(prev => prev + 1); // Move to next round
+            
             setIsKitchenModalOpen(true);
-            toast.info("Order Saved! KOT is ready for the kitchen.");
+            toast.info("Order Saved! KOT/BOT are ready.");
         } else {
             toast.error("Could not save order. Please check for errors.");
         }
@@ -176,7 +227,7 @@ const CollectOrder = () => {
     const resetOrder = () => {
         setAddedProducts([]);
         setInvoiceSummary({ discount: 0, paid: 0 });
-        setDiscountType("Percent"); // Reset discount type
+        setDiscountType("Percent"); 
         setMobile("");
         setSelectedTable("");
         setTableName("");
@@ -184,6 +235,7 @@ const CollectOrder = () => {
         setDeliveryProvider("");
         setCurrentInvoiceId(null);
         setCustomDateTime("");
+        setKotRound(1); // Reset round
         setIsOrderTypeModalOpen(true);
         toast.error("Order Reset!");
     };
@@ -208,29 +260,23 @@ const CollectOrder = () => {
         return true;
     };
 
-    // --- UPDATED CALCULATE TOTAL ---
     const calculateTotal = () => {
         const nonComplimentaryProducts = addedProducts.filter(p => !p.isComplimentary);
         const subtotal = nonComplimentaryProducts.reduce((total, p) => total + p.price * p.quantity, 0);
         const vat = nonComplimentaryProducts.reduce((total, p) => total + ((p.vat || 0) * p.quantity), 0);
         const sd = nonComplimentaryProducts.reduce((total, p) => total + ((p.sd || 0) * p.quantity), 0);
         
-        // Calculate Discount Amount based on Type
         let discountAmount = 0;
         const discountInput = parseFloat(invoiceSummary.discount || 0);
         
         if (discountType === 'Percent') {
-            // Calculate % on (Subtotal + VAT + SD)
             const totalBeforeDiscount = subtotal + vat + sd;
             discountAmount = (totalBeforeDiscount * discountInput) / 100;
         } else {
-            // Fixed Amount
             discountAmount = discountInput;
         }
 
         const payable = subtotal + vat + sd - discountAmount;
-        
-        // Return derived values. Note: 'discount' here is the final money amount.
         return { subtotal, vat, sd, discount: discountAmount, payable: roundAmount(payable) };
     };
 
@@ -238,14 +284,27 @@ const CollectOrder = () => {
         if (!validateInputs()) return false;
         setIsProcessing(true);
         
-        // Destructure values including the calculated discount money amount
         const { subtotal, vat, sd, discount, payable } = calculateTotal();
         
         const invoiceDetails = {
             orderType,
-            products: addedProducts.map((p) => ({ productId: p._id, productName: p.productName, qty: p.quantity, rate: p.price, subtotal: roundAmount(p.price * p.quantity), vat: p.vat || 0, sd: p.sd || 0, cookStatus: p.cookStatus || 'PENDING', isComplimentary: p.isComplimentary, })),
+            kotRound, // Pass current round to backend
+            products: addedProducts.map((p) => ({ 
+                productId: p._id, 
+                productName: p.productName, 
+                qty: p.quantity,
+                printedQty: p.printedQty || 0, // NEW: Pass printed quantity
+                addedInRound: p.addedInRound || kotRound, // NEW: Pass round added
+                rate: p.price, 
+                subtotal: roundAmount(p.price * p.quantity), 
+                vat: p.vat || 0, 
+                sd: p.sd || 0, 
+                cookStatus: p.cookStatus || 'PENDING', 
+                isComplimentary: p.isComplimentary,
+                drinkBar: p.drinkBar || false
+            })),
             subtotal: roundAmount(subtotal),
-            discount: roundAmount(discount), // Send the actual Money Amount to backend
+            discount: roundAmount(discount), 
             vat: roundAmount(vat),
             sd: roundAmount(sd),
             loginUserEmail,
@@ -280,7 +339,15 @@ const CollectOrder = () => {
                 toast.success("Invoice saved successfully!");
             }
             const data = response.data;
-            const dataForPrint = { ...invoiceDetails, ...data, dateTime: data.dateTime || new Date().toISOString(), invoiceSerial: data.invoiceSerial || data._id };
+            
+            const dataForPrint = { 
+                ...invoiceDetails, 
+                ...data, 
+                products: invoiceDetails.products, // Use local products array for printing
+                dateTime: data.dateTime || new Date().toISOString(), 
+                invoiceSerial: data.invoiceSerial || data._id 
+            };
+            
             setPrint(dataForPrint);
             setCurrentInvoiceId(data.invoiceId || data._id);
             
@@ -307,6 +374,16 @@ const CollectOrder = () => {
     const { subtotal, vat, sd, payable } = calculateTotal();
     const paid = roundAmount(parseFloat(invoiceSummary.paid || 0));
     const change = paid > 0 ? paid - payable : 0;
+
+    const handlePrintComplete = () => {
+        setPrintJobs((prev) => {
+            const updatedCompleted = prev.completed + 1;
+            if (updatedCompleted >= prev.expected) {
+                setIsKitchenModalOpen(false);
+            }
+            return { ...prev, completed: updatedCompleted };
+        });
+    };
 
     return (
         <div className="font-sans antialiased bg-gray-100 min-h-screen">
@@ -351,11 +428,8 @@ const CollectOrder = () => {
                         removeProduct={removeProduct}
                         invoiceSummary={invoiceSummary}
                         setInvoiceSummary={setInvoiceSummary}
-                        
-                        // Pass discount props
                         discountType={discountType}
                         setDiscountType={setDiscountType}
-                        
                         subtotal={subtotal}
                         vat={vat}
                         sd={sd}
@@ -384,60 +458,80 @@ const CollectOrder = () => {
                 )}
             </div>
 
-{isKitchenModalOpen && (
-    <div 
-        className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" 
-        onClick={() => setIsKitchenModalOpen(false)}
-    >
-        <div 
-            className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm flex flex-col items-center" 
-            onClick={(e) => e.stopPropagation()}
-        >
-            {/* 1. Header with Close (X) Button */}
-            <button 
-                className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors p-1" 
-                onClick={() => setIsKitchenModalOpen(false)}
-                title="Close without printing"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-            </button>
+            {isKitchenModalOpen && (
+                <div 
+                    className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4" 
+                    onClick={() => setIsKitchenModalOpen(false)}
+                >
+                    <div 
+                        className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm flex flex-col items-center" 
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button 
+                            className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors p-1" 
+                            onClick={() => setIsKitchenModalOpen(false)}
+                            title="Close without printing"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
 
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Kitchen Order Ticket</h3>
+                        <h3 className="text-lg font-bold text-gray-800 mb-4">Print Tickets Preview</h3>
 
-            {/* 2. The Receipt Preview Area */}
-            {/* We add a border and scroll to make it look like a preview */}
-            <div className="border-2 border-dashed border-gray-300 rounded p-2 mb-5 bg-gray-50 max-h-[60vh] overflow-y-auto">
-                <KitchenReceiptTemplate
-                    ref={kitchenReceiptRef}
-                    profileData={companies[0]}
-                    invoiceData={print}
-                    // This ensures the modal closes automatically after a successful print
-                    onPrintComplete={() => setIsKitchenModalOpen(false)}
-                />
-            </div>
+                        <div className="w-full max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
+                            {(() => {
+                                // --- NEW: Only pass unprinted items to the kitchen/bar previews ---
+                                const kitchenProducts = print?.products?.filter(p => !p.drinkBar && p.qty > p.printedQty) || [];
+                                const barProducts = print?.products?.filter(p => p.drinkBar && p.qty > p.printedQty) || [];
 
-            {/* 3. The Manual "Print & Close" Button (Fallback) */}
-            <button 
-                onClick={() => {
-                    // Manually trigger the print function exposed by the child component
-                    if (kitchenReceiptRef.current) {
-                        kitchenReceiptRef.current.printReceipt();
-                    }
-                }}
-                className="w-full bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2"
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                </svg>
-                Print & Close
-            </button>
-            
-        
-        </div>
-    </div>
-)}
+                                return (
+                                    <>
+                                        {kitchenProducts.length > 0 && (
+                                            <div className="border-2 border-dashed border-gray-300 rounded p-2 mb-4 bg-gray-50">
+                                                <div className="text-center font-bold text-gray-500 text-xs mb-1 uppercase tracking-wider">Kitchen Ticket</div>
+                                                <KitchenReceiptTemplate
+                                                    ref={kitchenReceiptRef}
+                                                    profileData={companies[0]}
+                                                    // Pass filtered kitchen products
+                                                    invoiceData={{ ...print, products: kitchenProducts }}
+                                                    onPrintComplete={handlePrintComplete}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {barProducts.length > 0 && (
+                                            <div className="border-2 border-dashed border-gray-300 rounded p-2 mb-4 bg-gray-50">
+                                                <div className="text-center font-bold text-gray-500 text-xs mb-1 uppercase tracking-wider">Bar Ticket</div>
+                                                <BarReceiptTemplate
+                                                    ref={barReceiptRef}
+                                                    profileData={companies[0]}
+                                                    // Pass filtered bar products
+                                                    invoiceData={{ ...print, products: barProducts }}
+                                                    onPrintComplete={handlePrintComplete}
+                                                />
+                                            </div>
+                                        )}
+                                    </>
+                                );
+                            })()}
+                        </div>
+
+                        <button 
+                            onClick={() => {
+                                if (kitchenReceiptRef.current) kitchenReceiptRef.current.printReceipt();
+                                if (barReceiptRef.current) barReceiptRef.current.printReceipt();
+                            }}
+                            className="w-full mt-2 bg-blue-600 text-white font-bold py-3 px-4 rounded-lg shadow hover:bg-blue-700 active:bg-blue-800 transition-colors flex items-center justify-center gap-2"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                            </svg>
+                            Print Active Tickets & Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

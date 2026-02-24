@@ -14,7 +14,6 @@ const EditSummary = ({
     invoiceSummary, setInvoiceSummary, subtotal, vat, sd, payable, paid, change,
     printInvoice, handleFinalizeOrder, handleKitchenClick, resetOrder, isProcessing,
     toggleComplimentaryStatus,
-    // --- New Props for Discount ---
     discountType,
     setDiscountType
 }) => {
@@ -151,7 +150,6 @@ const EditSummary = ({
                                     <tr className="border-b border-gray-200"><td className="px-4 py-2 text-sm text-gray-700">VAT (TK):</td><td className="px-4 py-2 text-right font-bold">{vat.toFixed(2)}</td></tr>
                                     <tr className="border-b border-gray-200"><td className="px-4 py-2 text-sm text-gray-700">SD (TK):</td><td className="px-4 py-2 text-right font-bold">{sd.toFixed(2)}</td></tr>
                                     
-                                    {/* --- UPDATED DISCOUNT ROW --- */}
                                     <tr className="border-b border-gray-200">
                                         <td className="px-4 py-2 text-sm text-gray-700">Discount:</td>
                                         <td className="px-4 py-2 text-right">

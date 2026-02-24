@@ -164,11 +164,6 @@ const KitchenReceiptTemplate = forwardRef(({ profileData, invoiceData, onPrintCo
                                 </td>
                                 <td style={styles.tableDataCell}>
                                     {item.productName || "Unknown"}
-                                    {item.cookStatus && (
-                                        <div style={{fontSize: "12px", fontStyle: "italic"}}>
-                                            [{item.cookStatus}]
-                                        </div>
-                                    )}
                                 </td>
                             </tr>
                         ))}

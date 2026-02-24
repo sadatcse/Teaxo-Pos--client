@@ -10,7 +10,8 @@ import {
 } from 'react-icons/fa';
 import useCustomerTableSearch from '../../Hook/useCustomerTableSearch';
 import Mtitle from '../../components library/Mtitle';
-import MtableLoading from "../../components library/MtableLoading"; 
+// --- ADDED PRELOADER IMPORT ---
+import Preloader from "../../components/Shortarea/Preloader";
 
 const statusConfig = {
     free: {
@@ -95,20 +96,18 @@ const Lobby = () => {
                 <div className="card-body">
                     <header className="mb-6 center">
                         <Mtitle title="Restaurant Lobby" />
-                        {/* <p className="text-slate-700 mt-1">
-                            Please select a table to proceed.
-                        </p> */}
                     </header>
                     <div className="divider" />
                     <main>
+                        {/* --- UPDATED LOADING LOGIC --- */}
                         {loading ? (
-                            <div className="col-span-full flex justify-center items-center py-24">
-                                <MtableLoading />
+                            <div className="flex justify-center items-center py-24">
+                                <Preloader />
                             </div>
-                        ) : (
+                        ) : tables && tables.length > 0 ? (
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                                 <AnimatePresence>
-                                    {(tables || []).map((table, i) => {
+                                    {tables.map((table, i) => {
                                         const config = statusConfig[table.status] || statusConfig.free;
                                         const isClickable = ['free', 'pending', 'reserved', 'cooking', 'served'].includes(table.status);
                                         const IconComponent = config.icon;
@@ -166,6 +165,10 @@ const Lobby = () => {
                                         );
                                     })}
                                 </AnimatePresence>
+                            </div>
+                        ) : (
+                            <div className="flex justify-center items-center py-24 text-gray-500 font-semibold text-lg">
+                                No tables available.
                             </div>
                         )}
                     </main>

@@ -248,7 +248,19 @@ const TableReservation = () => {
                                                     <td className="p-3 font-medium">{reservation.table?.tableName || "N/A"}</td>
                                                     <td className="p-3">{reservation.customerName}</td>
                                                     <td className="p-3"><p>{reservation.customerPhone}</p>{reservation.customerEmail && <p className="text-xs text-slate-500">{reservation.customerEmail}</p>}</td>
-                                                    <td className="p-3">{new Date(reservation.startTime).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })} - <br />{new Date(reservation.endTime).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                                                   <td className="p-3">
+  {new Date(reservation.startTime).toLocaleString('en-US', { 
+    timeZone: 'Asia/Dhaka', 
+    dateStyle: 'short', 
+    timeStyle: 'short' 
+  })} 
+  - <br />
+  {new Date(reservation.endTime).toLocaleString('en-US', { 
+    timeZone: 'Asia/Dhaka', 
+    dateStyle: 'short', 
+    timeStyle: 'short' 
+  })}
+</td>
                                                     <td className="p-3"><span className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${reservation.status === 'Confirmed' ? 'bg-green-100 text-green-800' : reservation.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : reservation.status === 'Cancelled' ? 'bg-red-100 text-red-800' : reservation.status === 'Completed' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}>{reservation.status}</span></td>
                                             <td className="p-3 text-center">
     <div className="flex justify-center items-center gap-2">
