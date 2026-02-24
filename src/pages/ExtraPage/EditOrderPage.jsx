@@ -37,10 +37,10 @@ const EditOrderPage = () => {
     const [originalOrderItems, setOriginalOrderItems] = useState([]);
     const [newOrderItems, setNewOrderItems] = useState([]);
     
-    // Tracks only the items/quantities for the current KOT/BOT print job
+    // Tracks only the newly added items/quantities for the current KOT/BOT print job
     const [kotPrintProducts, setKotPrintProducts] = useState([]);
     
-    // --- Track KOT Rounds in Edit Mode ---
+    // --- NEW: Track KOT Rounds in Edit Mode ---
     const [kotRound, setKotRound] = useState(1);
 
     // --- Custom Hooks for Data & UI ---
@@ -214,6 +214,7 @@ const EditOrderPage = () => {
     const decrementQuantity = (productId) => {
         const originalItem = originalOrderItems.find(p => p.productId === productId);
         if (originalItem) {
+            // Allow decrementing original items, but warn if dropping below what's printed
             if (originalItem.quantity > 1) {
                 setOriginalOrderItems(items => items.map(p => p.productId === productId ? { ...p, quantity: p.quantity - 1 } : p));
                 if (originalItem.quantity - 1 < originalItem.printedQty) {
@@ -285,6 +286,7 @@ const EditOrderPage = () => {
         else Swal.fire("Error", "Please select a table to continue.", "error");
     };
 
+    // --- CRITICAL FIX: Extract only unprinted quantities for KOT/BOT ---
     const getDeltaKOTProducts = useCallback(() => {
         const itemsToPrint = [];
 
@@ -309,30 +311,11 @@ const EditOrderPage = () => {
         return itemsToPrint;
     }, [allOrderItems]);
 
-    // --- UPDATED: Kitchen Click now handles reprints smoothly ---
     const handleKitchenClick = async () => {
-        let newKotItems = getDeltaKOTProducts();
-        let isReprint = false;
+        const newKotItems = getDeltaKOTProducts();
         
-        // If there are no *new* items, print ALL current items in the order (Reprint)
         if (newKotItems.length === 0) {
-            newKotItems = allOrderItems.filter(p => p.quantity > 0).map(item => ({
-                productId: item.productId,
-                productName: item.productName,
-                qty: item.quantity, // Print full quantity
-                rate: item.price,
-                subtotal: Math.round(item.quantity * item.price),
-                vat: item.vat || 0,
-                sd: item.sd || 0,
-                cookStatus: item.cookStatus || 'PENDING',
-                isComplimentary: item.isComplimentary || false,
-                drinkBar: item.drinkBar || false
-            }));
-            isReprint = true;
-
-            if (newKotItems.length === 0) {
-                return toast.warn("The order is completely empty.");
-            }
+            return toast.warn("No new items or changes to send to the kitchen/bar.");
         }
 
         // Pass 'true' to mark items as printed in the database immediately
@@ -347,12 +330,7 @@ const EditOrderPage = () => {
             
             setPrintJobs({ expected: expectedPrints, completed: 0 });
             setIsKitchenModalOpen(true);
-            
-            if (isReprint) {
-                toast.info("Reprinting full KOT/BOT tickets.");
-            } else {
-                toast.info("Order Updated! KOT/BOT are ready.");
-            }
+            toast.info("Order Updated! KOT/BOT are ready.");
             
             // --- Merge everything as 'Original' and mark as printed locally ---
             setOriginalOrderItems(prev => prev.map(item => ({ 
@@ -374,10 +352,8 @@ const EditOrderPage = () => {
                  setNewOrderItems([]);
             }
 
-            // Increment round for the next potential addition (Only if we aren't just reprinting)
-            if (!isReprint) {
-                setKotRound(prev => prev + 1);
-            }
+            // Increment round for the next potential addition
+            setKotRound(prev => prev + 1);
         } else {
             toast.error("Could not update order. KOT not printed.");
         }

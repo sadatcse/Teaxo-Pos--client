@@ -400,26 +400,46 @@ const Product = () => {
                                 <th className="p-3 rounded-r-xl text-right px-8">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {paginatedData.map((product) => (
-                                <tr key={product._id} className="border-b hover:bg-slate-100 last:border-0">
-                                    <td className="px-4 py-4 font-medium text-gray-800">{product.productName}</td>
-                                    <td className="px-4 py-4 text-gray-600">{product.category}</td>
-                                    <td className="px-4 py-4 text-gray-600">৳{product.price}</td>
-                                    <td className="px-4 py-4 text-gray-600">৳{product.vat || 0}</td>
-                                    <td className="px-4 py-4 text-gray-600">৳{product.sd || 0}</td>
-                                    <td className="px-4 py-4"><span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${product.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{product.status}</span></td>
-                                    <td className="py-4 px-6 flex justify-end gap-3 text-lg">
-                                        {canPerform('Product List', 'edit') && (
-                                            <button onClick={() => handleEdit(product._id)} className="text-blue-500 hover:scale-110"><FiEdit /></button>
-                                        )}
-                                        {canPerform('Product List', 'delete') && (
-                                            <button onClick={() => handleRemove(product._id)} className="text-red-500 hover:scale-110"><FiTrash2 /></button>
-                                        )}
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
+<tbody>
+    {paginatedData.map((product) => (
+        <tr key={product._id} className="border-b hover:bg-slate-100 last:border-0 group">
+            <td className="px-4 py-4 font-medium text-gray-800 relative overflow-hidden">
+                {/* --- DRINK BAR RIBBON START --- */}
+                {product.drinkBar && (
+                    <div className="absolute top-0 left-0 bg-red-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-br-lg shadow-sm z-10">
+                        Drink Bar
+                    </div>
+                )}
+                {/* --- DRINK BAR RIBBON END --- */}
+                
+                <span className={product.drinkBar ? "pl-1" : ""}>
+                    {product.productName}
+                </span>
+            </td>
+            <td className="px-4 py-4 text-gray-600">{product.category}</td>
+            <td className="px-4 py-4 text-gray-600">৳{product.price}</td>
+            <td className="px-4 py-4 text-gray-600">৳{product.vat || 0}</td>
+            <td className="px-4 py-4 text-gray-600">৳{product.sd || 0}</td>
+            <td className="px-4 py-4">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${product.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                    {product.status}
+                </span>
+            </td>
+            <td className="py-4 px-6 flex justify-end gap-3 text-lg">
+                {canPerform('Product List', 'edit') && (
+                    <button onClick={() => handleEdit(product._id)} className="text-blue-500 hover:scale-110">
+                        <FiEdit />
+                    </button>
+                )}
+                {canPerform('Product List', 'delete') && (
+                    <button onClick={() => handleRemove(product._id)} className="text-red-500 hover:scale-110">
+                        <FiTrash2 />
+                    </button>
+                )}
+            </td>
+        </tr>
+    ))}
+</tbody>
                     </table>
                     <MtableLoading data={products} />
                     {paginationControls}
