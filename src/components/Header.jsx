@@ -1,25 +1,24 @@
-// src/components/Header.js
-
 import React, { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { FaCheckCircle, FaClipboardList, FaShoppingCart, FaTable, FaUserCircle } from "react-icons/fa";
+import { FaCheckCircle, FaClipboardList, FaShoppingCart, FaTable, FaUserCircle, FaSun, FaMoon } from "react-icons/fa";
 import { RiMenuFold4Fill } from "react-icons/ri";
 import Preloader from "./Shortarea/Preloader";
 import person from "../assets/Raw-Image/Person.jpg";
 import {
   MdMenu,
-
   MdMail,
   MdNotifications,
   MdSearch,
 } from "react-icons/md";
 import { AuthContext } from "../providers/AuthProvider";
+import { ThemeContext } from "../providers/ThemeProvider";
 import UseAxiosSecure from "../Hook/UseAxioSecure";
 
 const Header = ({ isSidebarOpen, toggleSidebar }) => {
   const [isProfileOpen, setProfileOpen] = useState(false);
      const [isLoading, setIsLoading] = useState(false);
   const { user, logoutUser,branch  } = useContext(AuthContext);
+  const { theme, toggleTheme } = useContext(ThemeContext);
   const [isModalOpen, setIsModalOpen] = useState(false);
    const [products, setProducts] = useState([]);
     const axiosSecure = UseAxiosSecure();
@@ -53,13 +52,13 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
   const [isNotificationsOpen, setNotificationsOpen] = useState(false);
 
   return (
-    <header className="bg-white shadow-md w-full p-2 flex items-center justify-between z-10">
+    <header className="bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 text-gray-800 dark:text-white shadow-md w-full p-2 flex items-center justify-between z-10">
       {/* Left side: Toggler, Search */}
       <div className="flex items-center gap-4">
         {/* ✨ UPDATED TOGGLE BUTTON ✨ */}
         <button
           onClick={toggleSidebar}
-          className="text-gray-600 hover:bg-gray-100 p-2 rounded-full focus:outline-none transition-colors duration-200"
+          className="text-gray-650 dark:text-gray-350 hover:bg-gray-100 dark:hover:bg-slate-800 p-2 rounded-full focus:outline-none transition-colors duration-200"
         >
           {isSidebarOpen ? (
             <RiMenuFold4Fill className="text-2xl" />
@@ -73,7 +72,7 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
           <input
             type="search"
             placeholder="Search..."
-            className="w-full bg-gray-100 border-none rounded-md pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+            className="w-full bg-gray-100 dark:bg-slate-800 border-none text-gray-800 dark:text-slate-200 rounded-md pl-10 pr-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
         </div>
       </div>
@@ -109,11 +108,20 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
       </nav>
       {/* Right side: Icons and User Profile */}
       <div className="flex items-center gap-4">
+        {/* Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 transition-all duration-200 flex items-center justify-center"
+          title={theme === 'dark' ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {theme === 'dark' ? <FaSun className="text-yellow-400 text-lg" /> : <FaMoon className="text-gray-500 hover:text-gray-700 text-lg" />}
+        </button>
+
         {/* Mail Dropdown */}
         <div className="relative">
           <button
             onClick={() => setMailOpen(!isMailOpen)}
-            className="text-gray-500 text-2xl relative"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white text-2xl relative"
           >
             <MdMail />
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-green-500 text-white text-xs">
@@ -121,21 +129,19 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
             </span>
           </button>
           {isMailOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg p-2 z-20">
-              <p className="text-sm text-gray-700 p-2">
+            <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 rounded-md shadow-lg p-2 z-20 border border-slate-100 dark:border-slate-700">
+              <p className="text-sm p-2">
                 Coming Soon 
               </p>
             </div>
           )}
         </div>
 
-
-
         {/* Notifications Dropdown */}
         <div className="relative">
           <button
             onClick={() => setNotificationsOpen(!isNotificationsOpen)}
-            className="text-gray-500 text-2xl relative"
+            className="text-gray-500 hover:text-gray-700 dark:text-gray-300 dark:hover:text-white text-2xl relative"
           >
             <MdNotifications />
             <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-500 text-white text-xs">
@@ -143,8 +149,8 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
             </span>
           </button>
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-white rounded-md shadow-lg p-2 z-20">
-              <p className="text-sm text-gray-700 p-2">
+            <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 rounded-md shadow-lg p-2 z-20 border border-slate-100 dark:border-slate-700">
+              <p className="text-sm p-2">
                 comming soon .
               </p>
             </div>
@@ -166,31 +172,31 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
   ) : (
     <FaUserCircle className="text-2xl text-gray-600" />
   )}
-  <span className="hidden md:block font-medium text-sm text-gray-700">
+  <span className="hidden md:block font-medium text-sm text-gray-700 dark:text-slate-200">
     {user?.name || "Guest"}
   </span>
 </button>
 
           {isProfileOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white text-gray-700 rounded-lg shadow-lg z-20">
-              <div className="p-4 border-b">
+            <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 rounded-lg shadow-lg z-20 border border-slate-100 dark:border-slate-700">
+              <div className="p-4 border-b border-slate-100 dark:border-slate-700">
                 <h2 className="text-sm font-medium">
                   {user?.role || "User"}
                 </h2>
-                <p className="text-xs text-gray-500">
+                <p className="text-xs text-gray-500 dark:text-slate-400">
                   {user?.email || "No Email"}
                 </p>
               </div>
               <div className="flex flex-col text-sm">
                 <Link
                   to="/dashboard/profile"
-                  className="py-2 px-4 hover:bg-blue-100 text-left"
+                  className="py-2 px-4 hover:bg-blue-100 dark:hover:bg-slate-700 text-left"
                 >
                   Profile
                 </Link>
                 <button
                   onClick={handleSignOut}
-                  className="py-2 px-4 hover:bg-blue-100 text-left text-red-600"
+                  className="py-2 px-4 hover:bg-blue-100 dark:hover:bg-slate-700 text-left text-red-600 dark:text-red-400"
                 >
                   Sign Out
                 </button>
@@ -201,8 +207,8 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
       </div>
      {isModalOpen && (
 
-<div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center animate-fadeIn">
-    <div className="bg-white rounded-lg shadow-2xl w-full max-w-3xl relative p-8 border border-gray-200">
+<div className="fixed inset-0 bg-black bg-opacity-65 z-50 flex items-center justify-center animate-fadeIn">
+    <div className="bg-white dark:bg-slate-800 text-gray-800 dark:text-gray-100 rounded-lg shadow-2xl w-full max-w-3xl relative p-8 border border-gray-200 dark:border-slate-700">
       {/* Close Button */}
       <button
         onClick={closeModal}
@@ -214,8 +220,8 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
 
       {/* Modal Header */}
       <div className="text-center mb-6">
-        <h2 className="text-3xl font-semibold text-gray-800">Today's Sell Product</h2>
-        <p className="text-sm text-gray-500 mt-2">
+        <h2 className="text-3xl font-semibold text-gray-800 dark:text-white">Today's Sell Product</h2>
+        <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
           Review product sales and check quantities .
         </p>
       </div>
@@ -227,23 +233,23 @@ const Header = ({ isSidebarOpen, toggleSidebar }) => {
   ) : (
 
       <div className="overflow-auto max-h-80">
-        <table className="min-w-full text-left border-collapse border border-gray-300">
+        <table className="min-w-full text-left border-collapse border border-gray-300 dark:border-slate-700">
           <thead>
-            <tr className="bg-gray-100 text-gray-600 text-sm uppercase">
-              <th className="py-3 px-5 border-b border-gray-300">Product Name</th>
-              <th className="py-3 px-5 border-b border-gray-300">Quantity</th>
+            <tr className="bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-gray-200 text-sm uppercase">
+              <th className="py-3 px-5 border-b border-gray-300 dark:border-slate-700">Product Name</th>
+              <th className="py-3 px-5 border-b border-gray-300 dark:border-slate-700">Quantity</th>
             </tr>
           </thead>
           <tbody>
             {products.map((product, index) => (
               <tr
                 key={index}
-                className="hover:bg-gray-50 transition duration-150"
+                className="hover:bg-gray-50 dark:hover:bg-slate-700/50 transition duration-150"
               >
-                <td className="py-3 px-5 border-b border-gray-300 text-gray-700">
+                <td className="py-3 px-5 border-b border-gray-300 dark:border-slate-700 text-gray-700 dark:text-gray-300">
                   {product.productName}
                 </td>
-                <td className="py-3 px-5 border-b border-gray-300 text-gray-700">
+                <td className="py-3 px-5 border-b border-gray-300 dark:border-slate-700 text-gray-700 dark:text-gray-300">
                   {product.qty}
                 </td>
               </tr>

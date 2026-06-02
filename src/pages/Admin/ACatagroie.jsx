@@ -30,8 +30,11 @@ const ACatagroie = () => {
             const response = await axiosSecure.get(`/category/superadmin/all?${params.toString()}`);
             setCategories(response.data.data);
             setPagination(response.data.pagination);
-        } catch (error) { console.error("Error fetching categories:", error); } 
-        finally { setLoading(false); }
+        } catch (error) { 
+            console.error("Error fetching categories:", error); 
+        } finally { 
+            setLoading(false); 
+        }
     }, [axiosSecure, currentPage, filters, debouncedSearch]);
 
     useEffect(() => { fetchCategories(); }, [fetchCategories]);
@@ -79,18 +82,39 @@ const ACatagroie = () => {
     };
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="p-6 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
             <Mtitle title="Product Category Management" rightcontent={
-                <button onClick={() => handleOpenModal()} className="btn bg-blue-600 hover:bg-blue-700 text-white"><FiPlus className="mr-2"/>Add Category</button>
+                <button 
+                    onClick={() => handleOpenModal()} 
+                    className="btn bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-xl flex items-center gap-2"
+                >
+                    <FiPlus /> Add Category
+                </button>
             } />
 
-            <div className="p-4 bg-white rounded-lg shadow-md my-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-                <input type="text" value={filters.search} onChange={e => handleFilterChange('search', e.target.value)} placeholder="Search by category name..." className="input input-bordered w-full" />
-                <select value={filters.branch} onChange={e => handleFilterChange('branch', e.target.value)} className="select select-bordered w-full" disabled={branchesLoading}>
+            {/* Filter Panel */}
+            <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/80 my-6 grid grid-cols-1 md:grid-cols-3 gap-4 transition-colors">
+                <input 
+                    type="text" 
+                    value={filters.search} 
+                    onChange={e => handleFilterChange('search', e.target.value)} 
+                    placeholder="Search by category name..." 
+                    className="input input-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" 
+                />
+                <select 
+                    value={filters.branch} 
+                    onChange={e => handleFilterChange('branch', e.target.value)} 
+                    className="select select-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" 
+                    disabled={branchesLoading}
+                >
                     <option value="">All Branches</option>
-                    {branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
+                    {branches.map(b => <option key={b._id || b.id} value={b.name}>{b.name}</option>)}
                 </select>
-                <select value={filters.isActive} onChange={e => handleFilterChange('isActive', e.target.value)} className="select select-bordered w-full">
+                <select 
+                    value={filters.isActive} 
+                    onChange={e => handleFilterChange('isActive', e.target.value)} 
+                    className="select select-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
+                >
                     <option value="">All Statuses</option>
                     <option value="true">Active</option>
                     <option value="false">Inactive</option>
@@ -98,21 +122,35 @@ const ACatagroie = () => {
             </div>
 
             {loading ? <Preloader /> : (
-                <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+                <div className="overflow-x-auto bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/80 transition-colors">
                     <table className="table w-full">
-                        <thead className="bg-blue-600 text-white">
-                            <tr><th>Serial</th><th>Category Name</th><th>Branch</th><th>Status</th><th>Actions</th></tr>
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-650 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                            <tr>
+                                <th className="p-4 text-sm font-bold">Serial</th>
+                                <th className="p-4 text-sm font-bold">Category Name</th>
+                                <th className="p-4 text-sm font-bold">Branch</th>
+                                <th className="p-4 text-sm font-bold">Status</th>
+                                <th className="p-4 text-sm font-bold text-right rounded-tr-2xl">Actions</th>
+                            </tr>
                         </thead>
                         <tbody>
                             {categories.map(cat => (
-                                <tr key={cat._id} className="hover">
-                                    <td>{cat.serial}</td>
-                                    <td className="font-bold">{cat.categoryName}</td>
-                                    <td><span className="badge badge-neutral">{cat.branch}</span></td>
-                                    <td><span className={`badge ${cat.isActive ? 'badge-success' : 'badge-ghost'}`}>{cat.isActive ? 'Active' : 'Inactive'}</span></td>
-                                    <td className="space-x-2">
-                                        <button onClick={() => handleOpenModal(cat)} className="btn btn-ghost btn-sm"><FiEdit/></button>
-                                        <button onClick={() => handleDelete(cat._id)} className="btn btn-ghost btn-sm text-red-500"><FiTrash2/></button>
+                                <tr key={cat._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-350">
+                                    <td className="p-4 font-medium">{cat.serial}</td>
+                                    <td className="p-4 font-semibold text-slate-850 dark:text-slate-200">{cat.categoryName}</td>
+                                    <td className="p-4">
+                                        <span className="badge bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-none font-medium">
+                                            {cat.branch}
+                                        </span>
+                                    </td>
+                                    <td className="p-4">
+                                        <span className={`badge ${cat.isActive ? 'badge-success text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'} border-none font-medium`}>
+                                            {cat.isActive ? 'Active' : 'Inactive'}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 text-right space-x-2">
+                                        <button onClick={() => handleOpenModal(cat)} className="btn btn-ghost btn-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950 rounded-lg p-1.5"><FiEdit size={16}/></button>
+                                        <button onClick={() => handleDelete(cat._id)} className="btn btn-ghost btn-xs text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-lg p-1.5"><FiTrash2 size={16}/></button>
                                     </td>
                                 </tr>
                             ))}
@@ -121,12 +159,27 @@ const ACatagroie = () => {
                 </div>
             )}
             
-            <div className="flex justify-between items-center mt-6">
-                <p>Total Categories: {pagination.totalDocuments}</p>
+            {/* Pagination Controls */}
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 text-slate-600 dark:text-slate-400">
+                <p className="text-sm font-medium">Total Categories: {pagination.totalDocuments || 0}</p>
                 <div className="join">
-                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={pagination.currentPage === 1} className="join-item btn">«</button>
-                    <button className="join-item btn">Page {pagination.currentPage}</button>
-                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={pagination.currentPage === pagination.totalPages} className="join-item btn">»</button>
+                    <button 
+                        onClick={() => setCurrentPage(p => p - 1)} 
+                        disabled={pagination.currentPage === 1} 
+                        className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
+                    >
+                        «
+                    </button>
+                    <button className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 dark:text-slate-300 cursor-default">
+                        Page {pagination.currentPage || 1}
+                    </button>
+                    <button 
+                        onClick={() => setCurrentPage(p => p + 1)} 
+                        disabled={pagination.currentPage === pagination.totalPages} 
+                        className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
+                    >
+                        »
+                    </button>
                 </div>
             </div>
 

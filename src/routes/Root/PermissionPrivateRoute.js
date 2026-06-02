@@ -26,9 +26,14 @@ const PermissionPrivateRoute = ({ children }) => {
         return <Navigate to="/" state={{ from: location }} replace />;
     }
 
+    // Redirect superadmin to the admin area home page
+    if (user.role === "superadmin") {
+        return <Navigate to="/admin/home" replace />;
+    }
+
     // 3. If the user is logged in but doesn't have permission for this specific route, redirect them
-    // We also explicitly allow the dashboard home page as a default fallback.
-    if (!allowedRoutes.includes(location.pathname) && location.pathname !== '/dashboard/home') {
+    // We also explicitly allow the dashboard home page and user profile page.
+    if (!allowedRoutes.includes(location.pathname) && location.pathname !== '/dashboard/home' && location.pathname !== '/dashboard/profile') {
         // Redirect to a safe default page, like the dashboard home
         return <Navigate to="/dashboard/home" replace />;
     }

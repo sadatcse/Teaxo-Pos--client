@@ -26,13 +26,13 @@ const Sidebar = ({ isCollapsed }) => {
   return (
     <div className="relative mt-8">
       <div
-        className={`sidebar border-r border-gray-400 border-dashed h-dvh overflow-auto pl-4 pr-4 pb-4 poppins text-[#737373] ${
+        className={`sidebar border-r border-gray-200 dark:border-slate-800/80 border-dashed h-dvh overflow-auto pl-4 pr-4 pb-4 poppins text-[#737373] dark:text-slate-400 ${
           isCollapsed ? "w-[80px]" : "w-[270px]"
-        } bg-white shadow-lg transition-all duration-300`}
+        } bg-white dark:bg-slate-900 shadow-lg transition-all duration-300`}
       >
         {/* Logo Section */}
         <div className="flex flex-col items-center mb-6">
-          {!isCollapsed && <img src={logo} alt="Logo" className="w-24 h-24 mb-4" />}
+          {!isCollapsed && <img src={logo} alt="Logo" className="w-24 h-24 mb-4 dark:brightness-90" />}
         </div>
 
         {/* Menu Section */}
@@ -41,7 +41,7 @@ const Sidebar = ({ isCollapsed }) => {
             {menuItems(UserRole).map((cat) => (
               <li key={cat.title} className="mb-2">
                 {cat.list ? (
-                  <div className="collapse bg-gray-50 p-1 pt-3 hover:shadow rounded-xl">
+                  <div className="collapse bg-gray-50 dark:bg-slate-800 p-1 pt-3 hover:shadow rounded-xl transition-colors">
                     <input
                       type="checkbox"
                       id={`collapse-${cat.title}`}
@@ -49,7 +49,7 @@ const Sidebar = ({ isCollapsed }) => {
                     />
                     <label
                       htmlFor={`collapse-${cat.title}`}
-                      className="font-medium flex items-center gap-2 cursor-pointer pl-4"
+                      className="font-medium flex items-center gap-2 cursor-pointer pl-4 dark:text-slate-200"
                     >
                       {!isCollapsed && cat.icon}
                       {!isCollapsed && cat.title}
@@ -68,7 +68,7 @@ const Sidebar = ({ isCollapsed }) => {
                 ) : (
                   <div
                     onClick={() => handleNavigation(cat.path)}
-                    className="bg-gray-50 p-3 hover:shadow rounded-xl cursor-pointer flex items-center gap-2 pl-4"
+                    className="bg-gray-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 p-3 hover:shadow rounded-xl cursor-pointer flex items-center gap-2 pl-4 transition-colors"
                   >
                     {cat.icon}
                     {!isCollapsed && cat.title}
@@ -80,13 +80,13 @@ const Sidebar = ({ isCollapsed }) => {
         </nav>
 
         {/* Logout Section */}
-        <div className="mt-auto">
+        <div className="mt-auto pt-4">
           <button
             onClick={() => handleLogOut(logoutUser, navigate)}
-            className="w-full p-3 flex items-center justify-center gap-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
+            className="w-full p-3 flex items-center justify-center gap-2 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-all shadow-md shadow-red-200 dark:shadow-none"
           >
             <CiLogout size={24} />
-            {!isCollapsed && <span>Log Out</span>}
+            {!isCollapsed && <span className="font-semibold text-sm">Log Out</span>}
           </button>
         </div>
       </div>

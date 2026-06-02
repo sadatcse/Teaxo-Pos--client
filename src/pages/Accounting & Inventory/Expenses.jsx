@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { FiDollarSign, FiEdit, FiTrash2, FiEye, FiChevronLeft, FiChevronRight, FiLock } from 'react-icons/fi';
-import Swal from 'sweetalert2';
+import swalHelper from "../../utilities/swalHelper";
+import { expenseSchema, vendorPaymentSchema } from "../../utilities/formSchemas";
 import { TfiSearch } from "react-icons/tfi";
 import { GoPlus } from "react-icons/go";
 import { motion, AnimatePresence } from 'framer-motion';
@@ -95,11 +96,32 @@ const Expenses = () => {
     }, [formData.totalAmount, formData.paidAmount]);
 
     const handleAddOrEditExpense = async () => {
-            const requiredPermission = editId ? "edit" : "add";
-    if (!canPerform("Expense Management", requiredPermission)) {
-        Swal.fire("Access Denied", `You do not have permission to ${requiredPermission} expenses.`, "error");
-        return;
-    }
+        const requiredPermission = editId ? "edit" : "add";
+        if (!canPerform("Expense Management", requiredPermission)) {
+            swalHelper.error("Access Denied", `You do not have permission to ${requiredPermission} expenses.`);
+            return;
+        }
+
+        const parsed = expenseSchema.safeParse({
+            title: formData.title,
+            category: formData.category,
+            vendorName: formData.vendorName || undefined,
+            totalAmount: Number(formData.totalAmount),
+            paidAmount: Number(formData.paidAmount),
+            paymentStatus: formData.paymentStatus,
+            paymentMethod: formData.paymentMethod,
+            date: formData.date,
+            note: formData.note || undefined,
+            branch: formData.branch || branch
+        });
+
+        if (!parsed.success) {
+            const errors = parsed.error.flatten().fieldErrors;
+            const errorMsg = Object.values(errors).flat().join(", ");
+            swalHelper.error("Validation Error", errorMsg);
+            return;
+        }
+
         setIsFormLoading(true);
         const payload = { 
             ...formData, 
@@ -113,19 +135,19 @@ const Expenses = () => {
             else { await axiosSecure.post('/expense/post', payload); }
             fetchExpenses();
             setIsModalOpen(false);
-            Swal.fire({ icon: 'success', title: 'Success!', text: `Expense has been ${editId ? 'updated' : 'added'}.` });
+            swalHelper.success("Success!", `Expense has been ${editId ? 'updated' : 'added'}.`);
         } catch (error) {
             console.error('Error saving expense:', error);
             const errorMessage = error.response?.data?.message || 'Failed to save expense. Please try again.';
-            Swal.fire({ icon: 'error', title: 'Error!', text: errorMessage });
+            swalHelper.error("Error!", errorMessage);
         } finally { setIsFormLoading(false); }
     };
     
     const openCreateModal = () => {
-           if (!canPerform("Expense Management", "add")) {
-        Swal.fire("Access Denied", "You do not have permission to add expenses.", "error");
-        return;
-    }
+        if (!canPerform("Expense Management", "add")) {
+            swalHelper.error("Access Denied", "You do not have permission to add expenses.");
+            return;
+        }
         setEditId(null);
         setFormData({
             title: "", category: "Utility", vendorName: "", totalAmount: "", paidAmount: "",
@@ -136,48 +158,54 @@ const Expenses = () => {
     };
 
     const handleEdit = (expense) => {
-            if (!canPerform("Expense Management", "edit")) {
-        Swal.fire("Access Denied", "You do not have permission to edit expenses.", "error");
-        return;
-    }
+        if (!canPerform("Expense Management", "edit")) {
+            swalHelper.error("Access Denied", "You do not have permission to edit expenses.");
+            return;
+        }
         setEditId(expense._id);
         setFormData({ ...expense, date: new Date(expense.date) });
         setIsModalOpen(true);
     };
     
-    const handleRemove = (expense) => {
-       if (!canPerform("Expense Management", "delete")) {
-        Swal.fire("Access Denied", "You do not have permission to delete expenses.", "error");
-        return;
-    }
-        if (expense.purchaseId && user?.role !== 'admin') {
-            Swal.fire({ icon: 'warning', title: 'Action Restricted', text: 'This expense is linked to a purchase and can only be deleted by an administrator.' });
+    const handleRemove = async (expense) => {
+        if (!canPerform("Expense Management", "delete")) {
+            swalHelper.error("Access Denied", "You do not have permission to delete expenses.");
             return;
         }
-        Swal.fire({
-            title: 'Are you sure?', text: "You won't be able to revert this!", icon: 'warning', showCancelButton: true,
-            confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Yes, delete it!'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                axiosSecure.delete(`/expense/delete/${expense._id}`)
-                    .then(() => {
-                        if (expenses.length === 1 && currentPage > 1) { setCurrentPage(currentPage - 1); } else { fetchExpenses(); }
-                        Swal.fire('Deleted!', 'The expense record has been deleted.', 'success');
-                    })
-                    .catch(error => {
-                        console.error('Error deleting expense:', error.response);
-                        const errorMessage = error.response?.data?.message || 'Failed to delete the expense.';
-                        Swal.fire({ icon: 'error', title: 'Deletion Failed', text: errorMessage });
-                    });
-            }
+        if (expense.purchaseId && user?.role !== 'admin') {
+            swalHelper.warning("Action Restricted", "This expense is linked to a purchase and can only be deleted by an administrator.");
+            return;
+        }
+
+        const confirmed = await swalHelper.confirm({
+            title: "Are you sure?",
+            text: "You won't be able to revert this!",
+            confirmText: "Yes, delete it!",
+            danger: true
         });
+
+        if (confirmed) {
+            try {
+                await axiosSecure.delete(`/expense/delete/${expense._id}`);
+                if (expenses.length === 1 && currentPage > 1) {
+                    setCurrentPage(currentPage - 1);
+                } else {
+                    fetchExpenses();
+                }
+                swalHelper.success("Deleted!", "The expense record has been deleted.");
+            } catch (error) {
+                console.error('Error deleting expense:', error.response);
+                const errorMessage = error.response?.data?.message || 'Failed to delete the expense.';
+                swalHelper.error("Deletion Failed", errorMessage);
+            }
+        }
     };
     
     const openPayVendorModal = async () => {
-            if (!canPerform("Expense Management", "add")) {
-        Swal.fire("Access Denied", "You do not have permission to pay vendors.", "error");
-        return;
-    }
+        if (!canPerform("Expense Management", "add")) {
+            swalHelper.error("Access Denied", "You do not have permission to pay vendors.");
+            return;
+        }
         setIsFormLoading(true);
         try {
             const { data } = await axiosSecure.get(`/purchase/vendor-balances/${branch}`);
@@ -185,7 +213,7 @@ const Expenses = () => {
             setIsPayVendorModalOpen(true);
         } catch (error) {
             console.error("Error fetching vendor balances:", error);
-            Swal.fire('Error', 'Could not fetch vendor balances.', 'error');
+            swalHelper.error("Error", "Could not fetch vendor balances.");
         } finally { setIsFormLoading(false); }
     };
 
@@ -197,23 +225,38 @@ const Expenses = () => {
 
     const handleVendorPaymentSubmit = async (e) => {
         e.preventDefault();
-        // ... validation ...
+        
+        const parsed = vendorPaymentSchema.safeParse({
+            amountPaid: Number(paymentFormData.amountPaid),
+            paymentMethod: paymentFormData.paymentMethod,
+            notes: paymentFormData.notes || undefined,
+            paymentDate: paymentFormData.paymentDate,
+        });
+
+        if (!parsed.success) {
+            const errors = parsed.error.flatten().fieldErrors;
+            const errorMsg = Object.values(errors).flat().join(", ");
+            swalHelper.error("Validation Error", errorMsg);
+            return;
+        }
+
         setIsFormLoading(true);
         const payload = {
-            vendorId: selectedVendorForPayment.vendorId, branch,
+            vendorId: selectedVendorForPayment.vendorId,
+            branch,
             amountPaid: parseFloat(paymentFormData.amountPaid),
             paymentMethod: paymentFormData.paymentMethod,
             notes: paymentFormData.notes,
             paymentDate: paymentFormData.paymentDate.toISOString().split('T')[0], 
-             userId: user._id,
+            userId: user._id,
         };
         try {
             await axiosSecure.post('/vendor-payment/pay', payload);
-            Swal.fire('Success', 'Vendor payment recorded successfully!', 'success');
+            swalHelper.success("Success", "Vendor payment recorded successfully!");
             closePayVendorModal();
             fetchExpenses();
         } catch (error) {
-            Swal.fire('Error', error.response?.data?.message || 'Failed to record payment.', 'error');
+            swalHelper.error("Error", error.response?.data?.message || 'Failed to record payment.');
         } finally { setIsFormLoading(false); }
     };
     

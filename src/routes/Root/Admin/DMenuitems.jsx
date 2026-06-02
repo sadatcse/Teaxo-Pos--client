@@ -8,6 +8,8 @@ import {
   MdLogin,
   MdError,
   MdWork,
+  MdTableRestaurant,
+  MdSecurity,
 } from "react-icons/md";
 
 const DMenuitems = () => {
@@ -41,6 +43,16 @@ const DMenuitems = () => {
       title: "New Branch Wizard",
       path: "/admin/newbranchwizard",
       icon: <MdShoppingCart className="text-lg" />,
+    },
+    {
+      title: "Tables",
+      path: "/admin/tables",
+      icon: <MdTableRestaurant className="text-lg" />,
+    },
+    {
+      title: "User Roles",
+      path: "/admin/user-roles",
+      icon: <MdSecurity className="text-lg" />,
     },
     {
       title: "Log Data",

@@ -12,16 +12,12 @@ import Preloader from '../../components/Shortarea/Preloader';
 
 const LoginLog = () => {
     const axiosSecure = UseAxiosSecure();
-    
-    // ✅ 2. Use the hook to get branches. Aliased loading/error to avoid conflicts.
     const { branches, loading: branchesLoading, error: branchesError } = useTotalBranch();
 
-    // Data states (branches state is now removed)
     const [logs, setLogs] = useState([]);
     const [pagination, setPagination] = useState({});
     const [loading, setLoading] = useState(true);
 
-    // Filter states
     const [currentPage, setCurrentPage] = useState(1);
     const [filters, setFilters] = useState({
         branch: '',
@@ -44,7 +40,6 @@ const LoginLog = () => {
                 endDate: filters.endDate ? filters.endDate.toISOString() : '',
                 status: filters.status
             });
-            // The backend no longer needs to send the branch list with this request
             const response = await axiosSecure.get(`/userlog/superadmin/?${params.toString()}`);
             setLogs(response.data.data);
             setPagination(response.data.pagination);
@@ -78,17 +73,17 @@ const LoginLog = () => {
     };
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="p-6 bg-slate-50 dark:bg-slate-955 min-h-screen transition-colors duration-300">
             <Mtitle title="User Login Logs" />
 
-            <div className="p-4 bg-white rounded-lg shadow-md mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                {/* ✅ 3. Updated Branch Filter Dropdown */}
-                <div className="form-control">
-                    <label className="label-text">Branch</label>
+            {/* Filters */}
+            <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/80 mb-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end transition-colors">
+                <div className="form-control w-full">
+                    <label className="label py-1"><span className="label-text font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase">Branch</span></label>
                     <select 
                         value={filters.branch} 
                         onChange={(e) => handleFilterChange('branch', e.target.value)} 
-                        className="select select-bordered w-full"
+                        className="select select-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
                         disabled={branchesLoading}
                     >
                         <option value="">
@@ -98,61 +93,63 @@ const LoginLog = () => {
                         {branches.map(b => <option key={b.id} value={b.name}>{b.name}</option>)}
                     </select>
                 </div>
-                {/* ... other filters remain the same ... */}
-                 <div className="form-control">
-                    <label className="label-text">Search User</label>
-                    <input type="text" value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} placeholder="Name or Email" className="input input-bordered w-full" />
+                <div className="form-control w-full">
+                    <label className="label py-1"><span className="label-text font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase">Search User</span></label>
+                    <input type="text" value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} placeholder="Name or Email" className="input input-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
                 </div>
-                <div className="form-control">
-                    <label className="label-text">Start Date</label>
-                    <DatePicker selected={filters.startDate} onChange={(date) => handleFilterChange('startDate', date)} className="input input-bordered w-full" />
+                <div className="form-control w-full">
+                    <label className="label py-1"><span className="label-text font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase">Start Date</span></label>
+                    <DatePicker selected={filters.startDate} onChange={(date) => handleFilterChange('startDate', date)} className="input input-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
                 </div>
-                 <div className="form-control">
-                    <label className="label-text">End Date</label>
-                    <DatePicker selected={filters.endDate} onChange={(date) => handleFilterChange('endDate', date)} className="input input-bordered w-full" minDate={filters.startDate} />
+                 <div className="form-control w-full">
+                    <label className="label py-1"><span className="label-text font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase">End Date</span></label>
+                    <DatePicker selected={filters.endDate} onChange={(date) => handleFilterChange('endDate', date)} className="input input-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" minDate={filters.startDate} />
                 </div>
-                <div className="form-control">
-                    <label className="label-text">Status</label>
-                    <select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} className="select select-bordered w-full">
+                <div className="form-control w-full">
+                    <label className="label py-1"><span className="label-text font-semibold text-slate-700 dark:text-slate-300 text-xs uppercase">Status</span></label>
+                    <select value={filters.status} onChange={(e) => handleFilterChange('status', e.target.value)} className="select select-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">
                         <option value="">All</option>
                         <option value="active">Active Session</option>
                         <option value="logged_out">Logged Out</option>
                     </select>
                 </div>
-                <button onClick={resetFilters} className="btn btn-ghost col-span-full lg:col-span-1">
+                <button onClick={resetFilters} className="btn bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-none rounded-xl text-slate-750 dark:text-slate-200 col-span-full lg:col-span-1 mt-2">
                     <FiXCircle className="mr-2" /> Reset
                 </button>
             </div>
             
-            {/* ... Table and Pagination remain the same ... */}
             {loading ? <Preloader /> : (
-                <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+                <div className="overflow-x-auto bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/80 transition-colors">
                     <table className="table w-full">
-                        <thead className='bg-blue-600 text-white'>
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-655 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                             <tr>
-                                <th>User</th>
-                                <th>Branch</th>
-                                <th>Role</th>
-                                <th>Login Time</th>
-                                <th>Logout Time</th>
-                                <th>Duration</th>
-                                <th>Status</th>
+                                <th className="p-4 text-sm font-bold">User</th>
+                                <th className="p-4 text-sm font-bold">Branch</th>
+                                <th className="p-4 text-sm font-bold">Role</th>
+                                <th className="p-4 text-sm font-bold">Login Time</th>
+                                <th className="p-4 text-sm font-bold">Logout Time</th>
+                                <th className="p-4 text-sm font-bold">Duration</th>
+                                <th className="p-4 text-sm font-bold text-right rounded-tr-2xl">Status</th>
                             </tr>
                         </thead>
                         <tbody>
                             {logs.map(log => (
-                                <tr key={log._id} className="hover">
-                                    <td>
-                                        <div>{log.username}</div>
-                                        <div className="text-xs text-gray-500">{log.userEmail}</div>
+                                <tr key={log._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-350 transition-colors text-sm">
+                                    <td className="p-4">
+                                        <div className="font-semibold text-slate-850 dark:text-slate-200">{log.username}</div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{log.userEmail}</div>
                                     </td>
-                                    <td>{log.branch}</td>
-                                    <td className="capitalize">{log.role}</td>
-                                    <td>{moment(log.loginTime).format('lll')}</td>
-                                    <td>{log.logoutTime ? moment(log.logoutTime).format('lll') : '-'}</td>
-                                    <td>{getSessionDuration(log.loginTime, log.logoutTime)}</td>
-                                    <td>
-                                        <span className={`badge ${!log.logoutTime ? 'badge-success' : 'badge-ghost'}`}>
+                                    <td className="p-4">
+                                        <span className="badge bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-none font-medium">
+                                            {log.branch}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 capitalize font-medium">{log.role}</td>
+                                    <td className="p-4 text-slate-500 dark:text-slate-400">{moment(log.loginTime).format('lll')}</td>
+                                    <td className="p-4 text-slate-500 dark:text-slate-400">{log.logoutTime ? moment(log.logoutTime).format('lll') : '-'}</td>
+                                    <td className="p-4 text-slate-600 dark:text-slate-300 font-semibold">{getSessionDuration(log.loginTime, log.logoutTime)}</td>
+                                    <td className="p-4 text-right">
+                                        <span className={`badge ${!log.logoutTime ? 'badge-success text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500 dark:text-slate-400'} border-none font-medium`}>
                                             {!log.logoutTime ? 'Active' : 'Logged Out'}
                                         </span>
                                     </td>
@@ -162,12 +159,28 @@ const LoginLog = () => {
                     </table>
                 </div>
             )}
-            <div className="flex justify-between items-center mt-6">
-                <p>Showing page {pagination.currentPage} of {pagination.totalPages}</p>
+
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 text-slate-600 dark:text-slate-400">
+                <p className="text-sm font-medium">Showing page {pagination.currentPage || 1} of {pagination.totalPages || 1}</p>
                 <div className="join">
-                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={pagination.currentPage === 1} className="join-item btn">«</button>
-                    <button className="join-item btn">Page {pagination.currentPage}</button>
-                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={pagination.currentPage === pagination.totalPages} className="join-item btn">»</button>
+                    <button 
+                        onClick={() => setCurrentPage(p => p - 1)} 
+                        disabled={pagination.currentPage === 1} 
+                        className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
+                    >
+                        «
+                    </button>
+                    <button className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 dark:text-slate-300 cursor-default">
+                        Page {pagination.currentPage || 1}
+                    </button>
+                    <button 
+                        onClick={() => setCurrentPage(p => p + 1)} 
+                        disabled={pagination.currentPage === pagination.totalPages} 
+                        className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
+                    >
+                        »
+                    </button>
                 </div>
             </div>
         </div>

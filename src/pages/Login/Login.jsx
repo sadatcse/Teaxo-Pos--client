@@ -3,9 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet";
 import { motion } from "framer-motion";
 import { FaEnvelope, FaLock } from "react-icons/fa";
-import Swal from "sweetalert2";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import swalHelper from "../../utilities/swalHelper";
 import { toast } from "react-toastify";
 import useAuth from "../../Hook/useAuth";
+import { loginSchema } from "../../utilities/formSchemas";
 
 // Images
 import slideImage1 from "../../assets/Background/Login.jpg";
@@ -16,15 +19,26 @@ import Logo from "../../assets/Logo/login.png";
 const slideImages = [slideImage1, slideImage2, slideImage3];
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showForgotModal, setShowForgotModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const navigate = useNavigate();
   const { loginUser } = useAuth();
+
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+      rememberMe: false,
+    },
+  });
 
   // Background slideshow
   useEffect(() => {
@@ -39,47 +53,40 @@ const Login = () => {
     const savedEmail = localStorage.getItem("email");
     const savedPassword = localStorage.getItem("password");
     if (savedEmail && savedPassword) {
-      setEmail(savedEmail);
-      setPassword(savedPassword);
-      setRememberMe(true);
+      setValue("email", savedEmail);
+      setValue("password", savedPassword);
+      setValue("rememberMe", true);
     }
-  }, []);
+  }, [setValue]);
 
-const handleLogin = async (e) => {
-  e.preventDefault();
-  if (password.length < 6) {
-    Swal.fire("Password Too Short!", "Password must be at least 6 characters.", "warning");
-    return;
-  }
-  setLoading(true);
-  try {
-    await loginUser(email, password);
-    if (rememberMe) {
-      localStorage.setItem("email", email);
-      localStorage.setItem("password", password);
-    } else {
-      localStorage.removeItem("email");
-      localStorage.removeItem("password");
-    }
-    toast.success("Login Successful! Welcome back!");
-    navigate("/dashboard/home");
-  } catch (error) { // The error object is now accessible
-    if (error.response) { // Check if the error has a response from the server
-      if (error.response.status === 404) {
-        Swal.fire("User Not Found!", "The email you entered is not registered.", "error");
-      } else if (error.response.status === 500) {
-        Swal.fire("Server Error!", "Something went wrong on our end. Please try again later.", "error");
+  const onSubmit = async (data) => {
+    setLoading(true);
+    try {
+      await loginUser(data.email, data.password);
+      if (data.rememberMe) {
+        localStorage.setItem("email", data.email);
+        localStorage.setItem("password", data.password);
       } else {
-        // Fallback for other status codes
-        Swal.fire("Login Failed!", "Invalid email or password.", "error");
+        localStorage.removeItem("email");
+        localStorage.removeItem("password");
       }
-    } else {
-      // Fallback for network errors or other issues
-      Swal.fire("Network Error!", "Please check your internet connection and try again.", "error");
+      toast.success("Login Successful! Welcome back!");
+      navigate("/dashboard/home");
+    } catch (error) {
+      if (error.response) {
+        if (error.response.status === 404) {
+          swalHelper.error("User Not Found", "The email you entered is not registered.");
+        } else if (error.response.status === 500) {
+          swalHelper.error("Server Error", "Something went wrong on our end. Please try again later.");
+        } else {
+          swalHelper.error("Login Failed", "Invalid email or password.");
+        }
+      } else {
+        swalHelper.error("Network Error", "Please check your internet connection and try again.");
+      }
     }
-  }
-  setLoading(false);
-};
+    setLoading(false);
+  };
 
   return (
     <>
@@ -114,57 +121,78 @@ const handleLogin = async (e) => {
             <img src={Logo} alt="Logo" className="mx-auto w-32 mb-6" />
           </motion.div>
 
-          <h2 className="text-3xl font-bold text-center text-white mb-2">Welcome Back</h2>
+          <h2 className="text-3xl font-bold text-center text-white mb-2 text-shadow-sm">Welcome Back</h2>
           <p className="text-center text-gray-300 mb-6">Sign in to continue</p>
 
-          <form onSubmit={handleLogin} className="space-y-5">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             {/* Email */}
             <div>
-              <label className="text-sm text-gray-200">Email</label>
+              <label className="text-sm font-semibold text-gray-200 block mb-1">Email Address</label>
               <div className="relative">
-                <FaEnvelope className="absolute left-3 top-3 text-gray-400" />
+                <span className="absolute left-3 top-3 text-gray-400">
+                  <FaEnvelope aria-hidden="true" />
+                </span>
                 <input
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="login-email"
+                  {...register("email")}
                   placeholder="you@example.com"
-                  className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/20 text-white border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-300"
-                  required
+                  className={`w-full pl-10 pr-3 py-2 rounded-lg bg-white/20 text-white border outline-none placeholder-gray-300 focus:ring-2 focus:ring-blue-500 transition-all ${
+                    errors.email ? "border-red-500 focus:ring-red-500" : "border-gray-300"
+                  }`}
+                  aria-invalid={errors.email ? "true" : "false"}
+                  aria-describedby={errors.email ? "email-error" : undefined}
                 />
               </div>
+              {errors.email && (
+                <p className="text-red-400 text-xs mt-1" id="email-error">
+                  {errors.email.message}
+                </p>
+              )}
             </div>
 
             {/* Password */}
             <div>
-              <label className="text-sm text-gray-200">Password</label>
+              <label className="text-sm font-semibold text-gray-200 block mb-1">Password</label>
               <div className="relative">
-                <FaLock className="absolute left-3 top-3 text-gray-400" />
+                <span className="absolute left-3 top-3 text-gray-400">
+                  <FaLock aria-hidden="true" />
+                </span>
                 <input
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  id="login-password"
+                  {...register("password")}
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-3 py-2 rounded-lg bg-white/20 text-white border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none placeholder-gray-300"
-                  required
+                  className={`w-full pl-10 pr-3 py-2 rounded-lg bg-white/20 text-white border outline-none placeholder-gray-300 focus:ring-2 focus:ring-blue-500 transition-all ${
+                    errors.password ? "border-red-500 focus:ring-red-500" : "border-gray-300"
+                  }`}
+                  aria-invalid={errors.password ? "true" : "false"}
+                  aria-describedby={errors.password ? "password-error" : undefined}
                 />
               </div>
+              {errors.password && (
+                <p className="text-red-400 text-xs mt-1" id="password-error">
+                  {errors.password.message}
+                </p>
+              )}
             </div>
 
             {/* Options */}
             <div className="flex justify-between items-center text-sm text-gray-200">
-              <label className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input
                   type="checkbox"
-                  checked={rememberMe}
-                  onChange={(e) => setRememberMe(e.target.checked)}
-                  className="accent-blue-500"
+                  id="login-rememberMe"
+                  {...register("rememberMe")}
+                  className="accent-blue-500 cursor-pointer h-4 w-4 rounded"
                 />
                 Remember Me
               </label>
               <button
                 type="button"
+                id="forgot-password-btn"
                 onClick={() => setShowForgotModal(true)}
-                className="text-blue-400 hover:underline"
+                className="text-blue-400 hover:underline hover:text-blue-300 focus:outline-none focus:underline"
               >
                 Forgot?
               </button>
@@ -175,18 +203,12 @@ const handleLogin = async (e) => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               type="submit"
+              id="login-submit-btn"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2 rounded-lg transition"
+              className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-2.5 rounded-lg transition shadow-md hover:shadow-lg disabled:opacity-50"
             >
               {loading ? "Logging in..." : "Sign In"}
             </motion.button>
-
-            {/* <p className="text-center text-gray-300 text-sm">
-              Don't have an account?{" "}
-              <Link to="/register" className="text-blue-400 hover:underline">
-                Create Account
-              </Link>
-            </p> */}
           </form>
         </motion.div>
       </div>
@@ -203,6 +225,7 @@ const handleLogin = async (e) => {
             <button
               onClick={() => setShowForgotModal(false)}
               className="absolute top-2 right-3 text-2xl text-gray-500 hover:text-gray-800"
+              aria-label="Close modal"
             >
               &times;
             </button>
@@ -214,7 +237,7 @@ const handleLogin = async (e) => {
               onSubmit={(e) => {
                 e.preventDefault();
                 setShowForgotModal(false);
-                Swal.fire("Request Sent", "If account exists, you'll get a reset link.", "success");
+                swalHelper.success("Request Sent", "If the account exists, you'll receive a reset link.");
               }}
             >
               <input
@@ -238,3 +261,4 @@ const handleLogin = async (e) => {
 };
 
 export default Login;
+

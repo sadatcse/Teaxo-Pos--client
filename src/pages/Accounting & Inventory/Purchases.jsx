@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { FiEdit, FiTrash2, FiEye, FiPlus, FiX, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
-import Swal from 'sweetalert2';
+import swalHelper from "../../utilities/swalHelper";
 import { TfiSearch } from "react-icons/tfi";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -203,6 +203,43 @@ const Purchases = () => {
     };
 
     const handleSubmit = async () => {
+        // Form validations
+        if (!formData.vendor) {
+            swalHelper.error("Validation Error", "Vendor is required");
+            return;
+        }
+        if (!formData.invoiceNumber || !formData.invoiceNumber.trim()) {
+            swalHelper.error("Validation Error", "Invoice Number is required");
+            return;
+        }
+        if (!formData.items || formData.items.length === 0) {
+            swalHelper.error("Validation Error", "At least one purchase item is required");
+            return;
+        }
+        for (let i = 0; i < formData.items.length; i++) {
+            const item = formData.items[i];
+            if (!item.ingredient) {
+                swalHelper.error("Validation Error", `Ingredient is required for item #${i + 1}`);
+                return;
+            }
+            if (Number(item.quantity) <= 0) {
+                swalHelper.error("Validation Error", `Quantity must be greater than zero for item #${i + 1}`);
+                return;
+            }
+            if (Number(item.unitPrice) < 0) {
+                swalHelper.error("Validation Error", `Unit Price cannot be negative for item #${i + 1}`);
+                return;
+            }
+        }
+        if (Number(formData.paidAmount) < 0) {
+            swalHelper.error("Validation Error", "Paid Amount cannot be negative");
+            return;
+        }
+        if (Number(formData.paidAmount) > formData.grandTotal) {
+            swalHelper.error("Validation Error", "Paid Amount cannot exceed Grand Total");
+            return;
+        }
+
         setFormLoading(true);
         const payload = { ...formData, userId: user._id, purchaseDate: formData.purchaseDate.toISOString().split('T')[0] };
         try {
@@ -210,29 +247,31 @@ const Purchases = () => {
             await apiCall;
             fetchPurchases();
             closeModal();
-            Swal.fire({ icon: 'success', title: 'Success!', text: `Purchase ${editId ? 'updated' : 'recorded'} successfully.` });
+            swalHelper.success("Success!", `Purchase ${editId ? 'updated' : 'recorded'} successfully.`);
         } catch (error) {
-            Swal.fire({ icon: 'error', title: 'Error!', text: error.response?.data?.message || `Failed to ${editId ? 'update' : 'record'} purchase.` });
+            swalHelper.error("Error!", error.response?.data?.message || `Failed to ${editId ? 'update' : 'record'} purchase.`);
         } finally {
             setFormLoading(false);
         }
     };
 
-    const handleDelete = (purchaseId) => {
-        Swal.fire({
-            title: 'Are you sure?', text: "This will reverse the stock and delete the purchase record!", icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#d33', cancelButtonColor: '#3085d6', confirmButtonText: 'Yes, delete it!'
-        }).then(async (result) => {
-            if (result.isConfirmed) {
-                try {
-                    await axiosSecure.delete(`/purchase/delete/${purchaseId}`, { data: { userId: user._id } });
-                    fetchPurchases();
-                    Swal.fire('Deleted!', 'The purchase has been deleted.', 'success');
-                } catch (error) {
-                    Swal.fire('Error!', error.response?.data?.message || 'Failed to delete the purchase.', 'error');
-                }
-            }
+    const handleDelete = async (purchaseId) => {
+        const confirmed = await swalHelper.confirm({
+            title: "Are you sure?",
+            text: "This will reverse the stock and delete the purchase record!",
+            confirmText: "Yes, delete it!",
+            danger: true
         });
+
+        if (confirmed) {
+            try {
+                await axiosSecure.delete(`/purchase/delete/${purchaseId}`, { data: { userId: user._id } });
+                fetchPurchases();
+                swalHelper.success("Deleted!", "The purchase has been deleted.");
+            } catch (error) {
+                swalHelper.error("Error!", error.response?.data?.message || "Failed to delete the purchase.");
+            }
+        }
     };
     
     // --- RENDER & HELPER FUNCTIONS ---

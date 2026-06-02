@@ -1,3 +1,4 @@
+import React, { lazy, Suspense } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
 // 1. IMPORT the new PermissionPrivateRoute
@@ -9,70 +10,96 @@ import Error404 from "../pages/Error404/Error";
 import Login from "../pages/Login/Login";
 import Root from "./Root/Root";
 import DRoot from "./Root/Admin/DRoot";
-import DashboardHome from "../pages/Dashboard/DashboardHome";
-import CollectOrder from "../pages/OtherPage/collect-order";
-import PendingOrders from "../pages/OtherPage/pending-orders";
-import OrderHistory from "../pages/OtherPage/orderhistory";
-import SalesReportsDaily from "../pages/OtherPage/sales-reports-daily";
-import ProductSalesReport from "../pages/OtherPage/product-sales-report";
-import CounterReportDaily from "../pages/OtherPage/counter-report-daily";
-import UserAccess from "../pages/OtherPage/user-access";
-import Category from "../pages/OtherPage/category";
-import Product from "../pages/OtherPage/product";
-import AddOns from "../pages/OtherPage/add-ons";
-import Counter from "../pages/OtherPage/counter";
-import VatBin from "../pages/OtherPage/vat-bin";
-import SystemSettings from "../pages/OtherPage/system-settings";
-import Users from "../pages/OtherPage/users";
-import TableManagement from "../pages/OtherPage/table";
-import Customer from "../pages/OtherPage/Customer";
-import Lobby from "../pages/OtherPage/Lobby";
-import PrintPreview from "../pages/OtherPage/PrintPreview";
-import AHome from './../pages/Admin/AHome';
-import ACatagroie from './../pages/Admin/ACatagroie';
-import ACompany from './../pages/Admin/ACompany';
-import AUser from './../pages/Admin/AUser';
-import AProduct from './../pages/Admin/AProduct';
-import Worklog from './../pages/Admin/Worklog';
-import ErrorLog from './../pages/Admin/ErrorLog';
-import LoginLog from "../pages/Admin/LoginLog";
 import ARoot from "./Root/Aroot";
 import SuperAdminPrivateRoute from "./Root/SuperAdminPrivateRoute";
-import UpdateOrdersHistory from './../pages/OtherPage/update-orders-history';
-import TableReservation from "../pages/Table/TableReservation";
-import Kitchendisplay from "../pages/ExtraPage/Kitchendisplay";
-import EditOrderPage from "../pages/ExtraPage/EditOrderPage";
-import Expenses from "../pages/Accounting & Inventory/Expenses";
-import Ingredients from "../pages/Accounting & Inventory/Ingredients";
-import IngredientsExpense from "../pages/Accounting & Inventory/IngredientsExpense";
-import Purchases from "../pages/Accounting & Inventory/Purchases";
-import Stocks from "../pages/Accounting & Inventory/Stocks";
-import Vendor from "../pages/Accounting & Inventory/Vendor";
-import IngredientsCatagorie from "../pages/Accounting & Inventory/IngredientsCatagorie";
-import CustomOrder from "../pages/ExtraPage/CustomOrder";
-import IngredientExpenses from "../pages/Ingredients/IngredientExpenses";
-import MenuCosting from "../pages/Ingredients/MenuCosting";
-import AverageIngredientCost from "../pages/Ingredients/AverageIngredientCost";
-import RecipeIngredients from "../pages/Ingredients/RecipeIngredients";
-import IngredientsMaster from "../pages/Ingredients/IngredientsMaster";
-import ReviewCustomer from "../pages/Review/ReviewCustomer";
-import ViewReview from "../pages/Review/ViewReview";
-import AiBusinessChat from "../pages/AIInsights/AiBusinessChat";
-import ReviewInsights from "../pages/AIInsights/ReviewInsights";
-import MenuOptimizer from "../pages/AIInsights/MenuOptimizer";
-import AiSalesAdvisor from "../pages/AIInsights/AiSalesAdvisor";
-import DailySalesForecast from "../pages/AIInsights/DailySalesForecast";
-import VendorLedger from "../pages/VendorLedger/VendorLedger";
-import ExpenseSummary from "../pages/Accounting & Inventory/ExpenseSummary";
-import ProfitAndLoss from "../pages/Reports/ProfitAndLoss";
-import StockSalesCompare from "../pages/Reports/StockSalesCompare";
-import AiPurchaseAdvisor from "../pages/AIInsights/aipurchaseadvisor";
-import UserProfile from "../pages/OtherPage/UserProfile";
-import NewBranchWizard from "../pages/Admin/NewBranchWizard";
-import UserPermission from "../pages/OtherPage/UserPermission";
-import UserRoleManagement from "../pages/OtherPage/userrolemanagement";
-import RoleActionPermission from "../pages/ExtraPage/RoleActionPermission";
 import DemoLogin from "../pages/Login/DemoLogin";
+
+// Loading component
+const LazyFallback = () => (
+  <div className="flex items-center justify-center min-h-[400px] w-full bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-200 transition-colors duration-300">
+    <div className="flex flex-col items-center gap-3">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <p className="text-sm font-medium opacity-75">Loading component...</p>
+    </div>
+  </div>
+);
+
+// HOC to wrap lazy loaded page
+const lazyLoad = (importFunc) => {
+  const LazyComponent = lazy(importFunc);
+  const WrappedComponent = (props) => (
+    <Suspense fallback={<LazyFallback />}>
+      <LazyComponent {...props} />
+    </Suspense>
+  );
+  WrappedComponent.displayName = `LazyLoadedComponent`;
+  return WrappedComponent;
+};
+
+// Lazy components
+const DashboardHome = lazyLoad(() => import("../pages/Dashboard/DashboardHome"));
+const CollectOrder = lazyLoad(() => import("../pages/OtherPage/collect-order"));
+const PendingOrders = lazyLoad(() => import("../pages/OtherPage/pending-orders"));
+const OrderHistory = lazyLoad(() => import("../pages/OtherPage/orderhistory"));
+const SalesReportsDaily = lazyLoad(() => import("../pages/OtherPage/sales-reports-daily"));
+const ProductSalesReport = lazyLoad(() => import("../pages/OtherPage/product-sales-report"));
+const CounterReportDaily = lazyLoad(() => import("../pages/OtherPage/counter-report-daily"));
+const UserAccess = lazyLoad(() => import("../pages/OtherPage/user-access"));
+const Category = lazyLoad(() => import("../pages/OtherPage/category"));
+const Product = lazyLoad(() => import("../pages/OtherPage/product"));
+const AddOns = lazyLoad(() => import("../pages/OtherPage/add-ons"));
+const Counter = lazyLoad(() => import("../pages/OtherPage/counter"));
+const VatBin = lazyLoad(() => import("../pages/OtherPage/vat-bin"));
+const SystemSettings = lazyLoad(() => import("../pages/OtherPage/system-settings"));
+const Users = lazyLoad(() => import("../pages/OtherPage/users"));
+const TableManagement = lazyLoad(() => import("../pages/OtherPage/table"));
+const Customer = lazyLoad(() => import("../pages/OtherPage/Customer"));
+const Lobby = lazyLoad(() => import("../pages/OtherPage/Lobby"));
+const PrintPreview = lazyLoad(() => import("../pages/OtherPage/PrintPreview"));
+const AHome = lazyLoad(() => import('./../pages/Admin/AHome'));
+const ATables = lazyLoad(() => import("../pages/Admin/ATables"));
+const AUserRoles = lazyLoad(() => import("../pages/Admin/AUserRoles"));
+const ACatagroie = lazyLoad(() => import('./../pages/Admin/ACatagroie'));
+const ACompany = lazyLoad(() => import('./../pages/Admin/ACompany'));
+const AUser = lazyLoad(() => import('./../pages/Admin/AUser'));
+const AProduct = lazyLoad(() => import('./../pages/Admin/AProduct'));
+const Worklog = lazyLoad(() => import('./../pages/Admin/Worklog'));
+const ErrorLog = lazyLoad(() => import('./../pages/Admin/ErrorLog'));
+const LoginLog = lazyLoad(() => import("../pages/Admin/LoginLog"));
+const UpdateOrdersHistory = lazyLoad(() => import('./../pages/OtherPage/update-orders-history'));
+const TableReservation = lazyLoad(() => import("../pages/Table/TableReservation"));
+const Kitchendisplay = lazyLoad(() => import("../pages/ExtraPage/Kitchendisplay"));
+const EditOrderPage = lazyLoad(() => import("../pages/ExtraPage/EditOrderPage"));
+const Expenses = lazyLoad(() => import("../pages/Accounting & Inventory/Expenses"));
+const Ingredients = lazyLoad(() => import("../pages/Accounting & Inventory/Ingredients"));
+const IngredientsExpense = lazyLoad(() => import("../pages/Accounting & Inventory/IngredientsExpense"));
+const Purchases = lazyLoad(() => import("../pages/Accounting & Inventory/Purchases"));
+const Stocks = lazyLoad(() => import("../pages/Accounting & Inventory/Stocks"));
+const Vendor = lazyLoad(() => import("../pages/Accounting & Inventory/Vendor"));
+const IngredientsCatagorie = lazyLoad(() => import("../pages/Accounting & Inventory/IngredientsCatagorie"));
+const CustomOrder = lazyLoad(() => import("../pages/ExtraPage/CustomOrder"));
+const IngredientExpenses = lazyLoad(() => import("../pages/Ingredients/IngredientExpenses"));
+const MenuCosting = lazyLoad(() => import("../pages/Ingredients/MenuCosting"));
+const AverageIngredientCost = lazyLoad(() => import("../pages/Ingredients/AverageIngredientCost"));
+const RecipeIngredients = lazyLoad(() => import("../pages/Ingredients/RecipeIngredients"));
+const IngredientsMaster = lazyLoad(() => import("../pages/Ingredients/IngredientsMaster"));
+const ReviewCustomer = lazyLoad(() => import("../pages/Review/ReviewCustomer"));
+const ViewReview = lazyLoad(() => import("../pages/Review/ViewReview"));
+const AiBusinessChat = lazyLoad(() => import("../pages/AIInsights/AiBusinessChat"));
+const ReviewInsights = lazyLoad(() => import("../pages/AIInsights/ReviewInsights"));
+const MenuOptimizer = lazyLoad(() => import("../pages/AIInsights/MenuOptimizer"));
+const AiSalesAdvisor = lazyLoad(() => import("../pages/AIInsights/AiSalesAdvisor"));
+const DailySalesForecast = lazyLoad(() => import("../pages/AIInsights/DailySalesForecast"));
+const VendorLedger = lazyLoad(() => import("../pages/VendorLedger/VendorLedger"));
+const ExpenseSummary = lazyLoad(() => import("../pages/Accounting & Inventory/ExpenseSummary"));
+const ProfitAndLoss = lazyLoad(() => import("../pages/Reports/ProfitAndLoss"));
+const StockSalesCompare = lazyLoad(() => import("../pages/Reports/StockSalesCompare"));
+const AiPurchaseAdvisor = lazyLoad(() => import("../pages/AIInsights/aipurchaseadvisor"));
+const UserProfile = lazyLoad(() => import("../pages/OtherPage/UserProfile"));
+const NewBranchWizard = lazyLoad(() => import("../pages/Admin/NewBranchWizard"));
+const UserPermission = lazyLoad(() => import("../pages/OtherPage/UserPermission"));
+const UserRoleManagement = lazyLoad(() => import("../pages/OtherPage/userrolemanagement"));
+const RoleActionPermission = lazyLoad(() => import("../pages/ExtraPage/RoleActionPermission"));
 
 
 // import DeviceManagement from "../pages/Door/device-management";
@@ -97,6 +124,10 @@ export const router = createBrowserRouter([
             {
                 path: "demo", 
                 element: <DemoLogin />, 
+            },
+            {
+                path: "profile",
+                element: <Navigate to="/dashboard/profile" replace />,
             },
         ],
     },
@@ -364,6 +395,18 @@ export const router = createBrowserRouter([
                 path: "home",
                 element: (
                     <SuperAdminPrivateRoute> <AHome /></SuperAdminPrivateRoute>
+                ),
+            },
+            {
+                path: "tables",
+                element: (
+                    <SuperAdminPrivateRoute><ATables /></SuperAdminPrivateRoute>
+                ),
+            },
+            {
+                path: "user-roles",
+                element: (
+                    <SuperAdminPrivateRoute><AUserRoles /></SuperAdminPrivateRoute>
                 ),
             },
             {

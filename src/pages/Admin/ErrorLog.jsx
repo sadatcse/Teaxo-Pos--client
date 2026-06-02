@@ -63,20 +63,19 @@ const ErrorLog = () => {
 
     const statusBadge = (status) => {
         switch (status) {
-            case 'success': return 'badge-success';
-            case 'failed': return 'badge-error';
-            case 'pending': return 'badge-warning';
+            case 'success': return 'badge-success text-white';
+            case 'failed': return 'badge-error text-white';
+            case 'pending': return 'badge-warning text-white';
             default: return 'badge-ghost';
         }
     };
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="p-6 bg-slate-50 dark:bg-slate-955 min-h-screen transition-colors duration-300">
             <Mtitle title="System Transaction Logs" />
 
             {/* --- Filter Bar --- */}
-            <div className="p-4 bg-white rounded-lg shadow-md mb-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end">
-                {/* Filters */}
+            <div className="p-5 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/80 mb-6 grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end transition-colors">
                 <FilterInput label="Search" value={filters.search} onChange={(e) => handleFilterChange('search', e.target.value)} placeholder="User, Email, Details..." />
                 <FilterSelect label="Branch" value={filters.branch} onChange={(e) => handleFilterChange('branch', e.target.value)} disabled={branchesLoading}>
                     <option value="">All Branches</option>
@@ -90,42 +89,57 @@ const ErrorLog = () => {
                 </FilterSelect>
                 <FilterInput label="Transaction Type" value={filters.transactionType} onChange={(e) => handleFilterChange('transactionType', e.target.value)} placeholder="e.g., login" />
                 <FilterInput label="Status Code" value={filters.transactionCode} onChange={(e) => handleFilterChange('transactionCode', e.target.value)} placeholder="e.g., 500" />
-                <div>
-                    <label className="label-text">Start Date</label>
-                    <DatePicker selected={filters.startDate} onChange={(date) => handleFilterChange('startDate', date)} className="input input-bordered w-full" />
+                
+                <div className="form-control w-full">
+                    <label className="label-text text-slate-700 dark:text-slate-350 text-xs font-semibold mb-1">Start Date</label>
+                    <DatePicker selected={filters.startDate} onChange={(date) => handleFilterChange('startDate', date)} className="input input-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-250" />
                 </div>
-                <div>
-                    <label className="label-text">End Date</label>
-                    <DatePicker selected={filters.endDate} onChange={(date) => handleFilterChange('endDate', date)} className="input input-bordered w-full" minDate={filters.startDate} />
+                <div className="form-control w-full">
+                    <label className="label-text text-slate-700 dark:text-slate-350 text-xs font-semibold mb-1">End Date</label>
+                    <DatePicker selected={filters.endDate} onChange={(date) => handleFilterChange('endDate', date)} className="input input-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-255" minDate={filters.startDate} />
                 </div>
-                <button onClick={resetFilters} className="btn btn-ghost mt-4"><FiXCircle className="mr-2"/>Reset Filters</button>
+                
+                <button onClick={resetFilters} className="btn bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-none rounded-xl text-slate-750 dark:text-slate-200"><FiXCircle className="mr-2"/>Reset Filters</button>
             </div>
 
             {/* --- Data Table --- */}
             {loading ? <Preloader /> : (
-                <div className="overflow-x-auto bg-white rounded-lg shadow-md">
+                <div className="overflow-x-auto bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/80 transition-colors">
                     <table className="table w-full">
-                        <thead className="bg-blue-600 text-white">
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-655 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                             <tr>
-                                <th>User</th>
-                                <th>Type</th>
-                                <th>Status</th>
-                                <th>Message</th>
-                                <th>Branch</th>
-                                <th>Time</th>
-                                <th>Details</th>
+                                <th className="p-4 text-sm font-bold">User</th>
+                                <th className="p-4 text-sm font-bold">Type</th>
+                                <th className="p-4 text-sm font-bold">Status</th>
+                                <th className="p-4 text-sm font-bold">Message</th>
+                                <th className="p-4 text-sm font-bold">Branch</th>
+                                <th className="p-4 text-sm font-bold">Time</th>
+                                <th className="p-4 text-sm font-bold text-right rounded-tr-2xl">Details</th>
                             </tr>
                         </thead>
                         <tbody>
                             {logs.map(log => (
-                                <tr key={log._id} className="hover">
-                                    <td>{log.userName}<br/><span className="text-xs text-gray-500">{log.userEmail}</span></td>
-                                    <td>{log.transactionType}</td>
-                                    <td><span className={`badge ${statusBadge(log.status)}`}>{log.status} ({log.transactionCode})</span></td>
-                                    <td className="max-w-xs truncate">{log.Message}</td>
-                                    <td>{log.branch}</td>
-                                    <td>{moment(log.transactionTime).format('lll')}</td>
-                                    <td><button onClick={() => setSelectedLog(log)} className="btn btn-ghost btn-sm"><FiEye /></button></td>
+                                <tr key={log._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-350 transition-colors text-sm">
+                                    <td className="p-4">
+                                        <div className="font-semibold text-slate-850 dark:text-slate-200">{log.userName}</div>
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{log.userEmail}</div>
+                                    </td>
+                                    <td className="p-4 capitalize font-semibold">{log.transactionType}</td>
+                                    <td className="p-4">
+                                        <span className={`badge ${statusBadge(log.status)} border-none font-medium`}>
+                                            {log.status} ({log.transactionCode})
+                                        </span>
+                                    </td>
+                                    <td className="p-4 max-w-xs truncate text-slate-600 dark:text-slate-300">{log.Message}</td>
+                                    <td className="p-4">
+                                        <span className="badge bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-none font-medium">
+                                            {log.branch}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 text-slate-500 dark:text-slate-400">{moment(log.transactionTime).format('lll')}</td>
+                                    <td className="p-4 text-right">
+                                        <button onClick={() => setSelectedLog(log)} className="btn btn-ghost btn-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-955 rounded-lg p-1.5"><FiEye size={16}/></button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -134,12 +148,26 @@ const ErrorLog = () => {
             )}
             
             {/* --- Pagination Controls --- */}
-            <div className="flex justify-between items-center mt-6">
-                <p>Total Logs: {pagination.totalDocuments}</p>
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 text-slate-600 dark:text-slate-400">
+                <p className="text-sm font-medium">Total Logs: {pagination.totalDocuments || 0}</p>
                 <div className="join">
-                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={pagination.currentPage === 1} className="join-item btn">«</button>
-                    <button className="join-item btn">Page {pagination.currentPage}</button>
-                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={pagination.currentPage === pagination.totalPages} className="join-item btn">»</button>
+                    <button 
+                        onClick={() => setCurrentPage(p => p - 1)} 
+                        disabled={pagination.currentPage === 1} 
+                        className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
+                    >
+                        «
+                    </button>
+                    <button className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 dark:text-slate-300 cursor-default">
+                        Page {pagination.currentPage || 1}
+                    </button>
+                    <button 
+                        onClick={() => setCurrentPage(p => p + 1)} 
+                        disabled={pagination.currentPage === pagination.totalPages} 
+                        className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
+                    >
+                        »
+                    </button>
                 </div>
             </div>
 
@@ -151,41 +179,44 @@ const ErrorLog = () => {
 
 // Helper components for filters and modal
 const FilterInput = ({ label, ...props }) => (
-    <div className="form-control">
-        <label className="label-text">{label}</label>
-        <input type="text" {...props} className="input input-bordered w-full" />
+    <div className="form-control w-full">
+        <label className="label-text text-slate-700 dark:text-slate-300 text-xs font-semibold mb-1">{label}</label>
+        <input type="text" {...props} className="input input-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" />
     </div>
 );
 
 const FilterSelect = ({ label, children, ...props }) => (
-    <div className="form-control">
-        <label className="label-text">{label}</label>
-        <select {...props} className="select select-bordered w-full">{children}</select>
+    <div className="form-control w-full">
+        <label className="label-text text-slate-700 dark:text-slate-300 text-xs font-semibold mb-1">{label}</label>
+        <select {...props} className="select select-bordered w-full rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200">{children}</select>
     </div>
 );
 
 const LogDetailsModal = ({ log, onClose }) => (
     <div className="modal modal-open">
-        <div className="modal-box w-11/12 max-w-2xl">
-            <h3 className="font-bold text-lg mb-4">Log Details</h3>
-            <div className="space-y-2 text-sm">
+        <div className="modal-box w-11/12 max-w-2xl bg-white dark:bg-slate-900 border border-slate-150 dark:border-slate-800 rounded-2xl shadow-xl">
+            <h3 className="font-bold text-lg mb-4 text-slate-850 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-2">Log Transaction Details</h3>
+            <div className="space-y-3 text-sm text-slate-700 dark:text-slate-300">
                 <p><strong>User:</strong> {log.userName} ({log.userEmail})</p>
                 <p><strong>Time:</strong> {moment(log.transactionTime).format('llll')}</p>
                 <p><strong>Branch:</strong> {log.branch}</p>
                 <p><strong>IP Address:</strong> {log.ipAddress}</p>
-                <p><strong>Type:</strong> {log.transactionType}</p>
-                <p><strong>Status:</strong> {log.status} ({log.transactionCode})</p>
+                <p><strong>Type:</strong> <span className="capitalize font-semibold text-slate-800 dark:text-slate-100">{log.transactionType}</span></p>
+                <p><strong>Status:</strong> <span className="capitalize font-semibold text-red-600 dark:text-red-400">{log.status} ({log.transactionCode})</span></p>
                 <p><strong>Message:</strong> {log.Message}</p>
-                <p><strong>Details:</strong> {log.details}</p>
+                <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800">
+                    <p className="font-semibold text-slate-850 dark:text-slate-200 mb-1">Details Context:</p>
+                    <p className="font-mono text-xs break-all">{log.details}</p>
+                </div>
                 {log.stackTrace && (
                     <div>
-                        <p><strong>Stack Trace:</strong></p>
-                        <pre className="bg-gray-100 p-2 rounded text-xs whitespace-pre-wrap">{log.stackTrace}</pre>
+                        <p className="font-semibold text-slate-850 dark:text-slate-200 mb-1">Stack Trace:</p>
+                        <pre className="bg-red-50/50 dark:bg-red-950/20 text-red-700 dark:text-red-400 p-3 rounded-xl text-xs whitespace-pre-wrap font-mono max-h-60 overflow-y-auto border border-red-100 dark:border-red-900/30">{log.stackTrace}</pre>
                     </div>
                 )}
             </div>
-            <div className="modal-action">
-                <button onClick={onClose} className="btn">Close</button>
+            <div className="modal-action mt-6">
+                <button onClick={onClose} className="btn bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 border-none rounded-xl text-slate-750 dark:text-slate-200">Close</button>
             </div>
         </div>
     </div>

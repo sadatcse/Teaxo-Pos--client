@@ -3,7 +3,6 @@ import { FiEdit, FiTrash2, FiPlus } from 'react-icons/fi';
 import { useDebounce } from "use-debounce";
 import Swal from 'sweetalert2';
 
-// Ensure these paths are correct for your project structure
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import Mtitle from '../../components library/Mtitle';
 import Preloader from '../../components/Shortarea/Preloader';
@@ -76,59 +75,80 @@ const ACompany = () => {
     };
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="p-6 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
             <Mtitle title="Branch Management" rightcontent={
-                <div className="flex items-center gap-4">
-                     <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search branch, name, email..." className="input input-bordered w-full md:w-auto" />
-                    <button onClick={() => handleOpenModal()} className="btn bg-blue-600 hover:bg-blue-700 text-white"><FiPlus className="mr-2"/>Add Branch</button>
+                <div className="flex flex-col sm:flex-row items-center gap-4">
+                    <input 
+                        type="text" 
+                        value={search} 
+                        onChange={e => setSearch(e.target.value)} 
+                        placeholder="Search branch, name, email..." 
+                        className="input input-bordered w-full sm:w-auto rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200" 
+                    />
+                    <button 
+                        onClick={() => handleOpenModal()} 
+                        className="btn bg-indigo-600 hover:bg-indigo-700 text-white border-none rounded-xl flex items-center gap-2"
+                    >
+                        <FiPlus /> Add Branch
+                    </button>
                 </div>
             } />
 
             {loading ? <Preloader /> : (
-                <div className="overflow-x-auto bg-white rounded-lg shadow-md mt-6">
+                <div className="overflow-x-auto bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800/80 mt-6 transition-colors">
                     <table className="table w-full">
-                        <thead className="bg-blue-600 text-white">
-                            <tr><th>Logo</th><th>Company Name & IDs</th><th>Branch</th><th>Contact Info</th><th>Actions</th></tr>
+                        <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-650 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                            <tr>
+                                <th className="p-4 text-sm font-bold">Logo</th>
+                                <th className="p-4 text-sm font-bold">Company Name & IDs</th>
+                                <th className="p-4 text-sm font-bold">Branch</th>
+                                <th className="p-4 text-sm font-bold">Contact Info</th>
+                                <th className="p-4 text-sm font-bold text-right rounded-tr-2xl">Actions</th>
+                            </tr>
                         </thead>
                         <tbody>
                             {companies.map(company => (
-                                <tr key={company._id} className="hover">
+                                <tr key={company._id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 border-b border-slate-100 dark:border-slate-800 text-slate-700 dark:text-slate-350">
                                     {/* Logo */}
-                                    <td>
+                                    <td className="p-4">
                                         <div className="avatar">
-                                            <div className="mask mask-squircle w-12 h-12">
+                                            <div className="mask mask-squircle w-12 h-12 bg-slate-100 dark:bg-slate-800">
                                                 <img src={company.logo || 'https://via.placeholder.com/150'} alt={`${company.name} logo`} />
                                             </div>
                                         </div>
                                     </td>
 
-                                    {/* Name & BIN/TIN (New Fields Display) */}
-                                    <td>
-                                        <div className="font-bold text-gray-800">{company.name}</div>
-                                        <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1">
-                                            {company.binNumber && <span className="badge badge-ghost badge-sm border-gray-300">BIN: {company.binNumber}</span>}
-                                            {company.tinNumber && <span className="badge badge-ghost badge-sm border-gray-300">TIN: {company.tinNumber}</span>}
+                                    {/* Name & BIN/TIN */}
+                                    <td className="p-4">
+                                        <div className="font-semibold text-slate-850 dark:text-slate-200 text-md">{company.name}</div>
+                                        <div className="text-[11px] mt-1 flex flex-wrap gap-1">
+                                            {company.binNumber && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium">BIN: {company.binNumber}</span>}
+                                            {company.tinNumber && <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 font-medium">TIN: {company.tinNumber}</span>}
                                         </div>
                                     </td>
 
                                     {/* Branch */}
-                                    <td><span className="badge badge-neutral">{company.branch}</span></td>
+                                    <td className="p-4">
+                                        <span className="badge bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-none font-medium">
+                                            {company.branch}
+                                        </span>
+                                    </td>
 
-                                    {/* Contact & Owner (New Owner Email Display) */}
-                                    <td>
-                                        <div className="text-sm font-semibold">Co: {company.email}</div>
+                                    {/* Contact & Owner */}
+                                    <td className="p-4">
+                                        <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">Co: {company.email}</div>
                                         {company.ownerEmail && (
-                                            <div className="text-sm text-blue-600 font-medium">Owner: {company.ownerEmail}</div>
+                                            <div className="text-xs text-indigo-655 dark:text-indigo-400 font-medium mt-0.5">Owner: {company.ownerEmail}</div>
                                         )}
-                                        <div className="text-xs opacity-70 mt-1">{company.phone}</div>
+                                        <div className="text-[11px] opacity-70 mt-1">{company.phone}</div>
                                     </td>
 
                                     {/* Actions */}
-                                    <td className="space-x-2">
-                                        <button onClick={() => handleOpenModal(company)} className="btn btn-ghost btn-sm tooltip" data-tip="Edit">
+                                    <td className="p-4 text-right space-x-2">
+                                        <button onClick={() => handleOpenModal(company)} className="btn btn-ghost btn-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950 rounded-lg p-1.5" title="Edit">
                                             <FiEdit size={16} />
                                         </button>
-                                        <button onClick={() => handleDelete(company._id)} className="btn btn-ghost btn-sm text-red-500 tooltip" data-tip="Delete">
+                                        <button onClick={() => handleDelete(company._id)} className="btn btn-ghost btn-xs text-rose-600 dark:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950 rounded-lg p-1.5" title="Delete">
                                             <FiTrash2 size={16} />
                                         </button>
                                     </td>
@@ -139,12 +159,27 @@ const ACompany = () => {
                 </div>
             )}
             
-            <div className="flex justify-between items-center mt-6">
-                <p className="text-sm text-gray-500">Total Branches: {pagination.totalDocuments || 0}</p>
+            {/* Pagination */}
+            <div className="flex flex-col sm:flex-row justify-between items-center mt-6 gap-4 text-slate-600 dark:text-slate-400">
+                <p className="text-sm font-medium">Total Branches: {pagination.totalDocuments || 0}</p>
                 <div className="join">
-                    <button onClick={() => setCurrentPage(p => p - 1)} disabled={pagination.currentPage === 1} className="join-item btn btn-sm">«</button>
-                    <button className="join-item btn btn-sm">Page {pagination.currentPage}</button>
-                    <button onClick={() => setCurrentPage(p => p + 1)} disabled={pagination.currentPage === pagination.totalPages} className="join-item btn btn-sm">»</button>
+                    <button 
+                        onClick={() => setCurrentPage(p => p - 1)} 
+                        disabled={pagination.currentPage === 1} 
+                        className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
+                    >
+                        «
+                    </button>
+                    <button className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 dark:text-slate-300 cursor-default">
+                        Page {pagination.currentPage || 1}
+                    </button>
+                    <button 
+                        onClick={() => setCurrentPage(p => p + 1)} 
+                        disabled={pagination.currentPage === pagination.totalPages} 
+                        className="join-item btn bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 dark:text-slate-300 disabled:opacity-50"
+                    >
+                        »
+                    </button>
                 </div>
             </div>
 

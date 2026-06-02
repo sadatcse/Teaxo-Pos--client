@@ -21,6 +21,7 @@ const DashboardHome = () => {
   const axiosSecure = UseAxiosSecure();
 
   const fetchDashboardData = useCallback(async () => {
+    if (!branch) return;
     try {
       const response = await axiosSecure.get(`/invoice/${branch}/dashboard`);
       setDashboardData(response.data);

@@ -126,13 +126,13 @@ const Lobby = () => {
                                                 onMouseEnter={() => setHoveredTableId(table._id)}
                                                 onMouseLeave={() => setHoveredTableId(null)}
                                                 onClick={() => isClickable && handleTableSelect(table)}
-                                                className={`card compact bg-base-100 shadow-md transition-all duration-300 relative overflow-hidden border border-slate-200 ${isClickable ? 'cursor-pointer hover:shadow-xl hover:border-blue-600' : 'cursor-not-allowed opacity-70'}`}
+                                                className={`card compact bg-base-100 shadow-md transition-all duration-300 relative overflow-hidden border border-slate-200 dark:border-slate-800 ${isClickable ? 'cursor-pointer hover:shadow-xl hover:border-blue-600' : 'cursor-not-allowed opacity-70'}`}
                                             >
                                                 <div className="card-body items-center text-center p-4">
                                                     <div className="absolute top-3 right-3">
                                                         <IconComponent className={`w-10 h-10 ${config.iconClass} opacity-10`} />
                                                     </div>
-                                                    <h2 className="card-title text-4xl font-extrabold text-slate-700 tracking-tight">
+                                                    <h2 className="card-title text-4xl font-extrabold text-slate-700 dark:text-slate-200 tracking-tight">
                                                         {table.tableName}
                                                     </h2>
                                                     <div className="card-actions justify-center mt-3 w-full">

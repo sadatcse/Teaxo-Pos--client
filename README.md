@@ -4,11 +4,9 @@
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4.17-38bdf8.svg?logo=tailwind-css)](https://tailwindcss.com/)
 [![DaisyUI](https://img.shields.io/badge/DaisyUI-4.12.23-5a0df8.svg?logo=daisyui)](https://daisyui.com/)
 [![React Router](https://img.shields.io/badge/React_Router-v7.1.2-CA4245.svg?logo=react-router)](https://reactrouter.com/)
-[![TanStack Query](https://img.shields.io/badge/TanStack_Query-v5-FF4154.svg?logo=react-query)](https://tanstack.com/query)
 [![Socket.io](https://img.shields.io/badge/Socket.io-v4.8.1-010101.svg?logo=socket.dot-io)](https://socket.io/)
-[![Firebase](https://img.shields.io/badge/Firebase-v11.2.0-FFCA28.svg?logo=firebase)](https://firebase.google.com/)
 
-**Teaxo POS** (commercially managed as **Leave Restaurant Management System**) is a state-of-the-art, feature-rich Point of Sale (POS) and comprehensive restaurant operation management client. Built on **React 18**, **Tailwind CSS & DaisyUI**, and **Bootstrap 5**, it provides an elegant, highly responsive dashboard tailored to modern restaurants, multi-branch operations, and dark kitchens.
+**Teaxo POS** is a state-of-the-art, feature-rich Point of Sale (POS) and comprehensive restaurant operation management client. Built on **React 18**, **Tailwind CSS & DaisyUI**, and **Sass**, it provides an elegant, highly responsive dashboard tailored to modern restaurants, multi-branch operations, and dark kitchens.
 
 The application integrates real-time communications for kitchen sync, advanced recipe/ingredient costing, a vendor management ledger, robust role-based access control, and **AI-powered business intelligence/forecasting** models to optimize kitchen efficiency and profit margins.
 
@@ -25,8 +23,8 @@ The application integrates real-time communications for kitchen sync, advanced r
   - [📊 Finance, Sales & Activity Auditing](#-finance-sales--activity-auditing)
   - [🛡️ Security & Fine-grained RBAC](#-security--fine-grained-rbac)
   - [🏢 Multi-Branch & Super Admin Suite](#-multi-branch--super-admin-suite)
-- [🛠️ Technology Stack](#️-technology-stack)
-- [⚙️ Setup & Installation](#️-setup--installation)
+- [🛠️ Technology Stack](#-technology-stack)
+- [⚙️ Setup & Installation](#-setup--installation)
   - [1. Prerequisites](#1-prerequisites)
   - [2. Clone & Install Dependencies](#2-clone--install-dependencies)
   - [3. Configure Environment Variables](#3-configure-environment-variables)
@@ -89,14 +87,13 @@ The application integrates real-time communications for kitchen sync, advanced r
 | Category | Technology | Purpose |
 | :--- | :--- | :--- |
 | **Core Client** | React 18.3.1, React Router DOM v7 | Single Page Application architecture & client-side routing |
-| **Styling & UI** | Tailwind CSS v3, DaisyUI v4, Bootstrap v5.3, Sass/SCSS | Modern hybrid styling system combining Tailwind's utility classes with Bootstrap components |
-| **State & Fetching**| TanStack React Query v5, Axios | Server-state caching, automatic refetching, and secure API requests |
-| **Auth & Security** | Firebase, Google OAuth (@react-oauth/google), JWT | Unified secure identity provider for social and email login |
+| **Styling & UI** | Tailwind CSS v3, DaisyUI v4, Sass/SCSS | Modern responsive styling system using utility-first classes and custom styling |
+| **State & Fetching**| Axios | Promise-based HTTP client for secure API requests |
+| **Auth & Security** | JWT (JSON Web Tokens), Local Storage, Role Guards | Secured local credentials validation and routing authorization checks |
 | **Real-time Sync**  | Socket.io-client | Live order transmission and status notifications |
 | **Data Viz**        | Recharts, Chart.js, React-Chartjs-2 | Visual analytical reports and dashboard counters |
 | **Document/PDF**   | JSPDF, JSPDF-Autotable, React-to-print, DOM-to-image | High-fidelity invoice creation and physical receipt printing |
-| **Rich Editing**    | Quill, React-Quill | WYSIWYG rich text editor for recipes and system announcements |
-| **Utilities**       | Moment.js, LocalForage, Lodash, React-helmet-async | Offline caching, date manipulation, and metadata management |
+| **Utilities**       | Moment.js, React-helmet-async, Zod, React Hook Form, ExcelJS/XLSX | Form validation, offline state handling, date manipulation, spreadsheet exports, and SEO metadata management |
 
 ---
 
@@ -169,7 +166,7 @@ src/
 ├── components/               # Shareable UI elements (Header, Receipts, QRCode generators)
 ├── components library/       # Supplementary custom UI blocks
 ├── config/                   # Helper services (Image upload controllers)
-├── firebase/                 # Firebase SDK integration configurations
+├── firebase/                 # Legacy Firebase configurations (Inactive)
 ├── pages/                    # Main Feature Views
 │   ├── AIInsights/           # Business chatbot, forecasts, and menu optimizers
 │   ├── Accounting & Inventory/# Ledger, inventory, purchases, expenses

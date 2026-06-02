@@ -91,20 +91,20 @@ const handleSubmit = async () => {
     const CurrentStepComponent = STEPS[currentStep].component;
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
-            <h1 className="text-3xl font-bold text-gray-800 mb-4">New Branch Setup Wizard</h1>
+        <div className="p-6 bg-slate-50 dark:bg-slate-950 min-h-screen transition-colors duration-300">
+            <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100 mb-6">New Branch Setup Wizard</h1>
             
             {/* Progress Bar */}
-            <ul className="steps w-full mb-8">
+            <ul className="steps w-full mb-8 text-slate-600 dark:text-slate-400">
                 {STEPS.map((step, index) => (
-                    <li key={step.title} className={`step ${index <= currentStep ? 'step-primary' : ''}`}>
+                    <li key={step.title} className={`step ${index <= currentStep ? 'step-primary font-semibold text-indigo-600 dark:text-indigo-400' : ''}`}>
                         {step.title}
                     </li>
                 ))}
             </ul>
 
             {/* Step Content */}
-            <div className="bg-white p-8 rounded-lg shadow-md">
+            <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-colors">
                 <CurrentStepComponent 
                     data={wizardData} 
                     onNext={handleNext} 
