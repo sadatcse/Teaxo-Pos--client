@@ -14,8 +14,8 @@ const DailySales = ({ dailySales }) => {
   const [salesData, setSalesData] = useState(dailySales);
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-lg mb-6">
-      <h2 className="text-lg md:text-xl font-bold text-gray-700 mb-4">
+    <div className="bg-white dark:bg-zinc-900 p-4 rounded-lg shadow-lg mb-6 border dark:border-zinc-800">
+      <h2 className="text-lg md:text-xl font-bold text-gray-700 dark:text-zinc-100 mb-4">
         Daily Sales (Last 30 Days)
       </h2>
       <ResponsiveContainer width="100%" height={250}>

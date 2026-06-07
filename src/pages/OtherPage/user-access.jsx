@@ -75,19 +75,19 @@ const UserAccess = () => {
     };
     
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950">
             <Mtitle title="User Access Logs" />
             <motion.div 
                 initial={{ opacity: 0, y: 20 }} 
                 animate={{ opacity: 1, y: 0 }} 
                 transition={{ duration: 0.5 }}
-                className="card bg-base-100 shadow-xl mt-6"
+                className="card bg-base-100 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 shadow-xl mt-6"
             >
                 <div className="card-body p-4 sm:p-6">
                     {isLoading ? <MtableLoading /> : (
                         <div className="overflow-x-auto">
                             <table className="table w-full">
-                                <thead className="bg-blue-600 text-white uppercase text-xs">
+                                <thead className="bg-blue-600 dark:bg-zinc-800 text-white dark:text-zinc-200 uppercase text-xs">
                                     <tr>
                                         {["#", "User Email", "Username", "Role", "Login Time", "Logout Time", "Actions"].map((h, i) => (
                                             <th key={h} className={`p-3 ${i === 0 && 'rounded-tl-lg'} ${i === 6 && 'rounded-tr-lg text-center'}`}>{h}</th>
@@ -97,10 +97,10 @@ const UserAccess = () => {
                                 <tbody>
                                     <AnimatePresence>
                                         {userLogs.length === 0 ? (
-                                            <tr><td colSpan="7" className="text-center py-12 text-slate-700">No logs found.</td></tr>
+                                            <tr><td colSpan="7" className="text-center py-12 text-slate-700 dark:text-zinc-400">No logs found.</td></tr>
                                         ) : (
                                             userLogs.map((log, index) => (
-                                                <motion.tr key={log._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                <motion.tr key={log._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-850 text-sm text-slate-700 dark:text-zinc-350">
                                                     <td className="p-3">{(currentPage - 1) * 10 + index + 1}</td>
                                                     <td className="p-3">{log.userEmail}</td>
                                                     <td className="p-3">{log.username}</td>
@@ -108,7 +108,7 @@ const UserAccess = () => {
                                                     <td className="p-3">{log.loginTime ? new Date(log.loginTime).toLocaleString() : "N/A"}</td>
                                                     <td className="p-3">{log.logoutTime ? new Date(log.logoutTime).toLocaleString() : "N/A"}</td>
                                                     <td className="p-3 text-center">
-                                                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleDelete(log._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete Log">
+                                                        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleDelete(log._id)} className="btn btn-circle btn-sm bg-red-600 dark:bg-red-600/85 hover:bg-red-700 dark:hover:bg-red-650 text-white border-none" title="Delete Log">
                                                             <FiTrash2 />
                                                         </motion.button>
                                                     </td>
@@ -120,9 +120,9 @@ const UserAccess = () => {
                             </table>
                             <div className="flex justify-center mt-6">
                                 <div className="join">
-                                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="join-item btn btn-sm"><FiChevronLeft /></button>
-                                    <button className="join-item btn btn-sm btn-active bg-blue-600 text-white hover:bg-blue-700">Page {currentPage} of {totalPages}</button>
-                                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="join-item btn btn-sm"><FiChevronRight /></button>
+                                    <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="join-item btn btn-sm dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"><FiChevronLeft /></button>
+                                    <button className="join-item btn btn-sm btn-active bg-blue-600 text-white hover:bg-blue-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700 border-none">Page {currentPage} of {totalPages}</button>
+                                    <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="join-item btn btn-sm dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700"><FiChevronRight /></button>
                                 </div>
                             </div>
                         </div>

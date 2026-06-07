@@ -614,7 +614,7 @@ const EditOrderPage = () => {
     };
 
     if (isLoading) {
-        return ( <div className="flex items-center justify-center min-h-screen"><h1 className="text-2xl font-bold">Loading Order Details... ⏳</h1></div> );
+        return ( <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-zinc-950 text-gray-800 dark:text-zinc-100"><h1 className="text-2xl font-bold">Loading Order Details... ⏳</h1></div> );
     }
 
     const { subtotal, vat, sd, payable } = calculateTotal();
@@ -622,7 +622,7 @@ const EditOrderPage = () => {
     const change = paid > 0 ? paid - payable : 0;
 
     return (
-        <div className="font-sans antialiased bg-gray-100 min-h-screen">
+        <div className="font-sans antialiased bg-gray-100 dark:bg-zinc-950 text-gray-800 dark:text-zinc-100 min-h-screen">
             <TableSelectionModal isOpen={isTableSelectionModalOpen} tables={tables} selectedTable={selectedTable} handleTableSelect={handleTableSelect} onConfirm={handleTableSelectionConfirm} onClose={() => setIsTableSelectionModalOpen(false)} />
             <DeliveryProviderSelectionModal isOpen={isDeliveryProviderModalOpen} onSelect={handleDeliveryProviderSelect} onClose={() => setIsDeliveryProviderModalOpen(false)} />
             <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} />
@@ -701,11 +701,11 @@ const EditOrderPage = () => {
                     onClick={() => setIsKitchenModalOpen(false)}
                 >
                     <div 
-                        className="bg-white p-6 rounded-lg shadow-2xl relative w-full max-w-sm flex flex-col items-center" 
+                        className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 p-6 rounded-lg shadow-2xl relative w-full max-w-sm flex flex-col items-center" 
                         onClick={(e) => e.stopPropagation()}
                     >
                         <button 
-                            className="absolute top-3 right-3 text-gray-400 hover:text-red-500 transition-colors p-1" 
+                            className="absolute top-3 right-3 text-gray-400 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition-colors p-1" 
                             onClick={() => setIsKitchenModalOpen(false)}
                             title="Close without printing"
                         >
@@ -714,7 +714,7 @@ const EditOrderPage = () => {
                             </svg>
                         </button>
 
-                        <h3 className="text-lg font-bold text-gray-800 mb-4">Print Tickets Preview</h3>
+                        <h3 className="text-lg font-bold text-gray-800 dark:text-zinc-100 mb-4">Print Tickets Preview</h3>
 
                         <div className="w-full max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                             {(() => {
@@ -724,8 +724,8 @@ const EditOrderPage = () => {
                                 return (
                                     <>
                                         {kitchenProducts.length > 0 && (
-                                            <div className="border-2 border-dashed border-gray-300 rounded p-2 mb-4 bg-gray-50">
-                                                <div className="text-center font-bold text-gray-500 text-xs mb-1 uppercase tracking-wider">Kitchen Ticket</div>
+                                            <div className="border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded p-2 mb-4 bg-gray-50 dark:bg-zinc-950">
+                                                <div className="text-center font-bold text-gray-500 dark:text-zinc-400 text-xs mb-1 uppercase tracking-wider">Kitchen Ticket</div>
                                                 <KitchenReceiptTemplate
                                                     ref={kitchenReceiptRef}
                                                     profileData={companies[0]}
@@ -736,8 +736,8 @@ const EditOrderPage = () => {
                                         )}
 
                                         {barProducts.length > 0 && (
-                                            <div className="border-2 border-dashed border-gray-300 rounded p-2 mb-4 bg-gray-50">
-                                                <div className="text-center font-bold text-gray-500 text-xs mb-1 uppercase tracking-wider">Bar Ticket</div>
+                                            <div className="border-2 border-dashed border-gray-300 dark:border-zinc-700 rounded p-2 mb-4 bg-gray-50 dark:bg-zinc-950">
+                                                <div className="text-center font-bold text-gray-500 dark:text-zinc-400 text-xs mb-1 uppercase tracking-wider">Bar Ticket</div>
                                                 <BarReceiptTemplate
                                                     ref={barReceiptRef}
                                                     profileData={companies[0]}

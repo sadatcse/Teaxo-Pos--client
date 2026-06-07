@@ -197,10 +197,10 @@ const Category = () => {
     };
 
     const { paginatedData, paginationControls } = Mpagination({ totalData: filteredCategories });
-    const inputClass = "w-full border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
+    const inputClass = "w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 text-gray-800 dark:text-zinc-100">
             <Mtitle title="Manage Categories" rightcontent={
                 <div className="flex items-center gap-4">
                     <div className="form-control hidden sm:block">
@@ -208,18 +208,18 @@ const Category = () => {
                             <input 
                                 type="text" 
                                 placeholder="Search by name..." 
-                                className="input input-bordered w-full sm:w-64 pl-10" 
+                                className="input input-bordered w-full sm:w-64 pl-10 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" 
                                 value={searchTerm} 
                                 onChange={handleSearchChange} 
                             />
-                            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                            <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
                         </div>
                     </div>
                     
                     {/* Bulk Add Button - OUTLINE STYLE (Blue) */}
                     <motion.button 
                         onClick={() => setIsBulkModalOpen(true)} 
-                        className="btn btn-outline text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white rounded-lg gap-2"
+                        className="btn btn-outline text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-500 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white rounded-lg gap-2"
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                     >
@@ -239,7 +239,7 @@ const Category = () => {
             } />
 
             <motion.div 
-                className="card bg-base-100 shadow-xl mt-6"
+                className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl mt-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
@@ -260,7 +260,7 @@ const Category = () => {
                                     <AnimatePresence>
                                         {paginatedData.length === 0 ? (
                                             <tr>
-                                                <td colSpan="4" className="text-center py-12 text-slate-700">
+                                                <td colSpan="4" className="text-center py-12 text-slate-700 dark:text-zinc-400">
                                                     No categories found.
                                                 </td>
                                             </tr>
@@ -272,14 +272,18 @@ const Category = () => {
                                                     initial={{ opacity: 0 }} 
                                                     animate={{ opacity: 1 }} 
                                                     exit={{ opacity: 0 }} 
-                                                    className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700"
+                                                    className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-300"
                                                 >
-                                                    <td className="p-3 font-medium">{category.categoryName}</td>
+                                                    <td className="p-3 font-medium dark:text-zinc-200">{category.categoryName}</td>
                                                     <td className="p-3">{category.serial}</td>
                                                     <td className="p-3">
-                                                        <div className={`badge ${category.isActive ? 'badge-success' : 'badge-error'} text-white`}>
+                                                        <span className={`px-2.5 py-1 border font-semibold text-xs rounded-full capitalize ${
+                                                            category.isActive 
+                                                            ? 'bg-green-50 dark:bg-emerald-950/20 text-green-700 dark:text-emerald-400 border-green-200 dark:border-emerald-900/40' 
+                                                            : 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/40'
+                                                        }`}>
                                                             {category.isActive ? 'Active' : 'Inactive'}
-                                                        </div>
+                                                        </span>
                                                     </td>
                                                     <td className="p-3">
                                                         <div className="flex justify-center items-center gap-2">
@@ -307,20 +311,20 @@ const Category = () => {
                             initial={{ scale: 0.9, opacity: 0 }} 
                             animate={{ scale: 1, opacity: 1 }} 
                             exit={{ scale: 0.9, opacity: 0 }} 
-                            className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md"
+                            className="bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-md text-gray-800 dark:text-zinc-100"
                         >
-                            <h3 className="text-xl font-semibold text-blue-600 mb-6">{editId ? 'Edit Category' : 'Add New Category'}</h3>
+                            <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-6">{editId ? 'Edit Category' : 'Add New Category'}</h3>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="label-text text-slate-700">Category Name</label>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Category Name</label>
                                     <input type="text" value={formData.categoryName} onChange={(e) => setFormData({ ...formData, categoryName: e.target.value })} className={`${inputClass} mt-1`} placeholder="e.g., Appetizers" />
                                 </div>
                                 <div>
-                                    <label className="label-text text-slate-700">Serial Number</label>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Serial Number</label>
                                     <input type="number" value={formData.serial} onChange={(e) => setFormData({ ...formData, serial: e.target.value })} className={`${inputClass} mt-1`} placeholder="Auto-generated if empty" />
                                 </div>
                                 <div>
-                                    <label className="label-text text-slate-700">Status</label>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Status</label>
                                     <select value={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.value === 'true' })} className={`${inputClass} mt-1 select`}>
                                         <option value={true}>Active</option>
                                         <option value={false}>Inactive</option>
@@ -328,8 +332,8 @@ const Category = () => {
                                 </div>
                             </div>
                             <div className="flex justify-end gap-4 mt-8">
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn rounded-xl">Cancel</motion.button>
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditCategory} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md w-28" disabled={isSubmitting}>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn rounded-xl dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditCategory} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md w-28 border-none" disabled={isSubmitting}>
                                     {isSubmitting ? <span className="loading loading-spinner"></span> : editId ? 'Save' : 'Add'}
                                 </motion.button>
                             </div>
@@ -346,14 +350,13 @@ const Category = () => {
                             initial={{ scale: 0.9, opacity: 0 }} 
                             animate={{ scale: 1, opacity: 1 }} 
                             exit={{ scale: 0.9, opacity: 0 }} 
-                            className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-lg"
+                            className="bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-lg text-gray-800 dark:text-zinc-100"
                         >
                             <div className="flex justify-between items-center mb-6">
-                                {/* Changed text color to blue-600 */}
-                                <h3 className="text-xl font-semibold text-blue-600 flex items-center gap-2">
+                                <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2">
                                     <FaLayerGroup /> Bulk Add Categories
                                 </h3>
-                                <button onClick={closeBulkModal} className="btn btn-sm btn-circle btn-ghost"><FiX size={20}/></button>
+                                <button onClick={closeBulkModal} className="btn btn-sm btn-circle btn-ghost dark:text-zinc-400 dark:hover:bg-zinc-850"><FiX size={20}/></button>
                             </div>
                             
                             <div className="alert alert-info shadow-sm mb-4 text-xs">
@@ -364,25 +367,24 @@ const Category = () => {
 
                             <div className="form-control">
                                 <label className="label">
-                                    <span className="label-text font-medium">Paste Category Names (One per line)</span>
+                                    <span className="label-text font-medium dark:text-zinc-300">Paste Category Names (One per line)</span>
                                 </label>
                                 <textarea 
-                                    className="textarea textarea-bordered h-64 w-full text-base leading-relaxed" 
+                                    className="textarea textarea-bordered h-64 w-full text-base leading-relaxed dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" 
                                     placeholder={`Appetizers\nMain Course\nDesserts\nBeverages\n...`}
                                     value={bulkText}
                                     onChange={(e) => setBulkText(e.target.value)}
                                 ></textarea>
                                 <label className="label">
-                                    <span className="label-text-alt text-slate-500">
+                                    <span className="label-text-alt text-slate-500 dark:text-zinc-400">
                                         Lines: {bulkText.split('\n').filter(x => x.trim()).length}
                                     </span>
                                 </label>
                             </div>
 
                             <div className="flex justify-end gap-4 mt-6">
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeBulkModal} className="btn rounded-xl">Cancel</motion.button>
-                                {/* Changed background color to blue-600 */}
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleBulkAdd} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isSubmitting}>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeBulkModal} className="btn rounded-xl dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleBulkAdd} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md border-none" disabled={isSubmitting}>
                                     {isSubmitting ? <span className="loading loading-spinner"></span> : 'Upload All'}
                                 </motion.button>
                             </div>

@@ -77,47 +77,47 @@ const IngredientUsageReport = () => {
 
     // --- JSX Rendering ---
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 dark:text-zinc-100">
             {/* Page Header */}
             <motion.div
                 className="flex items-center gap-4 mb-6"
                 initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
             >
-                <FiBarChart2 className="text-4xl text-slate-800" />
-                <h1 className="text-3xl font-bold text-slate-800">Ingredient Usage Report</h1>
+                <FiBarChart2 className="text-4xl text-slate-800 dark:text-zinc-100" />
+                <h1 className="text-3xl font-bold text-slate-800 dark:text-zinc-100">Ingredient Usage Report</h1>
             </motion.div>
 
             {/* Filter Controls Card */}
             <motion.div
-                className="card bg-base-100 shadow-xl mb-8"
+                className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl mb-8"
                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
             >
                 <div className="card-body">
                     <div className="flex flex-wrap items-end gap-4">
-                        {/* Date Pickers and Category Select... (no changes here) */}
+                        {/* Date Pickers and Category Select */}
                         <div className="form-control w-full sm:w-auto flex-grow">
-                             <label className="label"><span className="label-text font-semibold">From Date</span></label>
-                             <DatePicker selected={fromDate} onChange={(date) => setFromDate(date)} dateFormat="dd-MM-yyyy" className="input input-bordered w-full" maxDate={new Date()} />
+                             <label className="label"><span className="label-text font-semibold dark:text-zinc-300">From Date</span></label>
+                             <DatePicker selected={fromDate} onChange={(date) => setFromDate(date)} dateFormat="dd-MM-yyyy" className="input input-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 w-full" maxDate={new Date()} />
                          </div>
                          <div className="form-control w-full sm:w-auto flex-grow">
-                             <label className="label"><span className="label-text font-semibold">To Date</span></label>
-                             <DatePicker selected={toDate} onChange={(date) => setToDate(date)} dateFormat="dd-MM-yyyy" className="input input-bordered w-full" minDate={fromDate} maxDate={new Date()} />
+                             <label className="label"><span className="label-text font-semibold dark:text-zinc-300">To Date</span></label>
+                             <DatePicker selected={toDate} onChange={(date) => setToDate(date)} dateFormat="dd-MM-yyyy" className="input input-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 w-full" minDate={fromDate} maxDate={new Date()} />
                          </div>
                          <div className="form-control w-full sm:w-auto flex-grow">
-                             <label className="label"><span className="label-text font-semibold">Ingredient Category</span></label>
+                             <label className="label"><span className="label-text font-semibold dark:text-zinc-300">Ingredient Category</span></label>
                              <select
-                                 className="select select-bordered w-full"
+                                 className="select select-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 w-full"
                                  value={selectedCategory}
                                  onChange={(e) => setSelectedCategory(e.target.value)}
                                  disabled={categoriesLoading}
-                             >
-                                 <option value="">{categoriesLoading ? "Loading..." : "All Categories"}</option>
-                                 {categoriesError && <option disabled>Error loading</option>}
-                                 {categories.map(cat => (
-                                     <option key={cat._id} value={cat._id}>{cat.categoryName}</option>
-                                 ))}
-                             </select>
-                         </div>
+                              >
+                                  <option value="">{categoriesLoading ? "Loading..." : "All Categories"}</option>
+                                  {categoriesError && <option disabled>Error loading</option>}
+                                  {categories.map(cat => (
+                                      <option key={cat._id} value={cat._id}>{cat.categoryName}</option>
+                                  ))}
+                              </select>
+                          </div>
                         <div className="form-control w-full sm:w-auto">
                     <motion.button
     // **MODIFIED**: Always fetch page 1 for a new report
@@ -152,19 +152,19 @@ const IngredientUsageReport = () => {
                     <motion.div key="report" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
                         {/* ... Report header and alert are unchanged ... */}
          
-                         {reportData.alert && (
-                             <div className="alert alert-warning shadow-lg mb-6">
-                                 <div><FiAlertTriangle size={24} /><span>{reportData.alert}</span></div>
-                             </div>
-                         )}
+                          {reportData.alert && (
+                              <div className="alert alert-warning shadow-lg mb-6">
+                                  <div><FiAlertTriangle size={24} /><span>{reportData.alert}</span></div>
+                              </div>
+                          )}
                         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            <div className={`${reportData.productsWithoutRecipe?.length > 0 ? 'lg:col-span-2' : 'lg:col-span-3'} card bg-base-100 shadow-xl`}>
+                            <div className={`${reportData.productsWithoutRecipe?.length > 0 ? 'lg:col-span-2' : 'lg:col-span-3'} card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl`}>
                                 <div className="card-body">
-                                    <h2 className="card-title text-xl font-bold mb-4">Calculated Ingredient Usage</h2>
+                                    <h2 className="card-title text-xl font-bold mb-4 dark:text-zinc-100">Calculated Ingredient Usage</h2>
                                     <div className="overflow-x-auto">
-                                        <table className="table table-zebra w-full border border-slate-300">
+                                        <table className="table table-zebra w-full border border-slate-300 dark:border-zinc-800">
                                             {/* ... Table head is unchanged ... */}
-                                            <thead className="bg-primary text-primary-content">
+                                            <thead className="bg-primary dark:bg-zinc-800 text-primary-content dark:text-zinc-200">
                                                  <tr>
                                                      <th>Ingredient Name</th>
                                                      <th className='text-right'>Total Quantity Used</th>
@@ -175,14 +175,14 @@ const IngredientUsageReport = () => {
                                                 {/* Table body renders paginated data */}
                                                 {reportData.ingredientUsage.length > 0 ? (
                                                     reportData.ingredientUsage.map((item, index) => ( // Changed key to index as _id might not exist
-                                                        <tr key={`${item.ingredientName}-${index}`}>
+                                                        <tr key={`${item.ingredientName}-${index}`} className="border-b dark:border-zinc-800 hover:bg-slate-50 dark:hover:bg-zinc-800/40 text-slate-700 dark:text-zinc-300">
                                                             <td className="font-semibold">{item.ingredientName}</td>
                                                             <td className='text-right'>{item.totalQuantity.toFixed(3)}</td>
                                                             <td>{item.unit}</td>
                                                         </tr>
                                                     ))
                                                 ) : (
-                                                    <tr><td colSpan="3" className="text-center py-8 text-slate-500">No ingredient usage data for the selected criteria.</td></tr>
+                                                    <tr><td colSpan="3" className="text-center py-8 text-slate-500 dark:text-zinc-400">No ingredient usage data for the selected criteria.</td></tr>
                                                 )}
                                             </tbody>
                                         </table>
@@ -192,19 +192,19 @@ const IngredientUsageReport = () => {
                                     {reportData?.pagination?.totalPages > 1 && (
                                         <div className="flex justify-center items-center gap-4 mt-8">
                                             <button 
-                                                className="btn btn-outline btn-primary btn-sm"
+                                                className="btn btn-outline btn-primary dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 btn-sm"
                                                 onClick={() => handleGenerateReport(currentPage - 1)}
                                                 disabled={currentPage === 1 || isLoading}
                                             >
                                                 « Previous
                                             </button>
                                             
-                                            <span className="font-semibold">
+                                            <span className="font-semibold dark:text-zinc-300">
                                                 Page {currentPage} of {reportData.pagination.totalPages}
                                             </span>
 
                                             <button 
-                                                className="btn btn-outline btn-primary btn-sm"
+                                                className="btn btn-outline btn-primary dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800 btn-sm"
                                                 onClick={() => handleGenerateReport(currentPage + 1)}
                                                 disabled={currentPage === reportData.pagination.totalPages || isLoading}
                                             >
@@ -218,11 +218,11 @@ const IngredientUsageReport = () => {
 
                             {/* ... Products Without Recipe card is unchanged ... */}
                             {reportData.productsWithoutRecipe?.length > 0 && (
-                                 <div className="lg:col-span-1 card bg-base-100 shadow-xl">
+                                 <div className="lg:col-span-1 card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl">
                                      <div className="card-body">
-                                         <h2 className="card-title text-xl font-bold mb-4">Products Without Recipe</h2>
-                                         <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 max-h-96 overflow-y-auto">
-                                             <ul className="list-disc list-inside space-y-2 text-slate-700">
+                                         <h2 className="card-title text-xl font-bold mb-4 dark:text-zinc-100">Products Without Recipe</h2>
+                                         <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900/40 rounded-lg p-4 max-h-96 overflow-y-auto">
+                                             <ul className="list-disc list-inside space-y-2 text-slate-700 dark:text-zinc-300">
                                                  {reportData.productsWithoutRecipe.map((product, index) => ( <li key={index}>{product}</li> ))}
                                              </ul>
                                          </div>
@@ -235,12 +235,12 @@ const IngredientUsageReport = () => {
 
                 {/* ... Initial state card is unchanged ... */}
                  {!isLoading && !error && !reportData && (
-                     <motion.div key="initial" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20 bg-base-100 rounded-xl shadow-lg">
-                         <FiCalendar className="mx-auto text-5xl text-slate-400 mb-4" />
-                         <h3 className="text-xl font-bold text-slate-600">Ready to Generate a Report</h3>
-                         <p className="text-slate-500 mt-2">Select a date range and click 'Generate Report' to view data.</p>
-                     </motion.div>
-                 )}
+                      <motion.div key="initial" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20 bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 rounded-xl shadow-lg">
+                          <FiCalendar className="mx-auto text-5xl text-slate-400 dark:text-zinc-500 mb-4" />
+                          <h3 className="text-xl font-bold text-slate-600 dark:text-zinc-350">Ready to Generate a Report</h3>
+                          <p className="text-slate-500 dark:text-zinc-400 mt-2">Select a date range and click 'Generate Report' to view data.</p>
+                      </motion.div>
+                  )}
             </AnimatePresence>
         </div>
     );

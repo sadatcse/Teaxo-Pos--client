@@ -112,26 +112,26 @@ const RoleActionPermission = () => {
     };
     
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 text-gray-800 dark:text-zinc-100 min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <div className="card bg-base-100 shadow-xl border-t-4 border-blue-700">
+                <div className="card bg-base-100 dark:bg-zinc-900 shadow-xl border dark:border-zinc-800 border-t-4 border-t-blue-700 dark:border-t-blue-500">
                     <div className="card-body">
-                        <div className="flex justify-between items-center mb-6">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                             <div>
-                                <h2 className="card-title text-2xl text-blue-700">Manage Action Permissions</h2>
-                                <p className="text-sm text-gray-500">Control what actions each role can perform (View, Add, Edit, Delete).</p>
+                                <h2 className="card-title text-2xl text-blue-700 dark:text-blue-400">Manage Action Permissions</h2>
+                                <p className="text-sm text-gray-500 dark:text-zinc-400">Control what actions each role can perform (View, Add, Edit, Delete).</p>
                             </div>
-                            <button onClick={handleSaveChanges} className="btn btn-primary bg-blue-700 hover:bg-blue-800 text-white">
+                            <button onClick={handleSaveChanges} className="btn btn-primary bg-blue-700 hover:bg-blue-800 text-white border-none">
                                 Save Changes
                             </button>
                         </div>
 
                         <div className="form-control w-full max-w-xs mb-6">
                             <label className="label">
-                                <span className="label-text font-semibold">Select a Role to Configure</span>
+                                <span className="label-text font-semibold dark:text-zinc-300">Select a Role to Configure</span>
                             </label>
                             <select
-                                className="select select-bordered focus:border-blue-700 focus:outline-none"
+                                className="select select-bordered focus:border-blue-700 focus:outline-none dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
                                 value={selectedRole}
                                 onChange={(e) => setSelectedRole(e.target.value)}
                             >
@@ -146,24 +146,24 @@ const RoleActionPermission = () => {
                         ) : (
                             <div className="overflow-x-auto">
                                 <table className="table w-full">
-                                    <thead className="bg-gray-50">
+                                    <thead className="bg-gray-50 dark:bg-zinc-800">
                                         <tr>
-                                            <th className="font-semibold text-gray-700">Feature</th>
-                                            <th className="text-center font-semibold text-gray-700">View</th>
-                                            <th className="text-center font-semibold text-gray-700">Add</th>
-                                            <th className="text-center font-semibold text-gray-700">Edit</th>
-                                            <th className="text-center font-semibold text-gray-700">Delete</th>
+                                            <th className="font-semibold text-gray-700 dark:text-zinc-200">Feature</th>
+                                            <th className="text-center font-semibold text-gray-700 dark:text-zinc-200">View</th>
+                                            <th className="text-center font-semibold text-gray-700 dark:text-zinc-200">Add</th>
+                                            <th className="text-center font-semibold text-gray-700 dark:text-zinc-200">Edit</th>
+                                            <th className="text-center font-semibold text-gray-700 dark:text-zinc-200">Delete</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {APP_FEATURES.map((feature) => (
-                                            <tr key={feature} className="hover">
-                                                <td className="font-medium">{feature}</td>
+                                            <tr key={feature} className="hover dark:hover:bg-zinc-800/40 border-b dark:border-zinc-800">
+                                                <td className="font-medium dark:text-zinc-300">{feature}</td>
                                                 {['view', 'add', 'edit', 'delete'].map((action) => (
                                                     <td key={action} className="text-center">
                                                         <input
                                                             type="checkbox"
-                                                            className="checkbox checkbox-primary border-gray-400 [--chkbg:theme(colors.blue.700)] [--chkfg:white]"
+                                                            className="checkbox checkbox-primary border-gray-400 dark:border-zinc-600 [--chkbg:theme(colors.blue.700)] [--chkfg:white]"
                                                             checked={permissions[feature]?.[action] || false}
                                                             onChange={() => handlePermissionChange(feature, action)}
                                                         />

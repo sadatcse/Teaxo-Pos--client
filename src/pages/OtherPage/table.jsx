@@ -108,49 +108,49 @@ const TableManagement = () => {
     const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: tables });
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 min-h-screen">
             <Mtitle title="Table Management" rightcontent={
                                 canPerform("Table Management", "add") && (
 
-                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300">
+                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300 border-none">
                     <GoPlus className="text-xl" /> Add New Table
                  </motion.button>
                 )
             } />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 shadow-xl mt-6">
                 <div className="p-4">
-                    <div className="text-sm text-slate-700 mb-4">{rowsPerPageAndTotal}</div>
+                    <div className="text-sm text-slate-700 dark:text-zinc-400 mb-4">{rowsPerPageAndTotal}</div>
                     {loading ? <MtableLoading /> : (
                         <div className="overflow-x-auto">
                             <table className="table w-full">
-                                <thead className='bg-blue-600 text-white uppercase text-xs font-medium tracking-wider'>
+                                <thead className='bg-blue-600 dark:bg-zinc-800 text-white dark:text-zinc-200 uppercase text-xs font-medium tracking-wider'>
                                     <tr>
-                                        <th className="p-3 rounded-tl-lg">Table Name</th>
-                                        <th className="p-3 rounded-tr-lg text-center">Actions</th>
+                                        <th className="p-3 rounded-l-xl">Table Name</th>
+                                        <th className="p-3 rounded-r-xl text-center">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <AnimatePresence>
                                         {paginatedData.length === 0 ? (
-                                            <tr><td colSpan="2" className="text-center py-8 text-slate-700">No tables found.</td></tr>
+                                            <tr><td colSpan="2" className="text-center py-8 text-slate-700 dark:text-zinc-400">No tables found.</td></tr>
                                         ) : (
                                             paginatedData.map((table) => (
-                                                <motion.tr key={table._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                <motion.tr key={table._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-850 text-sm text-slate-700 dark:text-zinc-300">
                                                     <td className="p-3 font-medium">{table.tableName}</td>
-                                <td className="p-3">
-    <div className="flex justify-center items-center gap-2">
-        {canPerform("Table Management", "view") && (
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenQrModal(table)} className="btn btn-circle btn-sm bg-slate-600 hover:bg-slate-700 text-white" title="Generate QR Code"><BsQrCode /></motion.button>
-        )}
-        {canPerform("Table Management", "edit") && (
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(table._id)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit Table"><FiEdit /></motion.button>
-        )}
-        {canPerform("Table Management", "delete") && (
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(table._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white" title="Delete Table"><FiTrash2 /></motion.button>
-        )}
-    </div>
-</td>
+                                                    <td className="p-3">
+                                                        <div className="flex justify-center items-center gap-2">
+                                                            {canPerform("Table Management", "view") && (
+                                                                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleOpenQrModal(table)} className="btn btn-circle btn-sm bg-slate-600 dark:bg-zinc-700 hover:bg-slate-700 dark:hover:bg-zinc-600 text-white border-none" title="Generate QR Code"><BsQrCode /></motion.button>
+                                                            )}
+                                                            {canPerform("Table Management", "edit") && (
+                                                                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(table._id)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white border-none" title="Edit Table"><FiEdit /></motion.button>
+                                                            )}
+                                                            {canPerform("Table Management", "delete") && (
+                                                                <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(table._id)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white border-none" title="Delete Table"><FiTrash2 /></motion.button>
+                                                            )}
+                                                        </div>
+                                                    </td>
                                                 </motion.tr>
                                             ))
                                         )}
@@ -165,23 +165,25 @@ const TableManagement = () => {
 
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
-                            <h2 className="text-xl font-semibold text-blue-600 mb-6">{editId ? "Edit Table" : "Add New Table"}</h2>
-                            <input type="text" value={formData.tableName} onChange={(e) => setFormData({ ...formData, tableName: e.target.value })} className="w-full border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150" placeholder="Table Name" />
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-md">
+                            <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-6">{editId ? "Edit Table" : "Add New Table"}</h2>
+                            <input type="text" value={formData.tableName} onChange={(e) => setFormData({ ...formData, tableName: e.target.value })} className="w-full bg-white dark:bg-zinc-805 border border-gray-300 dark:border-zinc-700 text-gray-700 dark:text-zinc-150 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 focus:outline-none" placeholder="Table Name" />
                             <div className="flex justify-end gap-4 mt-8">
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setIsModalOpen(false); setFormData({ tableName: "", branch: branch }); setEditId(null); }} className="btn rounded-xl">Cancel</motion.button>
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditTable} className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md" disabled={isLoading}>{isLoading ? "Saving..." : editId ? "Save Changes" : "Add Table"}</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { setIsModalOpen(false); setFormData({ tableName: "", branch: branch }); setEditId(null); }} className="btn rounded-xl bg-gray-250 dark:bg-zinc-800 hover:bg-gray-300 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 border-none">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditTable} className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md border-none" disabled={isLoading}>{isLoading ? "Saving..." : editId ? "Save Changes" : "Add Table"}</motion.button>
                             </div>
                         </motion.div>
                     </div>
                 )}
                 {isQrModalOpen && selectedTable && (
-                     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-4 rounded-2xl shadow-xl w-full max-w-xs relative">
-                            <h3 className="text-center font-bold text-lg text-slate-700 mb-2">{selectedTable.tableName}</h3>
-                             <QRCodeGenerator type="table" id={selectedTable._id} />
-                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleCloseQrModal} className="btn btn-circle btn-sm absolute -top-3 -right-3 bg-red-600 text-white hover:bg-red-700 shadow-lg"><FiX /></motion.button>
+                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-4 rounded-2xl shadow-xl w-full max-w-xs relative flex flex-col items-center">
+                            <h3 className="text-center font-bold text-lg text-slate-700 dark:text-zinc-350 mb-2">{selectedTable.tableName}</h3>
+                            <div className="bg-white p-2 rounded-xl">
+                                <QRCodeGenerator type="table" id={selectedTable._id} />
+                            </div>
+                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={handleCloseQrModal} className="btn btn-circle btn-sm absolute -top-3 -right-3 bg-red-600 text-white hover:bg-red-700 shadow-lg border-none"><FiX /></motion.button>
                         </motion.div>
                     </div>
                 )}

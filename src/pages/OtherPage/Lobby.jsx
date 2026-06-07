@@ -86,9 +86,9 @@ const Lobby = () => {
     };
 
     return (
-        <div className="bg-base-200 min-h-screen p-4 sm:p-6 lg:p-8">
+        <div className="bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen p-4 sm:p-6 lg:p-8 transition-colors duration-200">
             <motion.div
-                className="card bg-base-100 shadow-xl w-full mx-auto"
+                className="card bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 shadow-xl w-full mx-auto"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -97,7 +97,7 @@ const Lobby = () => {
                     <header className="mb-6 center">
                         <Mtitle title="Restaurant Lobby" />
                     </header>
-                    <div className="divider" />
+                    <div className="divider dark:before:bg-zinc-800 dark:after:bg-zinc-800" />
                     <main>
                         {/* --- UPDATED LOADING LOGIC --- */}
                         {loading ? (
@@ -126,13 +126,13 @@ const Lobby = () => {
                                                 onMouseEnter={() => setHoveredTableId(table._id)}
                                                 onMouseLeave={() => setHoveredTableId(null)}
                                                 onClick={() => isClickable && handleTableSelect(table)}
-                                                className={`card compact bg-base-100 shadow-md transition-all duration-300 relative overflow-hidden border border-slate-200 dark:border-slate-800 ${isClickable ? 'cursor-pointer hover:shadow-xl hover:border-blue-600' : 'cursor-not-allowed opacity-70'}`}
+                                                className={`card compact bg-white dark:bg-zinc-900 shadow-md transition-all duration-300 relative overflow-hidden border border-slate-200 dark:border-zinc-800 ${isClickable ? 'cursor-pointer hover:shadow-xl hover:border-blue-600 dark:hover:border-blue-500' : 'cursor-not-allowed opacity-70'}`}
                                             >
                                                 <div className="card-body items-center text-center p-4">
                                                     <div className="absolute top-3 right-3">
                                                         <IconComponent className={`w-10 h-10 ${config.iconClass} opacity-10`} />
                                                     </div>
-                                                    <h2 className="card-title text-4xl font-extrabold text-slate-700 dark:text-slate-200 tracking-tight">
+                                                    <h2 className="card-title text-4xl font-extrabold text-slate-700 dark:text-zinc-200 tracking-tight">
                                                         {table.tableName}
                                                     </h2>
                                                     <div className="card-actions justify-center mt-3 w-full">
@@ -141,7 +141,7 @@ const Lobby = () => {
                                                             {table.status === 'reserved' && table.reservation?.startTime && (
                                                                 <span className="ml-1.5 font-normal opacity-90">
                                                                     ({formatTime(table.reservation.startTime)})
-                                                                </span>
+                                                                 </span>
                                                             )}
                                                         </div>
                                                     </div>
@@ -153,11 +153,11 @@ const Lobby = () => {
                                                             animate={{ opacity: 1, y: 0 }}
                                                             exit={{ opacity: 0, y: 10 }}
                                                             transition={{ duration: 0.2 }}
-                                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-3 bg-slate-700 text-white text-sm rounded-lg shadow-lg z-20 pointer-events-none"
+                                                            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-xs p-3 bg-slate-700 dark:bg-zinc-800 text-white dark:text-zinc-100 text-sm rounded-lg shadow-lg z-20 pointer-events-none"
                                                         >
                                                             <div className="font-bold text-base mb-1">{table.reservation.customerName}</div>
-                                                            <div className="text-slate-300">{table.reservation.customerPhone}</div>
-                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-700"></div>
+                                                            <div className="text-slate-300 dark:text-zinc-400">{table.reservation.customerPhone}</div>
+                                                            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-slate-700 dark:border-t-zinc-800"></div>
                                                         </motion.div>
                                                     )}
                                                 </AnimatePresence>
@@ -167,7 +167,7 @@ const Lobby = () => {
                                 </AnimatePresence>
                             </div>
                         ) : (
-                            <div className="flex justify-center items-center py-24 text-gray-500 font-semibold text-lg">
+                            <div className="flex justify-center items-center py-24 text-gray-500 dark:text-zinc-400 font-semibold text-lg">
                                 No tables available.
                             </div>
                         )}

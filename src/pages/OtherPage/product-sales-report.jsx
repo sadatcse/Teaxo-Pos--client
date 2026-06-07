@@ -168,7 +168,7 @@ const ProductSalesReport = () => {
     const totalQuantity = displays.reduce((sum, item) => sum + item.qty, 0);
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-200">
             <Mtitle title="Product Sales Report" rightcontent={
                 <div className="flex items-center gap-2">
                     <motion.button
@@ -176,7 +176,7 @@ const ProductSalesReport = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleExportPdf}
-                        className="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100"
+                        className="btn btn-ghost btn-circle text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-zinc-800"
                         title="Export as PDF"
                     >
                         {isExporting ? <span className="loading loading-spinner"></span> : <MdPictureAsPdf className="text-xl" />}
@@ -186,7 +186,7 @@ const ProductSalesReport = () => {
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={handleExportExcel}
-                        className="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100"
+                        className="btn btn-ghost btn-circle text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-zinc-800"
                         title="Export as Excel"
                     >
                         {isExporting ? <span className="loading loading-spinner"></span> : <MdGridOn className="text-xl" />}
@@ -198,14 +198,14 @@ const ProductSalesReport = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="card bg-base-100 shadow-xl mb-6"
+                className="card bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 shadow-xl mb-6"
             >
                 <div className="card-body p-4 sm:p-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                        <div className="form-control"><label className="label"><span className="label-text text-slate-700">Category</span></label><select value={category} onChange={(e) => setCategory(e.target.value)} className="select select-bordered w-full"><option value="All">All Categories</option>{categories.map((cat) => (<option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>))}</select></div>
-                        <div className="form-control"><label className="label"><span className="label-text text-slate-700">Product</span></label><select value={product} onChange={(e) => setProduct(e.target.value)} className="select select-bordered w-full"><option value="All">All Products</option>{products.map((prod) => (<option key={prod._id} value={prod.productName}>{prod.productName}</option>))}</select></div>
-                        <div className="form-control relative"><label className="label"><span className="label-text text-slate-700">From Date</span></label><DatePicker selected={startDate} onChange={(date) => setStartDate(date)} className="input input-bordered w-full pl-10" dateFormat="dd/MM/yyyy" /><FiCalendar className="absolute left-3 bottom-3 text-slate-400" /></div>
-                        <div className="form-control relative"><label className="label"><span className="label-text text-slate-700">To Date</span></label><DatePicker selected={endDate} onChange={(date) => setEndDate(date)} className="input input-bordered w-full pl-10" dateFormat="dd/MM/yyyy" /><FiCalendar className="absolute left-3 bottom-3 text-slate-400" /></div>
+                        <div className="form-control"><label className="label"><span className="label-text text-slate-700 dark:text-zinc-300 font-medium">Category</span></label><select value={category} onChange={(e) => setCategory(e.target.value)} className="select select-bordered bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-700 text-slate-800 dark:text-zinc-150 w-full"><option value="All">All Categories</option>{categories.map((cat) => (<option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>))}</select></div>
+                        <div className="form-control"><label className="label"><span className="label-text text-slate-700 dark:text-zinc-300 font-medium">Product</span></label><select value={product} onChange={(e) => setProduct(e.target.value)} className="select select-bordered bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-700 text-slate-800 dark:text-zinc-150 w-full"><option value="All">All Products</option>{products.map((prod) => (<option key={prod._id} value={prod.productName}>{prod.productName}</option>))}</select></div>
+                        <div className="form-control relative"><label className="label"><span className="label-text text-slate-700 dark:text-zinc-300 font-medium">From Date</span></label><DatePicker selected={startDate} onChange={(date) => setStartDate(date)} className="input input-bordered bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-700 text-slate-800 dark:text-zinc-150 w-full pl-10" dateFormat="dd/MM/yyyy" /><FiCalendar className="absolute left-3 bottom-3 text-slate-400 dark:text-zinc-400" /></div>
+                        <div className="form-control relative"><label className="label"><span className="label-text text-slate-700 dark:text-zinc-300 font-medium">To Date</span></label><DatePicker selected={endDate} onChange={(date) => setEndDate(date)} className="input input-bordered bg-white dark:bg-zinc-800 border-gray-300 dark:border-zinc-700 text-slate-800 dark:text-zinc-150 w-full pl-10" dateFormat="dd/MM/yyyy" /><FiCalendar className="absolute left-3 bottom-3 text-slate-400 dark:text-zinc-400" /></div>
                         <motion.button onClick={handleSearch} className="btn bg-blue-600 hover:bg-blue-700 text-white w-full" disabled={isLoading} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>{isLoading ? <span className="loading loading-spinner"></span> : <><FiSearch /> Search</>}</motion.button>
                     </div>
                 </div>
@@ -215,7 +215,7 @@ const ProductSalesReport = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                className="card bg-base-100 shadow-xl"
+                className="card bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-805 shadow-xl"
             >
                 <div className="card-body p-4 sm:p-6">
                     {isLoading ? (
@@ -223,7 +223,7 @@ const ProductSalesReport = () => {
                     ) : (
                         <div className="overflow-x-auto">
                             <table className="table w-full">
-                                <thead className="bg-blue-600 text-white uppercase text-xs">
+                                <thead className="bg-blue-600 dark:bg-zinc-800 text-white uppercase text-xs border-b border-blue-700 dark:border-zinc-700">
                                     <tr>
                                         <th className="p-3 rounded-tl-lg">SL.No</th>
                                         <th className="p-3">
@@ -247,7 +247,7 @@ const ProductSalesReport = () => {
                                     <AnimatePresence>
                                         {sortedDisplays.length > 0 ? (
                                             sortedDisplays.map((prod, index) => (
-                                                <motion.tr key={prod.productName + index} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                <motion.tr key={prod.productName + index} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-850/50 border-b border-slate-200 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-300">
                                                     <td className="p-3 text-center">{index + 1}</td>
                                                     <td className="p-3">{prod.productName}</td>
                                                     <td className="p-3 text-right">৳{prod.rate.toFixed(2)}</td>
@@ -256,7 +256,7 @@ const ProductSalesReport = () => {
                                             ))
                                         ) : (
                                             <tr>
-                                                <td colSpan="4" className="text-center py-16 text-slate-500">
+                                                <td colSpan="4" className="text-center py-16 text-slate-500 dark:text-zinc-400 bg-transparent">
                                                     No sales data found for the selected criteria.
                                                 </td>
                                             </tr>
@@ -264,10 +264,10 @@ const ProductSalesReport = () => {
                                     </AnimatePresence>
                                 </tbody>
                                 {displays.length > 0 && (
-                                     <tfoot className="font-bold bg-slate-100 text-slate-800">
+                                     <tfoot className="font-bold bg-slate-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 border-t border-slate-200 dark:border-zinc-705">
                                          <tr>
                                              <td className="p-3 rounded-bl-lg" colSpan="3">Grand Total</td>
-                                             <td className="p-3 text-center text-blue-600 rounded-br-lg">{totalQuantity}</td>
+                                             <td className="p-3 text-center text-blue-600 dark:text-blue-400 rounded-br-lg">{totalQuantity}</td>
                                          </tr>
                                      </tfoot>
                                 )}

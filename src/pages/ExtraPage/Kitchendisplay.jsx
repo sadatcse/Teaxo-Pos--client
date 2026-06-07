@@ -47,10 +47,10 @@ const ProductBatchRow = ({ batch, productName, isDrink, onStatusChange }) => {
     // Style based on status
     const getStatusStyle = (status) => {
         switch (status) {
-            case 'PENDING': return 'bg-yellow-50 border-yellow-200 text-yellow-800';
-            case 'COOKING': return 'bg-orange-50 border-orange-200 text-orange-800';
-            case 'SERVED': return 'bg-gray-50 border-gray-100 text-gray-400 opacity-60';
-            default: return 'bg-gray-50';
+            case 'PENDING': return 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-900/40 text-yellow-800 dark:text-yellow-400';
+            case 'COOKING': return 'bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-900/40 text-orange-800 dark:text-orange-400';
+            case 'SERVED': return 'bg-gray-50 dark:bg-zinc-800/40 border-gray-100 dark:border-zinc-800 text-gray-400 dark:text-zinc-500 opacity-60';
+            default: return 'bg-gray-50 dark:bg-zinc-800/50';
         }
     };
 
@@ -58,11 +58,11 @@ const ProductBatchRow = ({ batch, productName, isDrink, onStatusChange }) => {
         <div className={`flex items-center justify-between p-2 mb-1 rounded-md border ${getStatusStyle(batch.cookStatus)}`}>
             {/* Left: Info */}
             <div className="flex items-center gap-3">
-                <div className={`text-xs font-bold px-2 py-1 rounded border ${isDrink ? 'bg-blue-100 text-blue-700 border-blue-200' : 'bg-white border-gray-200'}`}>
+                <div className={`text-xs font-bold px-2 py-1 rounded border ${isDrink ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-900/40' : 'bg-white dark:bg-zinc-800 border-gray-200 dark:border-zinc-700 text-gray-800 dark:text-zinc-200'}`}>
                     +{batch.qty}
                 </div>
                 <div className="flex flex-col">
-                    <span className="text-xs text-gray-500 flex items-center gap-1">
+                    <span className="text-xs text-gray-500 dark:text-zinc-400 flex items-center gap-1">
                         <MdHistory /> {moment(batch.updateTime).format('h:mm:ss A')}
                     </span>
                     <span className={`text-xs font-semibold uppercase ${batch.cookStatus === 'SERVED' ? 'line-through' : ''}`}>
@@ -127,16 +127,16 @@ const ProductItem = ({ product, onUpdateHistory }) => {
     const isDrink = product.drinkBar === true;
 
     return (
-        <li className="flex flex-col w-full py-3 border-b border-base-200 last:border-none">
+        <li className="flex flex-col w-full py-3 border-b border-base-200 dark:border-zinc-800 last:border-none">
             {/* Header: Total Product Summary */}
             <div className="flex items-center gap-3 mb-2">
-                <div className={`p-2 rounded-lg ${isDrink ? 'bg-blue-100 text-blue-600' : 'bg-orange-100 text-orange-600'}`}>
+                <div className={`p-2 rounded-lg ${isDrink ? 'bg-blue-100 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' : 'bg-orange-100 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'}`}>
                     {isDrink ? <IoBeerOutline size={22} /> : <MdFastfood size={22} />}
                 </div>
                 <div>
                     <div className="flex items-center gap-2">
-                        <span className="font-extrabold text-lg">Total: {product.qty}x</span>
-                        <span className="font-bold text-base text-gray-700">{product.productName}</span>
+                        <span className="font-extrabold text-lg text-gray-850 dark:text-zinc-100">Total: {product.qty}x</span>
+                        <span className="font-bold text-base text-gray-700 dark:text-zinc-300">{product.productName}</span>
                     </div>
                 </div>
             </div>
@@ -163,10 +163,10 @@ const OrderCard = ({ order, onUpdate }) => {
 
     const getOrderTypeDetails = (type) => {
         switch (type) {
-            case 'dine-in': return { className: 'bg-rose-600 text-white', icon: <IoRestaurant size={24} /> };
-            case 'delivery': return { className: 'bg-emerald-600 text-white', icon: <MdDeliveryDining size={24} /> };
-            case 'takeaway': return { className: 'bg-amber-500 text-white', icon: <BsHandbagFill size={20} /> };
-            default: return { className: 'bg-slate-500 text-white', icon: <MdSoupKitchen size={24} /> };
+            case 'dine-in': return { className: 'bg-rose-600 dark:bg-rose-900/80 text-white', icon: <IoRestaurant size={24} /> };
+            case 'delivery': return { className: 'bg-emerald-600 dark:bg-emerald-900/80 text-white', icon: <MdDeliveryDining size={24} /> };
+            case 'takeaway': return { className: 'bg-amber-500 dark:bg-amber-700/80 text-white', icon: <BsHandbagFill size={20} /> };
+            default: return { className: 'bg-slate-500 dark:bg-zinc-700 text-white', icon: <MdSoupKitchen size={24} /> };
         }
     };
 
@@ -239,7 +239,7 @@ const OrderCard = ({ order, onUpdate }) => {
     });
 
     return (
-        <div className="card bg-white shadow-xl border border-gray-200 flex flex-col h-full">
+        <div className="card bg-white dark:bg-zinc-900 shadow-xl border border-gray-200 dark:border-zinc-800 flex flex-col h-full text-gray-800 dark:text-zinc-100">
             <div className={`p-4 rounded-t-xl flex justify-between items-start ${orderTypeDetails.className}`}>
                 <div className="flex gap-3">
                     <div className="p-2 bg-white/20 rounded-lg backdrop-blur-sm h-fit">
@@ -252,7 +252,7 @@ const OrderCard = ({ order, onUpdate }) => {
                                 {order.customerName}
                              </span>
                              {order.kotRound > 0 && (
-                                <span className="badge badge-sm bg-yellow-400 text-black border-none font-bold">
+                                <span className="badge badge-sm bg-yellow-400 dark:bg-yellow-950/60 dark:text-yellow-300 border-none font-bold">
                                     Round {order.kotRound}
                                 </span>
                              )}
@@ -277,9 +277,9 @@ const OrderCard = ({ order, onUpdate }) => {
                 </ul>
             </div>
 
-            <div className="p-3 border-t border-gray-100 bg-gray-50 rounded-b-xl">
+            <div className="p-3 border-t border-gray-100 dark:border-zinc-800 bg-gray-50 dark:bg-zinc-850 rounded-b-xl">
                 <button 
-                    className={`btn btn-block ${hasPending ? 'btn-neutral' : 'btn-disabled'}`}
+                    className={`btn btn-block ${hasPending ? 'btn-neutral' : 'btn-disabled dark:bg-zinc-800 dark:text-zinc-500'}`}
                     onClick={handleCookAllPending}
                     disabled={!hasPending}
                 >
@@ -372,26 +372,26 @@ const Kitchendisplay = () => {
     };
 
     return (
-        <div className="bg-base-200 min-h-screen p-4 font-sans">
+        <div className="bg-base-200 dark:bg-zinc-950 min-h-screen p-4 font-sans text-gray-800 dark:text-zinc-100">
             <div className="max-w-[1920px] mx-auto">
-                <div className="flex flex-col sm:flex-row justify-between items-center mb-8 bg-white p-5 rounded-2xl shadow-sm border border-gray-200">
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-8 bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border border-gray-200 dark:border-zinc-800">
                     <div className="flex items-center gap-4">
-                        <div className="p-3 bg-rose-100 text-rose-600 rounded-xl">
+                        <div className="p-3 bg-rose-100 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 rounded-xl">
                             <MdOutlineFoodBank size={32} />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-black text-gray-800 tracking-tight">KITCHEN BOARD</h1>
-                            <p className="text-gray-500 font-medium">Live Orders Management</p>
+                            <h1 className="text-3xl font-black text-gray-800 dark:text-zinc-100 tracking-tight">KITCHEN BOARD</h1>
+                            <p className="text-gray-500 dark:text-zinc-400 font-medium">Live Orders Management</p>
                         </div>
                     </div>
                     
                     <div className="flex items-center gap-4 mt-4 sm:mt-0">
-                        <div className="stat-value text-2xl font-bold text-gray-700 bg-gray-50 px-4 py-2 rounded-lg border">
+                        <div className="stat-value text-2xl font-bold text-gray-700 dark:text-zinc-300 bg-gray-50 dark:bg-zinc-800 px-4 py-2 rounded-lg border dark:border-zinc-700">
                             {orders.length} <span className="text-sm font-normal text-gray-400">Active</span>
                         </div>
                         <button 
                             onClick={() => setIsAlertEnabled(!isAlertEnabled)} 
-                            className={`btn btn-circle ${isAlertEnabled ? 'btn-neutral' : 'btn-ghost'}`}
+                            className={`btn btn-circle ${isAlertEnabled ? 'btn-neutral dark:bg-zinc-700 dark:text-white' : 'btn-ghost dark:text-zinc-455'}`}
                         >
                             {isAlertEnabled ? <IoVolumeHighOutline size={24} /> : <IoVolumeMuteOutline size={24} />}
                         </button>
@@ -414,7 +414,7 @@ const Kitchendisplay = () => {
                             <OrderCard key={order._id} order={order} onUpdate={handleUpdateOrder} />
                         ))}
                         {orders.length === 0 && (
-                            <div className="col-span-full text-center py-20 text-gray-400">
+                            <div className="col-span-full text-center py-20 text-gray-400 dark:text-zinc-500">
                                 <FaCheckCircle size={60} className="mx-auto mb-4 opacity-20" />
                                 <p className="text-xl font-bold">All Orders Cleared</p>
                             </div>

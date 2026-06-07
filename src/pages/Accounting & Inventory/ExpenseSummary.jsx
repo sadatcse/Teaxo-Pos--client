@@ -67,12 +67,18 @@ const ExpenseSummary = () => {
     const chartOptions = { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Expense Distribution' } } };
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen">
             <Mtitle title="Expense Summary" rightcontent={
                 <div className='flex items-center gap-4'>
-                    <div className="relative"><FiCalendar className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" /><DatePicker selected={fromDate} onChange={(date) => setFromDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full pl-10" /></div>
-                    <span className="text-slate-500">to</span>
-                    <div className="relative"><FiCalendar className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" /><DatePicker selected={toDate} onChange={(date) => setToDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full pl-10" /></div>
+                    <div className="relative">
+                        <FiCalendar className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
+                        <DatePicker selected={fromDate} onChange={(date) => setFromDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full pl-10 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100" />
+                    </div>
+                    <span className="text-slate-500 dark:text-zinc-400">to</span>
+                    <div className="relative">
+                        <FiCalendar className="absolute top-1/2 left-3 -translate-y-1/2 text-gray-400" />
+                        <DatePicker selected={toDate} onChange={(date) => setToDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full pl-10 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100" />
+                    </div>
                 </div>
             } />
 
@@ -80,41 +86,83 @@ const ExpenseSummary = () => {
                 <>
                     {/* Summary Cards */}
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-                        <div className="stat bg-base-100 shadow-lg rounded-xl"><div className="stat-figure text-red-500"><FiTrendingUp className="text-3xl" /></div><div className="stat-title">Total Expense</div><div className="stat-value text-red-500">{totals.totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</div></div>
-                        <div className="stat bg-base-100 shadow-lg rounded-xl"><div className="stat-figure text-green-500"><FiCheckCircle className="text-3xl" /></div><div className="stat-title">Total Paid</div><div className="stat-value text-green-500">{totals.totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</div></div>
-                        <div className="stat bg-base-100 shadow-lg rounded-xl"><div className="stat-figure text-yellow-500"><FiAlertCircle className="text-3xl" /></div><div className="stat-title">Total Due</div><div className="stat-value text-yellow-500">{totalDue.toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</div></div>
+                        <div className="stat bg-base-100 dark:bg-zinc-900 shadow-lg rounded-xl border dark:border-zinc-800">
+                            <div className="stat-figure text-red-500"><FiTrendingUp className="text-3xl" /></div>
+                            <div className="stat-title dark:text-zinc-400">Total Expense</div>
+                            <div className="stat-value text-red-500 dark:text-red-400">{totals.totalExpense.toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</div>
+                        </div>
+                        <div className="stat bg-base-100 dark:bg-zinc-900 shadow-lg rounded-xl border dark:border-zinc-800">
+                            <div className="stat-figure text-green-500"><FiCheckCircle className="text-3xl" /></div>
+                            <div className="stat-title dark:text-zinc-400">Total Paid</div>
+                            <div className="stat-value text-green-500 dark:text-emerald-450">{totals.totalPaid.toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</div>
+                        </div>
+                        <div className="stat bg-base-100 dark:bg-zinc-900 shadow-lg rounded-xl border dark:border-zinc-800">
+                            <div className="stat-figure text-yellow-500"><FiAlertCircle className="text-3xl" /></div>
+                            <div className="stat-title dark:text-zinc-400">Total Due</div>
+                            <div className="stat-value text-yellow-500 dark:text-yellow-500">{totalDue.toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</div>
+                        </div>
                     </motion.div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
                         {/* Left Side: Category Breakdown & Chart */}
                         <div className="lg:col-span-2 space-y-8">
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card bg-base-100 shadow-xl"><div className="p-4">
-                                <h2 className="text-xl font-semibold mb-4 text-slate-700">Category Breakdown</h2>
-                                <div className="overflow-x-auto"><table className="table w-full">
-                                    <thead className='bg-blue-600 text-white uppercase text-xs'><tr><th className="p-3 rounded-tl-lg">Category</th><th className="p-3 text-center">Transactions</th><th className="p-3 text-right">Total Amount</th><th className="p-3 text-right rounded-tr-lg">Paid Amount</th></tr></thead>
-                                    <tbody>{summaryData.length === 0 ? (<tr><td colSpan="4" className="text-center py-10 text-slate-700">No data for this period.</td></tr>) : (summaryData.map((item) => (<tr key={item.category} className="hover:bg-blue-50 border-b text-sm"><td className="p-3 font-semibold">{item.category}</td><td className="p-3 text-center">{item.count}</td><td className="p-3 text-right font-medium">{item.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td><td className="p-3 text-right">{item.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td></tr>)))}</tbody>
-                                </table></div>
-                            </div></motion.div>
-                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="card bg-base-100 shadow-xl"><div className="p-4"><Bar options={chartOptions} data={chartData} /></div></motion.div>
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl border dark:border-zinc-800">
+                                <div className="p-4">
+                                    <h2 className="text-xl font-semibold mb-4 text-slate-700 dark:text-zinc-200">Category Breakdown</h2>
+                                    <div className="overflow-x-auto">
+                                        <table className="table w-full">
+                                            <thead className='bg-blue-600 text-white uppercase text-xs'>
+                                                <tr>
+                                                    <th className="p-3 rounded-tl-lg">Category</th>
+                                                    <th className="p-3 text-center">Transactions</th>
+                                                    <th className="p-3 text-right">Total Amount</th>
+                                                    <th className="p-3 text-right rounded-tr-lg">Paid Amount</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {summaryData.length === 0 ? (
+                                                    <tr><td colSpan="4" className="text-center py-10 text-slate-700 dark:text-zinc-400">No data for this period.</td></tr>
+                                                ) : (
+                                                    summaryData.map((item) => (
+                                                        <tr key={item.category} className="hover:bg-blue-50 dark:hover:bg-zinc-800/50 border-b border-gray-250 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-300">
+                                                            <td className="p-3 font-semibold">{item.category}</td>
+                                                            <td className="p-3 text-center">{item.count}</td>
+                                                            <td className="p-3 text-right font-medium">{item.totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                            <td className="p-3 text-right">{item.paidAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                                                        </tr>
+                                                    ))
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </motion.div>
+                            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl border dark:border-zinc-800">
+                                <div className="p-4"><Bar options={chartOptions} data={chartData} /></div>
+                            </motion.div>
                         </div>
 
                         {/* Right Side: Vendor Dues */}
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="card bg-base-100 shadow-xl"><div className="p-4">
-                            <h2 className="text-xl font-semibold mb-4 text-slate-700">Top Vendor Dues</h2>
-                            <div className="space-y-3">
-                                {vendorDues.length === 0 ? <p className="text-center text-slate-500 py-8">No outstanding vendor dues for this period.</p> :
-                                    vendorDues.map((vendor, index) => (
-                                        <div key={vendor.vendorId || index} className="flex justify-between items-center p-3 bg-slate-50 rounded-lg">
-                                            <span className="font-semibold text-slate-600">{vendor.vendorName}</span>
-                                            <span className="font-bold text-yellow-600">{vendor.totalDue.toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl border dark:border-zinc-800">
+                            <div className="p-4">
+                                <h2 className="text-xl font-semibold mb-4 text-slate-700 dark:text-zinc-200">Top Vendor Dues</h2>
+                                <div className="space-y-3">
+                                    {vendorDues.length === 0 ? (
+                                        <p className="text-center text-slate-500 dark:text-zinc-400 py-8">No outstanding vendor dues for this period.</p>
+                                    ) : (
+                                        vendorDues.map((vendor, index) => (
+                                            <div key={vendor.vendorId || index} className="flex justify-between items-center p-3 bg-slate-50 dark:bg-zinc-950/40 rounded-lg border dark:border-zinc-850">
+                                                <span className="font-semibold text-slate-600 dark:text-zinc-300">{vendor.vendorName}</span>
+                                                <span className="font-bold text-yellow-600 dark:text-yellow-500">{vendor.totalDue.toLocaleString(undefined, { minimumFractionDigits: 2 })} BDT</span>
                                                 <Link to={`/dashboard/vendor-ledger/${vendor.vendorId}`} title="View Ledger">
-                                                        <FiBookOpen className="text-blue-500 hover:text-blue-700 cursor-pointer transition-colors" />
-                                                    </Link>
-                                        </div>
-                                    ))
-                                }
+                                                    <FiBookOpen className="text-blue-500 hover:text-blue-700 cursor-pointer transition-colors" />
+                                                </Link>
+                                            </div>
+                                        ))
+                                    )}
+                                </div>
                             </div>
-                        </div></motion.div>
+                        </motion.div>
                     </div>
                 </>
             )}

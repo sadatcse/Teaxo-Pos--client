@@ -11,43 +11,43 @@ import MtableLoading from "../../components library/MtableLoading";
 
 // Component for Displaying an Empty or Error State
 const MEmptyState = ({ message, details }) => (
-    <div className="text-center py-20 px-6 bg-slate-50 rounded-xl">
+    <div className="text-center py-20 px-6 bg-slate-50 dark:bg-zinc-900 border dark:border-zinc-800 rounded-xl">
         <FaExclamationCircle className="mx-auto text-4xl text-yellow-400 mb-4" />
-        <h3 className="text-lg font-semibold text-slate-700">{message}</h3>
-        <p className="text-slate-500 text-sm mt-1">{details}</p>
+        <h3 className="text-lg font-semibold text-slate-700 dark:text-zinc-200">{message}</h3>
+        <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">{details}</p>
     </div>
 );
 
 // Card for Combo Suggestion
 const ComboSuggestionCard = ({ suggestion }) => (
-    <div className="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl shadow-md border border-emerald-200">
+    <div className="bg-gradient-to-br from-green-50 to-emerald-100 dark:from-emerald-950/20 dark:to-green-950/40 p-6 rounded-xl shadow-md border border-emerald-200 dark:border-emerald-900/50">
         <div className="flex items-center gap-3 mb-4">
             <FaStar className="text-2xl text-yellow-400" />
-            <h3 className="text-xl font-bold text-emerald-800">AI Combo Suggestion</h3>
+            <h3 className="text-xl font-bold text-emerald-800 dark:text-emerald-400 font-bold">AI Combo Suggestion</h3>
         </div>
-        <div className="space-y-3 text-slate-700">
-            <p><span className="font-semibold">Suggested Name:</span> {suggestion.name || 'N/A'}</p>
+        <div className="space-y-3 text-slate-700 dark:text-zinc-300">
+            <p><span className="font-semibold text-slate-800 dark:text-zinc-200">Suggested Name:</span> {suggestion.name || 'N/A'}</p>
             <p>
-                <span className="font-semibold">Items:</span> 
+                <span className="font-semibold text-slate-800 dark:text-zinc-200">Items:</span> 
                 {/* CORRECTED: Map the array to get the 'productName' from each object */}
                 {Array.isArray(suggestion.items) ? suggestion.items.map(item => item.productName || item._id).join(', ') : suggestion.items || 'N/A'}
             </p>
-            <p><span className="font-semibold">Suggested Price:</span> ৳{suggestion.price || '0.00'}</p>
-            <p><span className="font-semibold">Reasoning:</span> {suggestion.reason || 'No reason provided.'}</p>
+            <p><span className="font-semibold text-slate-800 dark:text-zinc-200">Suggested Price:</span> ৳{suggestion.price || '0.00'}</p>
+            <p><span className="font-semibold text-slate-800 dark:text-zinc-200">Reasoning:</span> {suggestion.reason || 'No reason provided.'}</p>
         </div>
     </div>
 );
 
 // Card for Item Improvement
 const ItemImprovementCard = ({ suggestion }) => (
-    <div className="bg-gradient-to-br from-orange-50 to-amber-100 p-6 rounded-xl shadow-md border border-amber-200">
+    <div className="bg-gradient-to-br from-orange-50 to-amber-100 dark:from-amber-950/20 dark:to-orange-950/40 p-6 rounded-xl shadow-md border border-amber-200 dark:border-amber-900/50">
         <div className="flex items-center gap-3 mb-4">
             <FaWrench className="text-2xl text-orange-500" />
-            <h3 className="text-xl font-bold text-orange-800">Item Improvement Opportunity</h3>
+            <h3 className="text-xl font-bold text-orange-850 dark:text-amber-400 font-bold">Item Improvement Opportunity</h3>
         </div>
-        <div className="space-y-3 text-slate-700">
-            <p><span className="font-semibold">Underperforming Item:</span> {suggestion.name || 'N/A'}</p>
-            <p><span className="font-semibold">Suggestion:</span> {suggestion.suggestion || 'No suggestion provided.'}</p>
+        <div className="space-y-3 text-slate-700 dark:text-zinc-300">
+            <p><span className="font-semibold text-slate-800 dark:text-zinc-200">Underperforming Item:</span> {suggestion.name || 'N/A'}</p>
+            <p><span className="font-semibold text-slate-800 dark:text-zinc-200">Suggestion:</span> {suggestion.suggestion || 'No suggestion provided.'}</p>
         </div>
     </div>
 );
@@ -81,11 +81,11 @@ const MenuOptimizer = () => {
     }, [fetchSuggestion]);
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 dark:text-zinc-100">
             <Mtitle title="AI Menu Optimizer" />
             
             <motion.div 
-                className="mt-4 text-slate-600 max-w-2xl"
+                className="mt-4 text-slate-600 dark:text-zinc-350 max-w-2xl"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}

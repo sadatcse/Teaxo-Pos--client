@@ -8,10 +8,10 @@ import MtableLoading from "../../components library/MtableLoading";
 
 // Component for Displaying an Empty or Info State
 const MEmptyState = ({ message, details }) => (
-    <div className="text-center py-20 px-6 bg-slate-50 rounded-xl">
+    <div className="text-center py-20 px-6 bg-slate-50 dark:bg-zinc-900 border dark:border-zinc-800 rounded-xl">
         <FaExclamationCircle className="mx-auto text-4xl text-yellow-400 mb-4" />
-        <h3 className="text-lg font-semibold text-slate-700">{message}</h3>
-        <p className="text-slate-500 text-sm mt-1">{details}</p>
+        <h3 className="text-lg font-semibold text-slate-700 dark:text-zinc-200">{message}</h3>
+        <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">{details}</p>
     </div>
 );
 
@@ -24,18 +24,18 @@ const PurchaseCard = ({ item }) => {
     else borderColor = 'border-yellow-500';
 
     return (
-        <div className={`bg-base-100 p-5 rounded-xl shadow-md border-l-4 ${borderColor}`}>
-            <h3 className="text-xl font-bold text-slate-800">{item.name}</h3>
+        <div className={`bg-base-100 dark:bg-zinc-900 p-5 rounded-xl shadow-md border dark:border-zinc-800 border-l-4 ${borderColor}`}>
+            <h3 className="text-xl font-bold text-slate-800 dark:text-zinc-200">{item.name}</h3>
             <div className="grid grid-cols-2 gap-4 mt-3 text-sm">
-                <p className="text-slate-500">Current Stock: <span className="font-semibold text-slate-700">{item.currentStock} {item.unit}</span></p>
+                <p className="text-slate-500 dark:text-zinc-400">Current Stock: <span className="font-semibold text-slate-700 dark:text-zinc-355">{item.currentStock} {item.unit}</span></p>
                 <p className={`font-bold ${borderColor.replace('border-', 'text-')}`}>~{item.daysRemaining} days left</p>
             </div>
-            <div className="mt-4 pt-4 border-t border-slate-200 bg-slate-50 p-3 rounded-lg">
-                <p className="font-semibold text-blue-600">
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-950 p-3 rounded-lg">
+                <p className="font-semibold text-blue-600 dark:text-blue-400">
                     <FaShoppingCart className="inline mr-2" />
                     AI Suggestion: Purchase {item.suggestedPurchaseQty} {item.unit}
                 </p>
-                <p className="text-xs text-slate-500 mt-1 pl-6">{item.justification}</p>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 mt-1 pl-6">{item.justification}</p>
             </div>
         </div>
     );
@@ -71,10 +71,10 @@ const AiPurchaseAdvisor = () => {
     }, [fetchSuggestions]);
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 dark:text-zinc-100">
             <Mtitle title="AI Purchase Advisor" />
             <motion.div 
-                className="mt-4 text-slate-600 max-w-2xl"
+                className="mt-4 text-slate-600 dark:text-zinc-350 max-w-2xl"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}

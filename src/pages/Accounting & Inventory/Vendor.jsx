@@ -143,17 +143,23 @@ const handleRemove = (id) => {
 };
 
     const handleInputChange = (e) => { setFormData({ ...formData, [e.target.name]: e.target.value }); };
-    const renderStatusBadge = (status) => { const styles = { Active: "bg-green-100 text-green-700", Inactive: "bg-red-100 text-red-700", }; return (<span className={`px-3 py-1 text-sm font-medium rounded-full ${styles[status] || 'bg-gray-100 text-gray-700'}`}>{status}</span>); };
+    const renderStatusBadge = (status) => { 
+        const styles = { 
+            Active: "bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400", 
+            Inactive: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400", 
+        }; 
+        return (<span className={`px-3 py-1 text-sm font-medium rounded-full ${styles[status] || 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400'}`}>{status}</span>); 
+    };
     const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: vendors });
 
-    const inputClass = "w-full border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
+    const inputClass = "w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 disabled:bg-gray-100 dark:disabled:bg-zinc-900 disabled:text-gray-400 dark:disabled:text-zinc-500";
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen">
             <Mtitle title="Vendor Management" rightcontent={
                 <div className='flex items-center gap-4'>
                     <div className='relative md:w-80'>
-                        <TfiSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gray-400' />
+                        <TfiSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-lg text-gray-400 dark:text-zinc-500' />
                         <input type="text" className={`${inputClass} pl-10`} placeholder='Search by Name or ID...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
                     {canPerform("Vendor Management", "add") && (
@@ -164,18 +170,18 @@ const handleRemove = (id) => {
                 </div>
             } />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl mt-6">
                 <div className="p-4">
-                    <div className="text-sm text-slate-700 mb-4">{rowsPerPageAndTotal}</div>
+                    <div className="text-sm text-slate-700 dark:text-zinc-400 mb-4">{rowsPerPageAndTotal}</div>
                     {isTableLoading ? <MtableLoading /> : (
                         <div className="overflow-x-auto">
                             <table className="table w-full">
                                 <thead className='bg-blue-600 text-white uppercase text-xs font-medium tracking-wider'><tr><th className="p-3 rounded-tl-lg">Vendor ID</th><th className="p-3">Vendor Name</th><th className="p-3">Phone</th><th className="p-3">Email</th><th className="p-3">Status</th><th className="p-3 rounded-tr-lg text-center">Actions</th></tr></thead>
                                 <tbody>
                                     <AnimatePresence>
-                                        {paginatedData.length === 0 ? (<tr><td colSpan="6" className="text-center py-8 text-slate-700">No vendors found.</td></tr>) : (
+                                        {paginatedData.length === 0 ? (<tr><td colSpan="6" className="text-center py-8 text-slate-700 dark:text-zinc-400">No vendors found.</td></tr>) : (
                                             paginatedData.map((vendor) => (
-                                                <motion.tr key={vendor._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                <motion.tr key={vendor._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-300">
                                                     <td className="p-3 font-medium">{vendor.vendorID}</td><td className="p-3">{vendor.vendorName}</td><td className="p-3">{vendor.primaryPhone}</td><td className="p-3">{vendor.primaryEmail || 'N/A'}</td><td className="p-3">{renderStatusBadge(vendor.status)}</td>
 <td className="p-3 text-center">
     <div className="flex justify-center items-center gap-2">
@@ -212,23 +218,23 @@ const handleRemove = (id) => {
 
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-2xl max-h-screen overflow-y-auto">
-                            <h2 className="text-xl font-semibold text-blue-600 mb-6">{editId ? 'Edit Vendor' : 'Create New Vendor'}</h2>
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-2xl max-h-screen overflow-y-auto">
+                            <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-6">{editId ? 'Edit Vendor' : 'Create New Vendor'}</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div><label className="label-text text-slate-700">Vendor ID *</label><input type="text" name="vendorID" value={formData.vendorID} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="e.g., V-001" required disabled={!!editId} /></div>
-                                <div><label className="label-text text-slate-700">Vendor Name *</label><input type="text" name="vendorName" value={formData.vendorName} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Enter vendor name" required /></div>
-                                <div><label className="label-text text-slate-700">Primary Phone *</label><input type="text" name="primaryPhone" value={formData.primaryPhone} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Enter phone number" required /></div>
-                                <div><label className="label-text text-slate-700">Primary Email</label><input type="email" name="primaryEmail" value={formData.primaryEmail} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Enter email address" /></div>
-                                <div className="md:col-span-2"><label className="label-text text-slate-700">Address</label><input type="text" name="address" value={formData.address} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Enter vendor address" /></div>
-                                <div><label className="label-text text-slate-700">Contact Person Name</label><input type="text" name="contactPersonName" value={formData.contactPersonName} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Optional" /></div>
-                                <div><label className="label-text text-slate-700">Contact Person Phone</label><input type="text" name="contactPersonPhone" value={formData.contactPersonPhone} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Optional" /></div>
-                                <div><label className="label-text text-slate-700">Status *</label><select name="status" value={formData.status} onChange={handleInputChange} className={`${inputClass} mt-1`}><option>Active</option><option>Inactive</option></select></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Vendor ID *</label><input type="text" name="vendorID" value={formData.vendorID} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="e.g., V-001" required disabled={!!editId} /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Vendor Name *</label><input type="text" name="vendorName" value={formData.vendorName} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Enter vendor name" required /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Primary Phone *</label><input type="text" name="primaryPhone" value={formData.primaryPhone} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Enter phone number" required /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Primary Email</label><input type="email" name="primaryEmail" value={formData.primaryEmail} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Enter email address" /></div>
+                                <div className="md:col-span-2"><label className="label-text text-slate-700 dark:text-zinc-300">Address</label><input type="text" name="address" value={formData.address} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Enter vendor address" /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Contact Person Name</label><input type="text" name="contactPersonName" value={formData.contactPersonName} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Optional" /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Contact Person Phone</label><input type="text" name="contactPersonPhone" value={formData.contactPersonPhone} onChange={handleInputChange} className={`${inputClass} mt-1`} placeholder="Optional" /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Status *</label><select name="status" value={formData.status} onChange={handleInputChange} className={`${inputClass} mt-1`}><option className="dark:bg-zinc-800 dark:text-zinc-100">Active</option><option className="dark:bg-zinc-800 dark:text-zinc-100">Inactive</option></select></div>
                             </div>
-                            <div className="mt-4"><label className="label-text text-slate-700">Notes</label><textarea name="notes" value={formData.notes} onChange={handleInputChange} className={`${inputClass} w-full mt-1`} placeholder="Add any relevant notes here..."></textarea></div>
+                            <div className="mt-4"><label className="label-text text-slate-700 dark:text-zinc-300">Notes</label><textarea name="notes" value={formData.notes} onChange={handleInputChange} className={`${inputClass} w-full mt-1`} placeholder="Add any relevant notes here..."></textarea></div>
                             <div className="flex justify-end space-x-4 mt-8">
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn rounded-xl">Cancel</motion.button>
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditVendor} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isFormLoading}>{isFormLoading ? 'Saving...' : editId ? 'Save Changes' : 'Create Vendor'}</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn-cancel">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditVendor} className="btn-confirm" disabled={isFormLoading}>{isFormLoading ? 'Saving...' : editId ? 'Save Changes' : 'Create Vendor'}</motion.button>
                             </div>
                         </motion.div>
                     </div>

@@ -85,11 +85,11 @@ const MenuCosting = () => {
     const handleProductClick = (product) => setSelectedProduct(product);
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 dark:text-zinc-100">
             <Mtitle title="Menu Costing Analysis" />
 
             <motion.div 
-                className="card bg-base-100 shadow-xl mt-6"
+                className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl mt-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -98,7 +98,7 @@ const MenuCosting = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                         <div className="lg:col-span-4 flex flex-col gap-6">
                             <div>
-                                <h2 className="text-xl font-semibold text-blue-600 mb-4 flex items-center gap-3">
+                                <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-3">
                                     <MdFoodBank className="text-2xl"/> 
                                     <span>Select a Category</span>
                                 </h2>
@@ -111,7 +111,7 @@ const MenuCosting = () => {
                                                 <motion.div key={cat._id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
                                                     <button 
                                                         onClick={() => handleCategoryClick(cat)}
-                                                        className={`btn btn-block justify-start rounded-xl ${selectedCategory === cat.categoryName ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-ghost'}`}
+                                                        className={`btn btn-block justify-start rounded-xl ${selectedCategory === cat.categoryName ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-ghost dark:text-zinc-300 dark:hover:bg-zinc-800'}`}
                                                     >
                                                         {cat.categoryName}
                                                     </button>
@@ -125,20 +125,20 @@ const MenuCosting = () => {
                             <div className="divider lg:hidden"></div>
 
                             <div>
-                               <h2 className="text-xl font-semibold text-blue-600 mb-4 flex items-center gap-3">
+                               <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-3">
                                     <FaUtensils className="text-2xl"/> 
                                     <span>Choose a Product</span>
                                 </h2>
                                 <div className="space-y-2 max-h-96 overflow-y-auto pr-2">
                                     <AnimatePresence>
                                         {loadingProducts && <div className="text-center p-4"><InlineSpinner /></div>}
-                                        {!selectedCategory && !loadingProducts && <p className="text-sm text-slate-700 p-4 text-center">Select a category to see products.</p>}
-                                        {selectedCategory && !loadingProducts && products.length === 0 && <p className="text-sm text-slate-700 p-4 text-center">No products found here.</p>}
+                                        {!selectedCategory && !loadingProducts && <p className="text-sm text-slate-700 dark:text-zinc-400 p-4 text-center">Select a category to see products.</p>}
+                                        {selectedCategory && !loadingProducts && products.length === 0 && <p className="text-sm text-slate-700 dark:text-zinc-400 p-4 text-center">No products found here.</p>}
                                         {products.map(prod => (
                                             <motion.div key={prod._id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
                                                 <button
                                                     onClick={() => handleProductClick(prod)}
-                                                    className={`btn btn-block justify-start rounded-xl ${selectedProduct?._id === prod._id ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-ghost'}`}
+                                                    className={`btn btn-block justify-start rounded-xl ${selectedProduct?._id === prod._id ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-ghost dark:text-zinc-300 dark:hover:bg-zinc-800'}`}
                                                 >
                                                     {prod.productName}
                                                 </button>
@@ -149,18 +149,18 @@ const MenuCosting = () => {
                             </div>
                         </div>
 
-                        <div className="lg:col-span-8 bg-base-200 rounded-2xl p-4 sm:p-6 min-h-[600px] flex items-center justify-center">
+                        <div className="lg:col-span-8 bg-base-200 dark:bg-zinc-950 rounded-2xl p-4 sm:p-6 min-h-[600px] flex items-center justify-center">
                             <AnimatePresence mode="wait">
                                 {loadingCosting && (
                                     <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center h-full text-center">
                                         <MtableLoading />
-                                        <p className="-mt-16 text-slate-700 font-semibold">Calculating Costs...</p>
+                                        <p className="-mt-16 text-slate-700 dark:text-zinc-300 font-semibold">Calculating Costs...</p>
                                     </motion.div>
                                 )}
 
                                 {!selectedProduct && !loadingCosting && (
-                                    <motion.div key="placeholder" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="flex flex-col items-center justify-center h-full text-center text-slate-700">
-                                        <FaFileInvoiceDollar className="text-7xl text-blue-200 mb-4" />
+                                    <motion.div key="placeholder" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="flex flex-col items-center justify-center h-full text-center text-slate-700 dark:text-zinc-400">
+                                        <FaFileInvoiceDollar className="text-7xl text-blue-200 dark:text-zinc-700 mb-4" />
                                         <h3 className="text-2xl font-bold">Cost Analysis</h3>
                                         <p className="max-w-xs mx-auto mt-2 text-sm">Select a product to view its detailed cost breakdown and profitability report.</p>
                                     </motion.div>
@@ -168,31 +168,31 @@ const MenuCosting = () => {
 
                                 {costingDetails && !loadingCosting && (
                                     costingDetails.error ? (
-                                        <motion.div key="error" initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col items-center justify-center h-full w-full max-w-md mx-auto p-8 bg-base-100 rounded-2xl shadow-xl border border-red-500/20 text-center">
+                                        <motion.div key="error" initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col items-center justify-center h-full w-full max-w-md mx-auto p-8 bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 rounded-2xl shadow-xl border-red-500/20 text-center">
                                             <FaExclamationTriangle className="text-5xl text-red-500 mb-5" />
-                                            <h3 className="text-2xl font-bold text-slate-700 mb-3">{costingDetails.error}</h3>
-                                            <p className="text-slate-700 leading-relaxed text-sm">{costingDetails.suggestion}</p>
+                                            <h3 className="text-2xl font-bold text-slate-700 dark:text-zinc-200 mb-3">{costingDetails.error}</h3>
+                                            <p className="text-slate-700 dark:text-zinc-400 leading-relaxed text-sm">{costingDetails.suggestion}</p>
                                         </motion.div>
                                     ) : (
                                         <motion.div key="details" className='w-full' initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                            <h2 className="text-3xl font-bold text-slate-700 border-b-2 border-slate-200 pb-4 mb-6">{costingDetails.productName}</h2>
+                                            <h2 className="text-3xl font-bold text-slate-700 dark:text-zinc-100 border-b-2 border-slate-200 dark:border-zinc-800 pb-4 mb-6">{costingDetails.productName}</h2>
                                             <div className='mb-8'>
-                                                <h3 className='text-xl font-semibold text-blue-600 mb-4 flex items-center gap-3'><FaCalculator /> Cost & Price Summary</h3>
+                                                <h3 className='text-xl font-semibold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-3'><FaCalculator /> Cost & Price Summary</h3>
                                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                                    <motion.div whileHover={{ scale: 1.05 }} className="stat bg-base-100 rounded-2xl shadow"><div className="stat-title text-slate-700">Selling Price</div><div className="stat-value text-blue-600">৳{costingDetails.originalPrice.toFixed(2)}</div></motion.div>
-                                                    <motion.div whileHover={{ scale: 1.05 }} className="stat bg-base-100 rounded-2xl shadow"><div className="stat-title text-slate-700">Ingredient Cost</div><div className="stat-value text-red-600">৳{costingDetails.calculationDetails.totalIngredientCost.toFixed(2)}</div></motion.div>
-                                                    <motion.div whileHover={{ scale: 1.05 }} className="stat bg-base-100 rounded-2xl shadow"><div className="stat-title text-slate-700">Suggested Price</div><div className="stat-value text-green-600">৳{costingDetails.calculationDetails.finalSuggestedPrice.toFixed(2)}</div><div className="stat-desc text-slate-700">{costingDetails.calculationDetails.profitMargin} profit</div></motion.div>
+                                                    <motion.div whileHover={{ scale: 1.05 }} className="stat bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 rounded-2xl shadow"><div className="stat-title text-slate-700 dark:text-zinc-400">Selling Price</div><div className="stat-value text-blue-600">৳{costingDetails.originalPrice.toFixed(2)}</div></motion.div>
+                                                    <motion.div whileHover={{ scale: 1.05 }} className="stat bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 rounded-2xl shadow"><div className="stat-title text-slate-700 dark:text-zinc-400">Ingredient Cost</div><div className="stat-value text-red-600">৳{costingDetails.calculationDetails.totalIngredientCost.toFixed(2)}</div></motion.div>
+                                                    <motion.div whileHover={{ scale: 1.05 }} className="stat bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 rounded-2xl shadow"><div className="stat-title text-slate-700 dark:text-zinc-400">Suggested Price</div><div className="stat-value text-green-600">৳{costingDetails.calculationDetails.finalSuggestedPrice.toFixed(2)}</div><div className="stat-desc text-slate-700 dark:text-zinc-400">{costingDetails.calculationDetails.profitMargin} profit</div></motion.div>
                                                 </div>
                                             </div>
                                             <div>
-                                                <h3 className='text-xl font-semibold text-blue-600 mb-4 flex items-center gap-3'><FaListAlt /> Ingredient Breakdown</h3>
-                                                <div className="overflow-x-auto rounded-lg max-h-64 border border-slate-200">
+                                                <h3 className='text-xl font-semibold text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-3'><FaListAlt /> Ingredient Breakdown</h3>
+                                                <div className="overflow-x-auto rounded-lg max-h-64 border border-slate-200 dark:border-zinc-800">
                                                     <table className="table w-full table-pin-header">
                                                         <thead className='bg-blue-600 text-white'><tr><th className='rounded-tl-lg'>Ingredient Name</th><th>Quantity</th><th>Avg. Unit Cost</th><th className='rounded-tr-lg text-right'>Total Cost</th></tr></thead>
                                                         <tbody>
                                                             <AnimatePresence>
                                                                 {costingDetails.ingredientBreakdown.map((ing, index) => (
-                                                                    <motion.tr key={ing.id} className='hover:bg-blue-50 text-sm text-slate-700' initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, delay: index * 0.05 }}>
+                                                                    <motion.tr key={ing.id} className='hover:bg-blue-50 dark:hover:bg-zinc-800/40 text-sm text-slate-700 dark:text-zinc-300 border-b dark:border-zinc-800' initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3, delay: index * 0.05 }}>
                                                                         <td className="font-medium">{ing.name}</td><td>{ing.quantity} {ing.unit}</td><td>৳{ing.avgUnitCost.toFixed(2)} / {ing.unit}</td><td className="text-right font-semibold">৳{ing.totalCost.toFixed(2)}</td>
                                                                     </motion.tr>
                                                                 ))}

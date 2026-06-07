@@ -220,17 +220,17 @@ const Login = () => {
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4 }}
-            className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm relative"
+            className="bg-white dark:bg-zinc-900 border dark:border-zinc-800 rounded-lg shadow-lg p-6 w-full max-w-sm relative text-gray-800 dark:text-zinc-100"
           >
             <button
               onClick={() => setShowForgotModal(false)}
-              className="absolute top-2 right-3 text-2xl text-gray-500 hover:text-gray-800"
+              className="absolute top-2 right-3 text-2xl text-gray-500 hover:text-gray-800 dark:text-zinc-400 dark:hover:text-zinc-200"
               aria-label="Close modal"
             >
               &times;
             </button>
-            <h3 className="text-lg font-bold mb-2">Forgot Password?</h3>
-            <p className="text-gray-600 mb-4 text-sm">
+            <h3 className="text-lg font-bold mb-2 text-gray-900 dark:text-zinc-100">Forgot Password?</h3>
+            <p className="text-gray-600 dark:text-zinc-400 mb-4 text-sm">
               Enter your email to receive a reset link.
             </p>
             <form
@@ -243,7 +243,7 @@ const Login = () => {
               <input
                 type="email"
                 placeholder="Email Address"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-4"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-850 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none mb-4 dark:text-zinc-100"
                 required
               />
               <button

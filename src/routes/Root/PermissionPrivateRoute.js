@@ -6,7 +6,7 @@ import useUserPermissions from '../../Hook/useUserPermissions';
 
 // A simple preloader component for a better user experience
 const FullPageLoader = () => (
-    <div className="flex items-center justify-center h-screen bg-base-200">
+    <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-zinc-950 transition-colors duration-250">
         <span className="loading loading-spinner loading-lg text-primary"></span>
     </div>
 );

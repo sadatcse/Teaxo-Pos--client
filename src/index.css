@@ -23,3 +23,64 @@
     animation: scaleIn 0.3s ease-out forwards;
   }
 }
+
+/* React Datepicker Dark Mode Styles */
+.dark .react-datepicker {
+  background-color: #18181b !important; /* zinc-900 */
+  border-color: #27272a !important; /* zinc-800 */
+  color: #f4f4f5 !important; /* zinc-100 */
+  font-family: inherit;
+}
+.dark .react-datepicker__header {
+  background-color: #27272a !important; /* zinc-800 */
+  border-bottom-color: #3f3f46 !important; /* zinc-700 */
+}
+.dark .react-datepicker__current-month,
+.dark .react-datepicker-time__header,
+.dark .react-datepicker-year-header {
+  color: #f4f4f5 !important; /* zinc-100 */
+}
+.dark .react-datepicker__day-name,
+.dark .react-datepicker__day,
+.dark .react-datepicker__time-name {
+  color: #d4d4d8 !important; /* zinc-300 */
+}
+.dark .react-datepicker__day:hover,
+.dark .react-datepicker__month-text:hover,
+.dark .react-datepicker__quarter-text:hover,
+.dark .react-datepicker__year-text:hover {
+  background-color: #3f3f46 !important; /* zinc-700 */
+  color: #f4f4f5 !important;
+}
+.dark .react-datepicker__day--selected,
+.dark .react-datepicker__day--keyboard-selected {
+  background-color: #2563eb !important; /* blue-600 */
+  color: #ffffff !important;
+}
+.dark .react-datepicker__day--disabled {
+  color: #52525b !important; /* zinc-600 */
+}
+.dark .react-datepicker__navigation-icon::before {
+  border-color: #a1a1aa !important; /* zinc-400 */
+}
+.dark .react-datepicker__navigation:hover *::before {
+  border-color: #f4f4f5 !important;
+}
+.dark .react-datepicker__triangle {
+  fill: #18181b !important;
+  stroke: #27272a !important;
+}
+.dark .react-datepicker__input-container input {
+  color-scheme: dark;
+}
+
+/* Custom Global Styles for Accounting Forms */
+.input-style {
+  @apply w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150;
+}
+.btn-cancel {
+  @apply px-4 py-2 bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 text-gray-700 dark:text-zinc-300 font-medium rounded-xl transition duration-300 cursor-pointer;
+}
+.btn-confirm {
+  @apply px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl shadow transition duration-300 cursor-pointer;
+}

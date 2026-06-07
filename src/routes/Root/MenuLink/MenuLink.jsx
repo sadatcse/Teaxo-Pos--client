@@ -10,7 +10,7 @@ const MenuLink = ({ item, location, isCollapsed }) => {
       className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
         isActive
           ? "bg-[#eba21c] text-white shadow"
-          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+          : "text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800 hover:text-gray-900 dark:hover:text-white"
       }`}
     >
       {item.icon}

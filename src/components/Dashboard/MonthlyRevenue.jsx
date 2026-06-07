@@ -55,13 +55,13 @@ const MonthlyRevenue = () => {
 
   return (
     <div className="col-span-12 xl:col-span-4">
-      <div className="bg-white rounded-lg shadow-lg">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h6 className="text-lg font-bold text-gray-700">Monthly Earning</h6>
+      <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg border dark:border-zinc-800">
+        <div className="p-4 border-b border-gray-200 dark:border-zinc-800 flex justify-between items-center">
+          <h6 className="text-lg font-bold text-gray-700 dark:text-zinc-100">Monthly Earning</h6>
           <select
             value={selectedMonth}
             onChange={handleMonthChange}
-            className="text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+            className="text-sm border-gray-300 dark:border-zinc-700 dark:bg-zinc-850 dark:text-zinc-100 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
           >
             {months.map((month) => (
               <option key={month} value={month}>
@@ -76,8 +76,8 @@ const MonthlyRevenue = () => {
           {weeklyData.weeklyPercentage.length > 0 ? (
             weeklyData.weeklyPercentage.map((weekInfo, i) => (
               <div key={i}>
-                <span className="text-sm font-semibold">{weekInfo.week}</span>
-                <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <span className="text-sm font-semibold text-gray-800 dark:text-zinc-305">{weekInfo.week}</span>
+                <div className="w-full bg-gray-200 dark:bg-zinc-800 rounded-full h-2.5 mt-1">
                   <div
                     className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
                     style={{ width: `${weekInfo.percentage}%` }}
@@ -86,7 +86,7 @@ const MonthlyRevenue = () => {
               </div>
             ))
           ) : (
-            <p className="text-sm text-gray-500">No sales data for this month.</p>
+            <p className="text-sm text-gray-500 dark:text-zinc-400">No sales data for this month.</p>
           )}
         </div>
       </div>

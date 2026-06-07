@@ -106,24 +106,24 @@ const Addons = () => {
     };
 
     const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: filteredAddons });
-    const inputClass = "w-full border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
+    const inputClass = "w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-800 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 text-gray-800 dark:text-zinc-100">
             <Mtitle title="Addon Management" rightcontent={
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300">
                     <FaDAndD className="text-xl" /> Add New Addon
                 </motion.button>
             } />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl mt-6">
                 <div className="card-body p-4 sm:p-6">
                     <div className="flex justify-between items-center mb-4">
-                        <div className="text-sm text-slate-700">{rowsPerPageAndTotal}</div>
+                        <div className="text-sm text-slate-700 dark:text-zinc-300">{rowsPerPageAndTotal}</div>
                         <div className="form-control w-full max-w-xs">
                             <div className="relative">
                                 <input type="text" placeholder="Search by name..." className={`${inputClass} pl-10`} value={searchTerm} onChange={handleSearchChange} />
-                                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                                <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500" size={18} />
                             </div>
                         </div>
                     </div>
@@ -137,12 +137,20 @@ const Addons = () => {
                                 </thead>
                                 <tbody>
                                     <AnimatePresence>
-                                        {paginatedData.length === 0 ? (<tr><td colSpan="4" className="text-center py-12 text-slate-700">No addons found.</td></tr>) : (
+                                        {paginatedData.length === 0 ? (<tr><td colSpan="4" className="text-center py-12 text-slate-700 dark:text-zinc-400">No addons found.</td></tr>) : (
                                             paginatedData.map((addon) => (
-                                                <motion.tr key={addon._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                <motion.tr key={addon._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-300">
                                                     <td className="p-3 font-medium">{addon.name}</td>
                                                     <td className="p-3">৳{addon.price}</td>
-                                                    <td className="p-3"><div className={`badge ${addon.status === 'available' ? 'badge-success' : 'badge-error'} text-white capitalize`}>{addon.status}</div></td>
+                                                    <td className="p-3">
+                                                        <span className={`px-2.5 py-1 border font-semibold text-xs rounded-full capitalize ${
+                                                            addon.status === 'available' 
+                                                            ? 'bg-green-50 dark:bg-emerald-950/20 text-green-700 dark:text-emerald-400 border-green-200 dark:border-emerald-900/40' 
+                                                            : 'bg-red-50 dark:bg-red-950/20 text-red-700 dark:text-red-400 border-red-200 dark:border-red-900/40'
+                                                        }`}>
+                                                            {addon.status}
+                                                        </span>
+                                                    </td>
                                                     <td className="p-3">
                                                         <div className="flex justify-center items-center gap-2">
                                                             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(addon._id)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white"><FiEdit /></motion.button>
@@ -164,16 +172,16 @@ const Addons = () => {
             <AnimatePresence>
                 {isModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
-                            <h3 className="text-xl font-semibold text-blue-600 mb-6">{editId ? 'Edit Addon' : 'Add New Addon'}</h3>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-md text-gray-800 dark:text-zinc-100">
+                            <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-6">{editId ? 'Edit Addon' : 'Add New Addon'}</h3>
                             <div className="space-y-4">
-                                <div><label className="label-text text-slate-700">Addon Name</label><input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={`${inputClass} mt-1`} placeholder="e.g., Extra Cheese" /></div>
-                                <div><label className="label-text text-slate-700">Price</label><input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || "" })} className={`${inputClass} mt-1`} placeholder="e.g., 50" /></div>
-                                <div><label className="label-text text-slate-700">Status</label><select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className={`${inputClass} mt-1`}><option value="available">Available</option><option value="unavailable">Unavailable</option></select></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Addon Name</label><input type="text" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className={`${inputClass} mt-1`} placeholder="e.g., Extra Cheese" /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Price</label><input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || "" })} className={`${inputClass} mt-1`} placeholder="e.g., 50" /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300">Status</label><select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className={`${inputClass} mt-1`}><option value="available">Available</option><option value="unavailable">Unavailable</option></select></div>
                             </div>
                             <div className="flex justify-end gap-4 mt-8">
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn rounded-xl">Cancel</motion.button>
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditAddon} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isLoading}>{isLoading ? <span className="loading loading-spinner"></span> : editId ? 'Save Changes' : 'Add Addon'}</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn rounded-xl dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditAddon} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md border-none" disabled={isLoading}>{isLoading ? <span className="loading loading-spinner"></span> : editId ? 'Save Changes' : 'Add Addon'}</motion.button>
                             </div>
                         </motion.div>
                     </div>

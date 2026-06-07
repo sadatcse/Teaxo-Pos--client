@@ -13,7 +13,7 @@ import { AuthContext } from "../../providers/AuthProvider";
 const ChatMessage = ({ message, isUser }) => {
     const bubbleClass = isUser 
         ? "bg-blue-600 text-white self-end" 
-        : "bg-slate-200 text-slate-800 self-start";
+        : "bg-slate-200 dark:bg-zinc-800 text-slate-800 dark:text-zinc-200 self-start";
     
     return (
         <motion.div
@@ -38,11 +38,11 @@ const TypingIndicator = () => (
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0 }}
-        className="self-start flex items-center gap-2 bg-slate-200 text-slate-500 rounded-2xl px-4 py-3"
+        className="self-start flex items-center gap-2 bg-slate-200 dark:bg-zinc-800 text-slate-500 dark:text-zinc-400 rounded-2xl px-4 py-3"
     >
-        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-        <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+        <div className="w-2 h-2 bg-slate-400 dark:bg-zinc-600 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+        <div className="w-2 h-2 bg-slate-400 dark:bg-zinc-600 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+        <div className="w-2 h-2 bg-slate-400 dark:bg-zinc-600 rounded-full animate-bounce"></div>
     </motion.div>
 );
 
@@ -94,11 +94,11 @@ const AiBusinessChat = () => {
     }, [input, axiosSecure, branch, isLoading]);
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 flex flex-col h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 dark:text-zinc-100 flex flex-col h-screen">
             <Mtitle title="AI Restaurant Chat" />
             
             <motion.div 
-                className="card bg-base-100 shadow-xl flex-grow flex flex-col mt-6"
+                className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl flex-grow flex flex-col mt-6"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
@@ -117,19 +117,19 @@ const AiBusinessChat = () => {
                 </div>
 
                 {/* Input Form */}
-                <div className="card-actions p-4 border-t border-slate-200 bg-base-100/80 backdrop-blur-sm">
+                <div className="card-actions p-4 border-t border-slate-200 dark:border-zinc-850 bg-base-100/80 dark:bg-zinc-900/80 backdrop-blur-sm">
                     <form onSubmit={handleSendMessage} className="w-full flex items-center gap-3">
                         <input
                             type="text"
                             placeholder="Ask about sales, top products..."
-                            className="input input-bordered w-full"
+                            className="input input-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 w-full"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
                             disabled={isLoading}
                         />
                         <button 
                             type="submit" 
-                            className="btn bg-blue-600 hover:bg-blue-700 text-white btn-circle" 
+                            className="btn bg-blue-600 hover:bg-blue-700 text-white btn-circle dark:bg-blue-600 dark:hover:bg-blue-700 dark:border-none" 
                             disabled={isLoading || !input.trim()}
                         >
                             <FiSend className="text-xl" />

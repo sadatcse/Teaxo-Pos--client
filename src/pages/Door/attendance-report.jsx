@@ -51,19 +51,19 @@ const AttendanceReport = () => {
 
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen">
             <Mtitle title="Employee Attendance Report" />
 
-            <div className="card bg-base-100 shadow-xl mt-6">
+            <div className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl mt-6">
                 <div className="card-body">
                     <div className="flex flex-wrap items-end gap-4 mb-6">
                         <div className="form-control">
-                            <label className="label"><span className="label-text">Start Date</span></label>
-                            <input type="date" name="startDate" value={filters.startDate} onChange={handleFilterChange} className="input input-bordered" />
+                            <label className="label"><span className="label-text dark:text-zinc-300">Start Date</span></label>
+                            <input type="date" name="startDate" value={filters.startDate} onChange={handleFilterChange} className="input input-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" />
                         </div>
                         <div className="form-control">
-                            <label className="label"><span className="label-text">End Date</span></label>
-                            <input type="date" name="endDate" value={filters.endDate} onChange={handleFilterChange} className="input input-bordered" />
+                            <label className="label"><span className="label-text dark:text-zinc-300">End Date</span></label>
+                            <input type="date" name="endDate" value={filters.endDate} onChange={handleFilterChange} className="input input-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" />
                         </div>
                     </div>
 
@@ -81,7 +81,7 @@ const AttendanceReport = () => {
                                 </thead>
                                 <tbody>
                                     {records.map(rec => (
-                                        <tr key={rec._id} className="hover">
+                                        <tr key={rec._id} className="hover dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300">
                                             <td>
                                                 <div className="flex items-center space-x-3">
                                                     <div className="avatar">
@@ -90,15 +90,15 @@ const AttendanceReport = () => {
                                                         </div>
                                                     </div>
                                                     <div>
-                                                        <div className="font-bold">{rec.userId.name}</div>
-                                                        <div className="text-sm opacity-50">{rec.userId.email}</div>
+                                                        <div className="font-bold text-slate-800 dark:text-zinc-100">{rec.userId.name}</div>
+                                                        <div className="text-sm text-slate-500 dark:text-zinc-400">{rec.userId.email}</div>
                                                     </div>
                                                 </div>
                                             </td>
                                             <td>{new Date(rec.checkInTime).toLocaleString()}</td>
-                                            <td>{rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : <span className="badge badge-warning">Checked In</span>}</td>
+                                            <td>{rec.checkOutTime ? new Date(rec.checkOutTime).toLocaleString() : <span className="badge badge-warning dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50">Checked In</span>}</td>
                                             <td>{rec.duration || '-'}</td>
-                                            <td><span className="badge badge-ghost badge-sm">{rec.deviceSn}</span></td>
+                                            <td><span className="badge badge-ghost dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700 badge-sm">{rec.deviceSn}</span></td>
                                         </tr>
                                     ))}
                                 </tbody>

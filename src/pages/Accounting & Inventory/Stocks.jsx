@@ -16,16 +16,16 @@ import useActionPermissions from "../../Hook/useActionPermissions";
 const PaginationControls = ({ currentPage, totalPages, onPageChange, totalDocuments, rowsPerPage }) => {
     if (totalPages <= 1) return null;
     return (
-        <div className="flex items-center justify-between pt-4 text-sm text-slate-700">
+        <div className="flex items-center justify-between pt-4 text-sm text-slate-700 dark:text-zinc-400">
             <div>
                 Showing <span className="font-semibold">{(currentPage - 1) * rowsPerPage + 1}</span> to <span className="font-semibold">{Math.min(currentPage * rowsPerPage, totalDocuments)}</span> of <span className="font-semibold">{totalDocuments}</span> entries
             </div>
             <div className="join">
-                <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="join-item btn btn-sm">
+                <button onClick={() => onPageChange(currentPage - 1)} disabled={currentPage === 1} className="join-item btn btn-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700">
                     <MdNavigateBefore />
                 </button>
-                <button className="join-item btn btn-sm">Page {currentPage} of {totalPages}</button>
-                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="join-item btn btn-sm">
+                <button className="join-item btn btn-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300">Page {currentPage} of {totalPages}</button>
+                <button onClick={() => onPageChange(currentPage + 1)} disabled={currentPage === totalPages} className="join-item btn btn-sm dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700">
                     <MdNavigateNext />
                 </button>
             </div>
@@ -59,20 +59,20 @@ const StockDetailsModal = ({ stock, onClose, axiosSecure }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="card bg-base-100 shadow-xl w-full max-w-2xl">
-                <div className="p-4 border-b border-slate-200 flex justify-between items-center">
-                    <h2 className="text-xl font-semibold text-blue-600">Stock Details: {stock.ingredient?.name}</h2>
-                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onClose} className="btn btn-sm btn-circle btn-ghost"><FaTimes /></motion.button>
+            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl w-full max-w-2xl border dark:border-zinc-800">
+                <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex justify-between items-center">
+                    <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400">Stock Details: {stock.ingredient?.name}</h2>
+                    <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={onClose} className="btn btn-sm btn-circle btn-ghost dark:text-zinc-400"><FaTimes /></motion.button>
                 </div>
                 <div className="p-4 sm:p-6">
-                    <div role="tablist" className="tabs tabs-boxed mb-4">
-                        <a role="tab" className={`tab ${activeTab === 'details' ? 'tab-active font-semibold' : ''}`} onClick={() => setActiveTab('details')}>Details</a>
-                        <a role="tab" className={`tab ${activeTab === 'movement' ? 'tab-active font-semibold' : ''}`} onClick={() => setActiveTab('movement')}>Movement History</a>
+                    <div role="tablist" className="tabs tabs-boxed mb-4 dark:bg-zinc-950">
+                        <a role="tab" className={`tab ${activeTab === 'details' ? 'tab-active font-semibold dark:text-white' : 'dark:text-zinc-400'}`} onClick={() => setActiveTab('details')}>Details</a>
+                        <a role="tab" className={`tab ${activeTab === 'movement' ? 'tab-active font-semibold dark:text-white' : 'dark:text-zinc-400'}`} onClick={() => setActiveTab('movement')}>Movement History</a>
                     </div>
                     {activeTab === 'details' && (
-                        <div className="space-y-3 text-sm text-slate-700">
+                        <div className="space-y-3 text-sm text-slate-700 dark:text-zinc-300">
                             <p><strong>SKU:</strong> {stock.ingredient?.sku || 'N/A'}</p>
-                            <p><strong>Current Quantity:</strong> <span className="font-bold text-lg text-blue-600">{stock.quantityInStock} {stock.unit}</span></p>
+                            <p><strong>Current Quantity:</strong> <span className="font-bold text-lg text-blue-600 dark:text-blue-400">{stock.quantityInStock} {stock.unit}</span></p>
                             <p><strong>Stock Alert Level:</strong> {stock.ingredient?.stockAlert || 0} {stock.unit}</p>
                             <p><strong>Category:</strong> {stock.ingredient?.category?.categoryName || 'N/A'}</p>
                             <p><strong>Last Updated:</strong> {new Date(stock.updatedAt).toLocaleString()}</p>
@@ -81,12 +81,12 @@ const StockDetailsModal = ({ stock, onClose, axiosSecure }) => {
                     {activeTab === 'movement' && (
                         <div className="overflow-x-auto max-h-96">
                             {isLoading ? <MtableLoading /> : (
-                                <table className="table table-zebra table-sm w-full">
-                                    <thead><tr><th>Date</th><th>Before</th><th>After</th><th>Adj.</th><th>User</th><th>Note</th></tr></thead>
+                                <table className="table table-zebra table-sm w-full dark:text-zinc-300">
+                                    <thead><tr className="dark:border-zinc-800 text-gray-700 dark:text-zinc-200"><th>Date</th><th>Before</th><th>After</th><th>Adj.</th><th>User</th><th>Note</th></tr></thead>
                                     <tbody>
                                         {movements.length > 0 ? movements.map(m => (
-                                            <tr key={m._id}><td>{new Date(m.createdAt).toLocaleString()}</td><td>{m.beforeQuantity}</td><td>{m.afterQuantity}</td><td className={m.adjustment >= 0 ? 'text-green-600' : 'text-red-600'}>{m.adjustment > 0 ? `+${m.adjustment}` : m.adjustment}</td><td>{m.createdBy?.name || 'System'}</td><td>{m.note}</td></tr>
-                                        )) : (<tr><td colSpan="6" className="text-center">No movement history found.</td></tr>)}
+                                            <tr key={m._id} className="dark:border-zinc-800"><td>{new Date(m.createdAt).toLocaleString()}</td><td>{m.beforeQuantity}</td><td>{m.afterQuantity}</td><td className={m.adjustment >= 0 ? 'text-green-600 dark:text-emerald-400 font-semibold' : 'text-red-600 dark:text-red-400 font-semibold'}>{m.adjustment > 0 ? `+${m.adjustment}` : m.adjustment}</td><td>{m.createdBy?.name || 'System'}</td><td>{m.note}</td></tr>
+                                        )) : (<tr><td colSpan="6" className="text-center py-4 dark:text-zinc-400">No movement history found.</td></tr>)}
                                     </tbody>
                                 </table>
                             )}
@@ -119,15 +119,15 @@ const UpdateStockAlertModal = ({ stock, onClose, onSuccess, axiosSecure }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="card bg-base-100 shadow-xl w-full max-w-md">
-                <div className="p-4 border-b border-slate-200 flex justify-between items-center"><h2 className="text-xl font-semibold text-blue-600">Update Stock Alert</h2><button onClick={onClose} className="btn btn-sm btn-circle btn-ghost"><FaTimes /></button></div>
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl w-full max-w-md border dark:border-zinc-800">
+                <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex justify-between items-center"><h2 className="text-xl font-semibold text-blue-600 dark:text-blue-450">Update Stock Alert</h2><button onClick={onClose} className="btn btn-sm btn-circle btn-ghost dark:text-zinc-400"><FaTimes /></button></div>
                 <form onSubmit={handleSubmit} className="p-6">
                     <div className="form-control">
-                        <label className="label"><span className="label-text text-slate-700">Alert Level for <span className="font-semibold">{stock.ingredient?.name}</span> ({stock.unit})</span></label>
-                        <input type="number" className="border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full" value={newAlert} onChange={(e) => setNewAlert(e.target.value)} required />
+                        <label className="label"><span className="label-text text-slate-700 dark:text-zinc-300">Alert Level for <span className="font-semibold">{stock.ingredient?.name}</span> ({stock.unit})</span></label>
+                        <input type="number" className="border border-gray-300 dark:border-zinc-700 dark:bg-zinc-850 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full" value={newAlert} onChange={(e) => setNewAlert(e.target.value)} required />
                     </div>
                     <div className="flex justify-end gap-4 mt-8">
-                        <motion.button type="button" onClick={onClose} className="btn rounded-xl" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Cancel</motion.button>
+                        <motion.button type="button" onClick={onClose} className="btn rounded-xl dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Cancel</motion.button>
                         <motion.button type="submit" className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md" disabled={isSubmitting} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>{isSubmitting ? <span className="loading loading-spinner"></span> : 'Update Alert'}</motion.button>
                     </div>
                 </form>
@@ -158,16 +158,16 @@ const UpdateStockAdjustmentModal = ({ stock, onClose, onSuccess, axiosSecure }) 
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4">
-            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="card bg-base-100 shadow-xl w-full max-w-md">
-                <div className="p-4 border-b border-slate-200 flex justify-between items-center"><h2 className="text-xl font-semibold text-blue-600">Stock Adjustment</h2><button onClick={onClose} className="btn btn-sm btn-circle btn-ghost"><FaTimes /></button></div>
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl w-full max-w-md border dark:border-zinc-800">
+                <div className="p-4 border-b border-slate-200 dark:border-zinc-800 flex justify-between items-center"><h2 className="text-xl font-semibold text-blue-600 dark:text-blue-450">Stock Adjustment</h2><button onClick={onClose} className="btn btn-sm btn-circle btn-ghost dark:text-zinc-400"><FaTimes /></button></div>
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="form-control"><label className="label"><span className="label-text">Current Stock ({stock.unit})</span></label><input type="text" value={stock.quantityInStock} className="input input-bordered bg-slate-100 rounded-xl" disabled /></div>
-                        <div className="form-control"><label className="label"><span className="label-text font-semibold">New Physical Quantity</span></label><input type="number" step="any" className="border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full" value={physicalQuantity} onChange={(e) => setPhysicalQuantity(e.target.value)} required /></div>
+                        <div className="form-control"><label className="label"><span className="label-text dark:text-zinc-300">Current Stock ({stock.unit})</span></label><input type="text" value={stock.quantityInStock} className="input input-bordered bg-slate-100 dark:bg-zinc-800 dark:border-zinc-700 rounded-xl dark:text-zinc-400" disabled /></div>
+                        <div className="form-control"><label className="label"><span className="label-text font-semibold dark:text-zinc-300">New Physical Quantity</span></label><input type="number" step="any" className="border border-gray-300 dark:border-zinc-700 dark:bg-zinc-850 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full" value={physicalQuantity} onChange={(e) => setPhysicalQuantity(e.target.value)} required /></div>
                     </div>
-                    <div className="form-control"><label className="label"><span className="label-text">Note (Reason for adjustment)</span></label><textarea className="textarea border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 h-24" placeholder="e.g., Weekly stock count..." value={note} onChange={(e) => setNote(e.target.value)}></textarea></div>
+                    <div className="form-control"><label className="label"><span className="label-text dark:text-zinc-300">Note (Reason for adjustment)</span></label><textarea className="textarea border border-gray-300 dark:border-zinc-700 dark:bg-zinc-850 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 h-24" placeholder="e.g., Weekly stock count..." value={note} onChange={(e) => setNote(e.target.value)}></textarea></div>
                     <div className="flex justify-end gap-4 mt-6">
-                        <motion.button type="button" onClick={onClose} className="btn rounded-xl" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Cancel</motion.button>
+                        <motion.button type="button" onClick={onClose} className="btn rounded-xl dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>Cancel</motion.button>
                         <motion.button type="submit" className="btn bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-md" disabled={isSubmitting} whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>{isSubmitting ? <span className="loading loading-spinner"></span> : 'Update Stock'}</motion.button>
                     </div>
                 </form>
@@ -212,23 +212,23 @@ const Stocks = () => {
     const handleOpenAdjustmentModal = (stock) => { setSelectedStock(stock); setAdjustmentModalOpen(true); };
 
     return (
-        <main className="bg-base-200 min-h-screen p-4 sm:p-6 lg:p-8">
+        <main className="bg-base-200 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen p-4 sm:p-6 lg:p-8">
             <Mtitle title="Current Stock" rightcontent={
                 <div className="flex flex-col md:flex-row gap-4 justify-end items-center">
                     <div className="w-full md:max-w-xs relative">
-                        <input type="text" className="border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full pr-10" placeholder="Search by Name or SKU" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        <input type="text" className="border border-gray-300 dark:border-zinc-750 dark:bg-zinc-900 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 w-full pr-10" placeholder="Search by Name or SKU" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                         <FaSearch className="text-slate-400 absolute top-1/2 right-4 transform -translate-y-1/2" />
                     </div>
-                    <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+                    <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)} className="border border-gray-300 dark:border-zinc-750 dark:bg-zinc-900 dark:text-zinc-105 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150">
                         <option value="">All Categories</option>
                         {ingredientCategories.map(cat => (<option key={cat._id} value={cat._id}>{cat.categoryName}</option>))}
                     </select>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowLowStockOnly(!showLowStockOnly)} className={`btn rounded-xl gap-2 ${showLowStockOnly ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white hover:bg-gray-50 border border-gray-300'}`}>
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowLowStockOnly(!showLowStockOnly)} className={`btn rounded-xl gap-2 ${showLowStockOnly ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-white dark:bg-zinc-900 hover:bg-gray-50 dark:hover:bg-zinc-800 border border-gray-300 dark:border-zinc-700 dark:text-zinc-300'}`}>
                         <MdSportsMartialArts /> Low Stock
                     </motion.button>
                 </div>
             } />
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl mt-6 border dark:border-zinc-800">
                 <div className="card-body p-4 sm:p-6">
                     {isTableLoading ? <MtableLoading /> : (
                         <div className="overflow-x-auto">
@@ -238,18 +238,18 @@ const Stocks = () => {
                                 </thead>
                                 <tbody>
                                     <AnimatePresence>
-                                        {stocks.length === 0 && (<tr><td colSpan="7" className="text-center py-4 text-slate-700">No stock items found.</td></tr>)}
+                                        {stocks.length === 0 && (<tr><td colSpan="7" className="text-center py-4 text-slate-700 dark:text-zinc-400">No stock items found.</td></tr>)}
                                         {stocks.map((s) => {
                                             const isLow = s.quantityInStock < s.ingredient.stockAlert;
                                             return (
-                                                <motion.tr key={s._id} className={`hover:bg-blue-50 transition-colors duration-200 ${isLow ? 'bg-red-50' : ''}`} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                                                    <td className="p-3 font-semibold text-slate-700 border-b border-slate-200 flex items-center gap-2">{s.ingredient?.name || 'N/A'}{isLow && <MdSportsMartialArts className="text-red-500" title="Low stock" />}</td>
-                                                    <td className="p-3 font-bold text-blue-700 border-b border-slate-200">{s.quantityInStock}</td>
-                                                    <td className="p-3 text-slate-700 border-b border-slate-200">{s.unit}</td>
-                                                    <td className="p-3 text-slate-700 border-b border-slate-200">{s.ingredient?.stockAlert || 0}</td>
-                                                    <td className="p-3 text-slate-500 border-b border-slate-200">{s.ingredient?.sku || 'N/A'}</td>
-                                                    <td className="p-3 text-sm text-slate-500 border-b border-slate-200">{new Date(s.updatedAt).toLocaleString()}</td>
-      <td className="p-3 border-b border-slate-200">
+                                                <motion.tr key={s._id} className={`hover:bg-blue-50 dark:hover:bg-zinc-800/40 transition-colors duration-200 ${isLow ? 'bg-red-50 dark:bg-red-950/25 text-red-950 dark:text-red-300' : 'text-slate-700 dark:text-zinc-300'}`} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                                                    <td className="p-3 font-semibold text-slate-700 dark:text-zinc-200 border-b border-slate-200 dark:border-zinc-800 flex items-center gap-2">{s.ingredient?.name || 'N/A'}{isLow && <MdSportsMartialArts className="text-red-500" title="Low stock" />}</td>
+                                                    <td className="p-3 font-bold text-blue-700 dark:text-blue-400 border-b border-slate-200 dark:border-zinc-800">{s.quantityInStock}</td>
+                                                    <td className="p-3 text-slate-700 dark:text-zinc-300 border-b border-slate-200 dark:border-zinc-800">{s.unit}</td>
+                                                    <td className="p-3 text-slate-700 dark:text-zinc-300 border-b border-slate-200 dark:border-zinc-800">{s.ingredient?.stockAlert || 0}</td>
+                                                    <td className="p-3 text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-zinc-800">{s.ingredient?.sku || 'N/A'}</td>
+                                                    <td className="p-3 text-sm text-slate-500 dark:text-zinc-400 border-b border-slate-200 dark:border-zinc-800">{new Date(s.updatedAt).toLocaleString()}</td>
+      <td className="p-3 border-b border-slate-200 dark:border-zinc-800">
     <div className="flex items-center justify-center gap-2">
         {canPerform("Stock Management", "view") && (
             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleViewDetails(s)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Details"><FaEye /></motion.button>

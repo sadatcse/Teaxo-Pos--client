@@ -35,14 +35,14 @@ const PermissionItem = ({ item, groupName, role, branch, initialChecked, onPermi
     };
 
     return (
-        <div className="form-control bg-gray-50 p-2 rounded-md hover:bg-gray-100 transition-colors duration-200">
+        <div className="form-control bg-gray-50 dark:bg-zinc-800 p-2 rounded-md hover:bg-gray-100 dark:hover:bg-zinc-750 transition-colors duration-200">
             <label className="cursor-pointer label justify-between">
-                <span className="label-text">{item.title}</span>
+                <span className="label-text dark:text-zinc-300">{item.title}</span>
                 <input
                     type="checkbox"
                     checked={isChecked}
                     onChange={handleCheckboxChange}
-                    className="checkbox border-gray-400 [--chkbg:theme(colors.blue.700)] [--chkfg:white]"
+                    className="checkbox border-gray-400 dark:border-zinc-700 [--chkbg:theme(colors.blue.700)] [--chkfg:white] bg-transparent"
                 />
             </label>
         </div>
@@ -86,18 +86,18 @@ const UserPermission = () => {
     const allMenuItems = menuItems();
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <div className="card bg-base-100 shadow-xl border-t-4 border-blue-700">
+                <div className="card bg-base-100 dark:bg-zinc-900 border border-slate-105 dark:border-zinc-800/80 shadow-xl border-t-4 border-blue-700 dark:border-t-blue-700">
                     <div className="card-body">
-                        <h2 className="card-title text-2xl mb-4 text-blue-700">Manage Role Permissions</h2>
+                        <h2 className="card-title text-2xl mb-4 text-blue-700 dark:text-blue-450">Manage Role Permissions</h2>
                         
                         <div className="form-control w-full max-w-xs mb-6">
                             <label className="label">
-                                <span className="label-text font-semibold">Select a Role to Configure</span>
+                                <span className="label-text font-semibold dark:text-zinc-300">Select a Role to Configure</span>
                             </label>
                             <select
-                                className="select select-bordered focus:border-blue-700 focus:outline-none"
+                                className="select select-bordered bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700 focus:border-blue-700 focus:outline-none"
                                 value={role}
                                 onChange={(e) => setRole(e.target.value)}
                             >
@@ -113,8 +113,8 @@ const UserPermission = () => {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {allMenuItems.map((menuGroup) => (
-                                    <div key={menuGroup.title} className="p-4 border rounded-lg bg-white shadow-sm">
-                                        <h3 className="text-lg font-bold mb-3 flex items-center gap-3 border-b border-gray-200 pb-2 text-gray-700">
+                                    <div key={menuGroup.title} className="p-4 border border-slate-200 dark:border-zinc-800 rounded-lg bg-white dark:bg-zinc-900 shadow-sm">
+                                        <h3 className="text-lg font-bold mb-3 flex items-center gap-3 border-b border-gray-200 dark:border-zinc-800 pb-2 text-gray-700 dark:text-zinc-200">
                                             {menuGroup.icon} {menuGroup.title}
                                         </h3>
                                         <div className="space-y-2">

@@ -12,8 +12,8 @@ const SidebarSkeleton = ({ isSidebarOpen }) => (
     <div className="p-2">
         {[...Array(8)].map((_, i) => (
             <div key={i} className="flex items-center gap-3 my-4 h-8">
-                <div className="bg-gray-200 rounded-md w-8 h-full animate-pulse"></div>
-                {isSidebarOpen && <div className="bg-gray-200 rounded-md h-5 w-3/4 animate-pulse"></div>}
+                <div className="bg-gray-200 dark:bg-zinc-800 rounded-md w-8 h-full animate-pulse"></div>
+                {isSidebarOpen && <div className="bg-gray-200 dark:bg-zinc-800 rounded-md h-5 w-3/4 animate-pulse"></div>}
             </div>
         ))}
     </div>
@@ -39,7 +39,7 @@ const AccordionItem = memo(({ item, isSidebarOpen }) => {
     const linkClasses = useMemo(() => `flex p-3 my-1 rounded-md gap-3 items-center transition-colors ${
         location.pathname === item.path
             ? "bg-blue-600 text-white shadow-md"
-            : "text-gray-600 hover:bg-gray-200"
+            : "text-gray-600 dark:text-zinc-350 hover:bg-gray-200 dark:hover:bg-zinc-800"
     }`, [location.pathname, item.path]);
 
     if (item.list) {
@@ -47,7 +47,7 @@ const AccordionItem = memo(({ item, isSidebarOpen }) => {
             <li className="my-1">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full flex justify-between items-center p-3 rounded-md text-gray-600 hover:bg-gray-200"
+                    className="w-full flex justify-between items-center p-3 rounded-md text-gray-600 dark:text-zinc-350 hover:bg-gray-200 dark:hover:bg-zinc-800"
                 >
                     <div className="flex items-center gap-3">
                         {item.icon}
@@ -64,7 +64,7 @@ const AccordionItem = memo(({ item, isSidebarOpen }) => {
                                     className={`flex p-2 my-1 text-sm rounded-md gap-3 items-center transition-colors ${
                                         location.pathname === child.path
                                             ? "bg-blue-600 text-white"
-                                            : "text-gray-500 hover:bg-gray-200"
+                                            : "text-gray-505 dark:text-zinc-400 hover:bg-gray-200 dark:hover:bg-zinc-800"
                                     }`}
                                 >
                                     {child.icon}
@@ -130,7 +130,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
         }, []);
     }, [allowedRoutes, permissionsLoading, allItems, user]); // Added user and allItems to dependency
 
-    const sidebarClasses = useMemo(() => `fixed top-0 left-0 h-full bg-white shadow-lg z-30 transition-all duration-300 flex flex-col ${
+    const sidebarClasses = useMemo(() => `fixed top-0 left-0 h-full bg-white dark:bg-zinc-900 border-r border-slate-100 dark:border-zinc-800 shadow-lg z-30 transition-all duration-300 flex flex-col ${
         isSidebarOpen
             ? 'w-64 translate-x-0'
             : 'w-64 -translate-x-full md:w-20 md:translate-x-0'
@@ -145,7 +145,7 @@ const Sidebar = ({ isSidebarOpen, toggleSidebar }) => {
             <div onClick={toggleSidebar} className={overlayClasses}></div>
 
             <div className={sidebarClasses}>
-                <div className="flex items-center justify-center p-8 border-b h-[65px] flex-shrink-0 my-5">
+                <div className="flex items-center justify-center p-8 border-b border-slate-100 dark:border-zinc-800 h-[65px] flex-shrink-0 my-5">
                     <img src={companies[0]?.logo} alt="Logo" className={`transition-all duration-300 pb-5 ${isSidebarOpen ? 'w-24' : 'w-10'}`} />
                 </div>
 

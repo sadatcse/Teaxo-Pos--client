@@ -91,26 +91,26 @@ const SalesReportsDaily = () => {
     }), { quantity: 0, grandAmount: 0, vat: 0, sd: 0, discount: 0, totalAmount: 0 });
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 min-h-screen">
             <Mtitle title="Daily Sales Report" />
             
             <motion.div
                 initial={{ opacity: 0, y: 25 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeOut" }}
-                className="bg-gradient-to-br from-white to-slate-50 rounded-2xl shadow-xl border border-slate-200"
+                className="bg-gradient-to-br from-white to-slate-50 dark:from-zinc-900 dark:to-zinc-900/50 rounded-2xl shadow-xl border border-slate-200 dark:border-zinc-800"
             >
                 <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
                         {/* From Date */}
                         <div className="flex flex-col">
-                            <label className="mb-2 text-sm font-semibold text-slate-700">From</label>
+                            <label className="mb-2 text-sm font-semibold text-slate-700 dark:text-zinc-350">From</label>
                             <div className="relative">
-                                <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 w-5 h-5" />
                                 <DatePicker
                                     selected={fromDate}
                                     onChange={(date) => setFromDate(date)}
-                                    className="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                    className="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm bg-white dark:bg-zinc-850 text-gray-700 dark:text-zinc-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                     dateFormat="dd/MM/yyyy"
                                 />
                             </div>
@@ -118,13 +118,13 @@ const SalesReportsDaily = () => {
 
                         {/* To Date */}
                         <div className="flex flex-col">
-                            <label className="mb-2 text-sm font-semibold text-slate-700">To</label>
+                            <label className="mb-2 text-sm font-semibold text-slate-700 dark:text-zinc-350">To</label>
                             <div className="relative">
-                                <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                                <FiCalendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-500 w-5 h-5" />
                                 <DatePicker
                                     selected={toDate}
                                     onChange={(date) => setToDate(date)}
-                                    className="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                    className="w-full pl-10 pr-3 py-2 text-sm border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm bg-white dark:bg-zinc-850 text-gray-700 dark:text-zinc-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                                     dateFormat="dd/MM/yyyy"
                                 />
                             </div>
@@ -132,10 +132,10 @@ const SalesReportsDaily = () => {
 
                         {/* Quick Range */}
                         <div className="flex flex-col">
-                            <label className="mb-2 text-sm font-semibold text-slate-700">Quick Range</label>
+                            <label className="mb-2 text-sm font-semibold text-slate-700 dark:text-zinc-350">Quick Range</label>
                             <select
                                 onChange={(e) => handleQuickRange(e.target.value)}
-                                className="w-full py-2 px-3 text-sm border border-slate-300 rounded-lg shadow-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                                className="w-full py-2 px-3 text-sm border border-slate-300 dark:border-zinc-700 rounded-lg shadow-sm bg-white dark:bg-zinc-850 text-slate-800 dark:text-zinc-150 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
                             >
                                 <option value="">Select Range</option>
                                 <option value="today">Today</option>
@@ -167,15 +167,15 @@ const SalesReportsDaily = () => {
                 </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="card bg-base-100 dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800/80 shadow-xl mt-6">
                 <div className="card-body p-4 sm:p-6">
-                    <h3 className="text-xl font-semibold text-blue-600 mb-4">
+                    <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-4">
                         Report from {moment(fromDate).format("DD/MM/YYYY")} to {moment(toDate).format("DD/MM/YYYY")}
                     </h3>
-                    {loading ? <MtableLoading /> : error ? <div className="text-center py-12 text-red-500">{error}</div> : (
+                    {loading ? <MtableLoading /> : error ? <div className="text-center py-12 text-red-500 dark:text-red-400">{error}</div> : (
                         <div className="overflow-x-auto">
                             <table className="table w-full">
-                                <thead className="bg-blue-600 text-white uppercase text-xs">
+                                <thead className="bg-blue-600 dark:bg-zinc-800 text-white dark:text-zinc-200 uppercase text-xs">
                                     <tr>
                                         {["SL.No", "Date", "Order", "Quantity", "Grand Amount", "Vat", "SD", "Discount", "Total Amount"].map((h, i) => (
                                             <th key={h} className={`p-3 ${i === 0 && 'rounded-tl-lg'} ${i === 8 && 'rounded-tr-lg'} ${['Grand Amount', 'Vat', 'SD', 'Discount', 'Total Amount'].includes(h) ? 'text-right' : ''}`}>{h}</th>
@@ -186,7 +186,7 @@ const SalesReportsDaily = () => {
                                     <AnimatePresence>
                                         {data.length > 0 ? (
                                             data.map((item) => (
-                                                <motion.tr key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                <motion.tr key={item.id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-850 text-sm text-slate-700 dark:text-zinc-300">
                                                     <td className="p-3">{item.id}</td>
                                                     <td className="p-3">{moment(item.date).format("DD-MM-YYYY")}</td>
                                                     <td className="p-3 text-center">{item.order}</td>
@@ -199,12 +199,12 @@ const SalesReportsDaily = () => {
                                                 </motion.tr>
                                             ))
                                         ) : (
-                                            <tr><td className="p-3 text-center" colSpan="9">No data available for the selected date range.</td></tr>
+                                            <tr><td className="p-3 text-center text-slate-500 dark:text-zinc-400" colSpan="9">No data available for the selected date range.</td></tr>
                                         )}
                                     </AnimatePresence>
                                 </tbody>
                                 {data.length > 0 && (
-                                    <tfoot className="font-bold bg-slate-100 text-slate-800">
+                                    <tfoot className="font-bold bg-slate-100 dark:bg-zinc-850/50 text-slate-800 dark:text-zinc-200">
                                         <tr>
                                             <td className="p-3 rounded-bl-lg" colSpan={3}>Total</td>
                                             <td className="p-3 text-center">{totals.quantity}</td>
@@ -212,7 +212,7 @@ const SalesReportsDaily = () => {
                                             <td className="p-3 text-right">{totals.vat.toFixed(2)}</td>
                                             <td className="p-3 text-right">{totals.sd.toFixed(2)}</td>
                                             <td className="p-3 text-right">{totals.discount.toFixed(2)}</td>
-                                            <td className="p-3 text-right text-blue-600 rounded-br-lg">{totals.totalAmount.toFixed(2)}</td>
+                                            <td className="p-3 text-right text-blue-600 dark:text-blue-400 rounded-br-lg">{totals.totalAmount.toFixed(2)}</td>
                                         </tr>
                                     </tfoot>
                                 )}

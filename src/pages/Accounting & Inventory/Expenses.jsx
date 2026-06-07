@@ -273,20 +273,34 @@ const Expenses = () => {
         setSelectedVendorForPayment(vendor);
     };
     const renderRowsInfo = () => { if (!paginationInfo || paginationInfo.totalDocuments === 0) { return "No records found."; } const start = (currentPage - 1) * paginationInfo.limit + 1; const end = start - 1 + expenses.length; return `Showing ${start}-${end} of ${paginationInfo.totalDocuments} records`; };
-    const renderStatusBadge = (status) => { const styles = { Paid: "bg-green-100 text-green-800", Unpaid: "bg-red-100 text-red-800", Partial: "bg-yellow-100 text-yellow-800", }; return (<span className={`px-3 py-1 text-xs font-semibold rounded-full ${styles[status] || 'bg-gray-100 text-gray-800'}`}>{status}</span>); };
-       if (permissionsLoading) {
+    const renderStatusBadge = (status) => {
+        const styles = {
+            Paid: "bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-400",
+            Unpaid: "bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400",
+            Partial: "bg-yellow-100 text-yellow-800 dark:bg-yellow-950/40 dark:text-yellow-400",
+        };
+        return (
+            <span className={`px-3 py-1 text-xs font-semibold rounded-full ${styles[status] || 'bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300'}`}>
+                {status}
+            </span>
+        );
+    };
+
+    if (permissionsLoading) {
         return <MtableLoading />;
     }
 
-
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 dark:text-zinc-100">
             <Mtitle title="Expense Management" rightcontent={
                 <div className='flex flex-col md:flex-row md:items-center gap-3'>
-                    <DatePicker selected={fromDate} onChange={(date) => setFromDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full" placeholderText="From Date" isClearable />
-                    <DatePicker selected={toDate} onChange={(date) => setToDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full" placeholderText="To Date" isClearable />
-                    <div className='relative md:w-64'><TfiSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400' /><input type="text" className='input input-bordered w-full pl-10' placeholder='Search...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
-           {canPerform("Expense Management", "add") && (
+                    <DatePicker selected={fromDate} onChange={(date) => setFromDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100" placeholderText="From Date" isClearable />
+                    <DatePicker selected={toDate} onChange={(date) => setToDate(date)} dateFormat="dd/MM/yyyy" className="input input-bordered w-full dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100" placeholderText="To Date" isClearable />
+                    <div className='relative md:w-64'>
+                        <TfiSearch className='absolute left-3 top-1/2 -translate-y-1/2 text-lg text-gray-400' />
+                        <input type="text" className='input input-bordered w-full pl-10 dark:bg-zinc-900 dark:border-zinc-700 dark:text-zinc-100' placeholder='Search...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    </div>
+                    {canPerform("Expense Management", "add") && (
                         <>
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={openPayVendorModal} className="btn bg-green-600 text-white hover:bg-green-700"><FiDollarSign /> Pay Vendor</motion.button>
                             <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={openCreateModal} className="btn bg-blue-600 text-white hover:bg-blue-700"><GoPlus /> New Expense</motion.button>
@@ -296,88 +310,216 @@ const Expenses = () => {
             } />
 
             {/* Main Expense Table */}
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 dark:bg-zinc-900 shadow-xl mt-6 border dark:border-zinc-800">
                 <div className="p-4">
-                    <div className="text-sm text-slate-700 mb-4">{renderRowsInfo()}</div>
+                    <div className="text-sm text-slate-700 dark:text-zinc-400 mb-4">{renderRowsInfo()}</div>
                     {isTableLoading ? <MtableLoading /> : (
                         <div className="overflow-x-auto">
                             <table className="table w-full">
-                                <thead className='bg-blue-600 text-white uppercase text-xs font-medium tracking-wider'><tr><th className="p-3 rounded-tl-lg">Title</th><th className="p-3">Category</th><th className="p-3">Total</th><th className="p-3">Paid</th><th className="p-3">Status</th><th className="p-3">Date</th><th className="p-3 rounded-tr-lg text-center">Actions</th></tr></thead>
+                                <thead className='bg-blue-600 text-white uppercase text-xs font-medium tracking-wider'>
+                                    <tr>
+                                        <th className="p-3 rounded-tl-lg">Title</th>
+                                        <th className="p-3">Category</th>
+                                        <th className="p-3">Total</th>
+                                        <th className="p-3">Paid</th>
+                                        <th className="p-3">Status</th>
+                                        <th className="p-3">Date</th>
+                                        <th className="p-3 rounded-tr-lg text-center">Actions</th>
+                                    </tr>
+                                </thead>
                                 <tbody>
                                     <AnimatePresence>
                                         {expenses.map((expense) => (
-                                            <motion.tr key={expense._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 last:border-b-0 text-sm text-slate-700">
-                                                <td className="p-3 font-medium">{expense.title}</td><td className="p-3">{expense.category}</td><td className="p-3">{expense.totalAmount?.toLocaleString()} BDT</td><td className="p-3">{expense.paidAmount?.toLocaleString()} BDT</td><td className="p-3">{renderStatusBadge(expense.paymentStatus)}</td><td className="p-3">{new Date(expense.date).toLocaleDateString()}</td>
-<td className="p-3">
-    <div className="flex justify-center items-center gap-2">
-        {canPerform("Expense Management", "view") && (
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => { setSelectedExpense(expense); setIsViewModalOpen(true); }} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white"><FiEye /></motion.button>
-        )}
-        {canPerform("Expense Management", "edit") && (
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(expense)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" disabled={expense.purchaseId}><FiEdit /></motion.button>
-        )}
-        {canPerform("Expense Management", "delete") && (
-            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(expense)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white"><FiTrash2 /></motion.button>
-        )}
-    </div>
-</td>
+                                            <motion.tr key={expense._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/50 border-b border-slate-200 dark:border-zinc-800 last:border-b-0 text-sm text-slate-700 dark:text-zinc-300">
+                                                <td className="p-3 font-medium">{expense.title}</td>
+                                                <td className="p-3">{expense.category}</td>
+                                                <td className="p-3">{expense.totalAmount?.toLocaleString()} BDT</td>
+                                                <td className="p-3">{expense.paidAmount?.toLocaleString()} BDT</td>
+                                                <td className="p-3">{renderStatusBadge(expense.paymentStatus)}</td>
+                                                <td className="p-3">{new Date(expense.date).toLocaleDateString()}</td>
+                                                <td className="p-3">
+                                                    <div className="flex justify-center items-center gap-2">
+                                                        {canPerform("Expense Management", "view") && (
+                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => { setSelectedExpense(expense); setIsViewModalOpen(true); }} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white"><FiEye /></motion.button>
+                                                        )}
+                                                        {canPerform("Expense Management", "edit") && (
+                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEdit(expense)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" disabled={expense.purchaseId}><FiEdit /></motion.button>
+                                                        )}
+                                                        {canPerform("Expense Management", "delete") && (
+                                                            <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleRemove(expense)} className="btn btn-circle btn-sm bg-red-600 hover:bg-red-700 text-white"><FiTrash2 /></motion.button>
+                                                        )}
+                                                    </div>
+                                                </td>
                                             </motion.tr>
                                         ))}
                                     </AnimatePresence>
                                 </tbody>
                             </table>
-                            {paginationInfo && paginationInfo.totalPages > 1 && (<div className="p-4 border-t border-slate-200 flex items-center justify-between"><span className="text-sm text-slate-700">Page <span className="font-semibold">{currentPage}</span> of <span className="font-semibold">{paginationInfo.totalPages}</span></span><div className="flex items-center gap-2"><button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="btn btn-sm btn-outline rounded-lg"><FiChevronLeft /></button><button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === paginationInfo.totalPages} className="btn btn-sm btn-outline rounded-lg"><FiChevronRight /></button></div></div>)}
+                            {paginationInfo && paginationInfo.totalPages > 1 && (
+                                <div className="p-4 border-t border-slate-200 dark:border-zinc-800 flex items-center justify-between">
+                                    <span className="text-sm text-slate-700 dark:text-zinc-400">
+                                        Page <span className="font-semibold">{currentPage}</span> of <span className="font-semibold">{paginationInfo.totalPages}</span>
+                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <button onClick={() => setCurrentPage(currentPage - 1)} disabled={currentPage === 1} className="btn btn-sm btn-outline rounded-lg dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"><FiChevronLeft /></button>
+                                        <button onClick={() => setCurrentPage(currentPage + 1)} disabled={currentPage === paginationInfo.totalPages} className="btn btn-sm btn-outline rounded-lg dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"><FiChevronRight /></button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
             </motion.div>
 
             {/* Vendor Payment Modal */}
-            <AnimatePresence>{isPayVendorModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-lg">
-                    <h2 className="text-xl font-semibold text-green-600 mb-6">Record Vendor Payment</h2>
-                    <form onSubmit={handleVendorPaymentSubmit} className="space-y-4">
-                        <div><label className="label-text text-slate-700">Select Vendor *</label><select className="select select-bordered w-full mt-1" onChange={handleVendorSelectChange} required defaultValue=""><option value="" disabled>Select a vendor</option>{vendorsWithBalance.map(v => (<option key={v.vendorId} value={v.vendorId}>{v.vendorName} (Due: {v.dueBalance.toLocaleString()} BDT)</option>))}</select></div>
-                        {selectedVendorForPayment && (<div className="p-3 bg-slate-100 rounded-lg text-sm"><span className="font-semibold">Total Due:</span> {selectedVendorForPayment.dueBalance.toLocaleString()} BDT</div>)}
-                        {user?.role === 'admin' && (<div>
-                            <label className="label-text text-slate-700">Payment Date *</label>
-                            <DatePicker selected={paymentFormData.paymentDate} onChange={(date) => setPaymentFormData(prev => ({ ...prev, paymentDate: date }))} dateFormat="dd/MM/yyyy" className="input input-bordered w-full mt-1" required />
-                        </div>)}
-                        <div><label className="label-text text-slate-700">Amount to Pay *</label><input type="number" name="amountPaid" value={paymentFormData.amountPaid} onChange={handlePaymentFormChange} className="input input-bordered w-full mt-1" placeholder="0.00" required step="0.01" max={selectedVendorForPayment?.dueBalance} /></div>
-                        <div><label className="label-text text-slate-700">Payment Method *</label><select name="paymentMethod" value={paymentFormData.paymentMethod} onChange={handlePaymentFormChange} className="select select-bordered w-full mt-1" required>{["Cash", "Card", "Mobile", "Other"].map(method => <option key={method} value={method}>{method}</option>)}</select></div>
-                        <div><label className="label-text text-slate-700">Notes</label><textarea name="notes" value={paymentFormData.notes} onChange={handlePaymentFormChange} rows="3" className="textarea textarea-bordered w-full mt-1" placeholder="Optional notes..."></textarea></div>
-                        <div className="flex justify-end space-x-4 pt-4"><button type="button" onClick={closePayVendorModal} className="btn rounded-xl">Cancel</button><button type="submit" className="btn bg-green-600 text-white hover:bg-green-700 rounded-xl" disabled={isFormLoading || !selectedVendorForPayment}>{isFormLoading ? 'Processing...' : 'Submit Payment'}</button></div>
-                    </form>
-                </motion.div>
-            </div>)}</AnimatePresence>
+            <AnimatePresence>
+                {isPayVendorModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-lg border dark:border-zinc-800">
+                            <h2 className="text-xl font-semibold text-green-600 mb-6">Record Vendor Payment</h2>
+                            <form onSubmit={handleVendorPaymentSubmit} className="space-y-4">
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Select Vendor *</label>
+                                    <select className="select select-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" onChange={handleVendorSelectChange} required defaultValue="">
+                                        <option value="" disabled>Select a vendor</option>
+                                        {vendorsWithBalance.map(v => (
+                                            <option key={v.vendorId} value={v.vendorId}>{v.vendorName} (Due: {v.dueBalance.toLocaleString()} BDT)</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                {selectedVendorForPayment && (
+                                    <div className="p-3 bg-slate-100 dark:bg-zinc-800/40 rounded-lg text-sm dark:text-zinc-300">
+                                        <span className="font-semibold">Total Due:</span> {selectedVendorForPayment.dueBalance.toLocaleString()} BDT
+                                    </div>
+                                )}
+                                {user?.role === 'admin' && (
+                                    <div>
+                                        <label className="label-text text-slate-700 dark:text-zinc-300">Payment Date *</label>
+                                        <DatePicker selected={paymentFormData.paymentDate} onChange={(date) => setPaymentFormData(prev => ({ ...prev, paymentDate: date }))} dateFormat="dd/MM/yyyy" className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" required />
+                                    </div>
+                                )}
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Amount to Pay *</label>
+                                    <input type="number" name="amountPaid" value={paymentFormData.amountPaid} onChange={handlePaymentFormChange} className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" placeholder="0.00" required step="0.01" max={selectedVendorForPayment?.dueBalance} />
+                                </div>
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Payment Method *</label>
+                                    <select name="paymentMethod" value={paymentFormData.paymentMethod} onChange={handlePaymentFormChange} className="select select-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" required>
+                                        {["Cash", "Card", "Mobile", "Other"].map(method => <option key={method} value={method}>{method}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Notes</label>
+                                    <textarea name="notes" value={paymentFormData.notes} onChange={handlePaymentFormChange} rows="3" className="textarea textarea-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" placeholder="Optional notes..."></textarea>
+                                </div>
+                                <div className="flex justify-end space-x-4 pt-4">
+                                    <button type="button" onClick={closePayVendorModal} className="btn rounded-xl dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700">Cancel</button>
+                                    <button type="submit" className="btn bg-green-600 text-white hover:bg-green-700 rounded-xl" disabled={isFormLoading || !selectedVendorForPayment}>{isFormLoading ? 'Processing...' : 'Submit Payment'}</button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Create/Edit Expense Modal */}
-            <AnimatePresence>{isModalOpen && (<div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-lg max-h-screen overflow-y-auto">
-                    <h2 className="text-xl font-semibold text-blue-600 mb-6">{editId ? 'Edit Expense' : 'Create New Expense'}</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label className="label-text text-slate-700">Category *</label><select name="category" value={formData.category} onChange={handleInputChange} className="input input-bordered w-full mt-1">{["Utility", "Maintenance", "Rent", "Salary", "Groceries", "Marketing", "Cleaning", "Vendor", "Other"].map(cat => <option key={cat} value={cat}>{cat}</option>)}</select></div>
-                        <div><label className="label-text text-slate-700">{formData.category === 'Vendor' ? 'Vendor *' : 'Vendor'}</label>{formData.category === 'Vendor' ? (<select name="vendorName" value={formData.vendorName} onChange={handleInputChange} className="input input-bordered w-full mt-1" required><option value="">Select Vendor</option>{vendors.map(v => (<option key={v._id} value={v.vendorName}>{v.vendorName}</option>))}</select>) : (<input type="text" name="vendorName" value={formData.vendorName} onChange={handleInputChange} className="input input-bordered w-full mt-1" placeholder="Optional" />)}</div>
-                        <div className="md:col-span-2"><label className="label-text text-slate-700">Title *</label><input type="text" name="title" value={formData.title} onChange={handleInputChange} className="input input-bordered w-full mt-1" placeholder="e.g., Office Electricity Bill" required /></div>
-                        <div><label className="label-text text-slate-700">Total Amount *</label><input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleInputChange} className="input input-bordered w-full mt-1" placeholder="0.00" required /></div>
-                        <div><label className="label-text text-slate-700">Paid Amount *</label><input type="number" name="paidAmount" value={formData.paidAmount} onChange={handleInputChange} className="input input-bordered w-full mt-1" placeholder="0.00" required /></div>
-                        <div><label className="label-text text-slate-700">Payment Method *</label><select name="paymentMethod" value={formData.paymentMethod} onChange={handleInputChange} className="input input-bordered w-full mt-1">{["Cash", "Card", "Mobile", "Other"].map(method => <option key={method} value={method}>{method}</option>)}</select></div>
-                        <div><label className="label-text text-slate-700">Payment Status</label><div className="mt-1 input input-bordered w-full flex items-center bg-slate-100">{renderStatusBadge(formData.paymentStatus)}</div></div>
-                        <div className=""><label className="label-text text-slate-700">Date *</label><DatePicker selected={formData.date} onChange={(date) => setFormData(prev => ({...prev, date: date}))} dateFormat="dd/MM/yyyy" className="input input-bordered w-full mt-1" required /></div>
+            <AnimatePresence>
+                {isModalOpen && (
+                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-lg max-h-screen overflow-y-auto border dark:border-zinc-800">
+                            <h2 className="text-xl font-semibold text-blue-600 mb-6">{editId ? 'Edit Expense' : 'Create New Expense'}</h2>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Category *</label>
+                                    <select name="category" value={formData.category} onChange={handleInputChange} className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
+                                        {["Utility", "Maintenance", "Rent", "Salary", "Groceries", "Marketing", "Cleaning", "Vendor", "Other"].map(cat => <option key={cat} value={cat}>{cat}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">{formData.category === 'Vendor' ? 'Vendor *' : 'Vendor'}</label>
+                                    {formData.category === 'Vendor' ? (
+                                        <select name="vendorName" value={formData.vendorName} onChange={handleInputChange} className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" required>
+                                            <option value="">Select Vendor</option>
+                                            {vendors.map(v => (
+                                                <option key={v._id} value={v.vendorName}>{v.vendorName}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <input type="text" name="vendorName" value={formData.vendorName} onChange={handleInputChange} className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" placeholder="Optional" />
+                                    )}
+                                </div>
+                                <div className="md:col-span-2">
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Title *</label>
+                                    <input type="text" name="title" value={formData.title} onChange={handleInputChange} className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" placeholder="e.g., Office Electricity Bill" required />
+                                </div>
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Total Amount *</label>
+                                    <input type="number" name="totalAmount" value={formData.totalAmount} onChange={handleInputChange} className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" placeholder="0.00" required />
+                                </div>
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Paid Amount *</label>
+                                    <input type="number" name="paidAmount" value={formData.paidAmount} onChange={handleInputChange} className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" placeholder="0.00" required />
+                                </div>
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Payment Method *</label>
+                                    <select name="paymentMethod" value={formData.paymentMethod} onChange={handleInputChange} className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100">
+                                        {["Cash", "Card", "Mobile", "Other"].map(method => <option key={method} value={method}>{method}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Payment Status</label>
+                                    <div className="mt-1 input input-bordered w-full flex items-center bg-slate-100 dark:bg-zinc-800 dark:border-zinc-700">{renderStatusBadge(formData.paymentStatus)}</div>
+                                </div>
+                                <div>
+                                    <label className="label-text text-slate-700 dark:text-zinc-300">Date *</label>
+                                    <DatePicker selected={formData.date} onChange={(date) => setFormData(prev => ({...prev, date: date}))} dateFormat="dd/MM/yyyy" className="input input-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" required />
+                                </div>
+                            </div>
+                            <div className="mt-4">
+                                <label className="label-text text-slate-700 dark:text-zinc-300">Note</label>
+                                <textarea name="note" value={formData.note} onChange={handleInputChange} rows="3" className="textarea textarea-bordered w-full mt-1 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100" placeholder="Add any relevant details..."></textarea>
+                            </div>
+                            <div className="flex justify-end space-x-4 mt-8">
+                                <button type="button" onClick={() => setIsModalOpen(false)} className="btn rounded-xl dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700">Cancel</button>
+                                <button onClick={handleAddOrEditExpense} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isFormLoading}>{isFormLoading ? 'Saving...' : editId ? 'Save Changes' : 'Create Expense'}</button>
+                            </div>
+                        </motion.div>
                     </div>
-                    <div className="mt-4"><label className="label-text text-slate-700">Note</label><textarea name="note" value={formData.note} onChange={handleInputChange} rows="3" className="textarea textarea-bordered w-full mt-1" placeholder="Add any relevant details..."></textarea></div>
-                    <div className="flex justify-end space-x-4 mt-8"><button type="button" onClick={() => setIsModalOpen(false)} className="btn rounded-xl">Cancel</button><button onClick={handleAddOrEditExpense} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isFormLoading}>{isFormLoading ? 'Saving...' : editId ? 'Save Changes' : 'Create Expense'}</button></div>
-                </motion.div>
-            </div>)}</AnimatePresence>
+                )}
+            </AnimatePresence>
 
             {/* View Expense Modal */}
-            <AnimatePresence>{isViewModalOpen && selectedExpense && (<div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-lg">
-                    <h2 className="text-xl font-semibold text-blue-600 mb-6">Expense Details</h2>
-                    <div className="space-y-3">{Object.entries({ "Title": selectedExpense.title, "Category": selectedExpense.category, "Vendor Name": selectedExpense.vendorName || "N/A", "Total Amount": `${selectedExpense.totalAmount?.toLocaleString()} BDT`, "Paid Amount": `${selectedExpense.paidAmount?.toLocaleString()} BDT`, "Due Amount": `${(selectedExpense.totalAmount - selectedExpense.paidAmount).toLocaleString()} BDT`, "Payment Status": <div className="inline-block">{renderStatusBadge(selectedExpense.paymentStatus)}</div>, "Payment Method": selectedExpense.paymentMethod, "Date": new Date(selectedExpense.date).toLocaleDateString(), "Note": selectedExpense.note || "No note provided." }).map(([label, value]) => (<div key={label} className="flex flex-col sm:flex-row border-b border-slate-200 pb-2 text-sm"><p className="font-semibold text-slate-700 w-full sm:w-1/3">{label}:</p><div className="text-slate-700 w-full sm:w-2/3">{value}</div></div>))}</div>
-                    <div className="flex justify-end mt-8"><button onClick={() => setIsViewModalOpen(false)} className="btn rounded-xl">Close</button></div>
-                </motion.div>
-            </div>)}</AnimatePresence>
+            <AnimatePresence>
+                {isViewModalOpen && selectedExpense && (
+                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-lg border dark:border-zinc-800">
+                            <h2 className="text-xl font-semibold text-blue-600 mb-6">Expense Details</h2>
+                            <div className="space-y-3">
+                                {Object.entries({
+                                    "Title": selectedExpense.title,
+                                    "Category": selectedExpense.category,
+                                    "Vendor Name": selectedExpense.vendorName || "N/A",
+                                    "Total Amount": `${selectedExpense.totalAmount?.toLocaleString()} BDT`,
+                                    "Paid Amount": `${selectedExpense.paidAmount?.toLocaleString()} BDT`,
+                                    "Due Amount": `${(selectedExpense.totalAmount - selectedExpense.paidAmount).toLocaleString()} BDT`,
+                                    "Payment Status": <div className="inline-block">{renderStatusBadge(selectedExpense.paymentStatus)}</div>,
+                                    "Payment Method": selectedExpense.paymentMethod,
+                                    "Date": new Date(selectedExpense.date).toLocaleDateString(),
+                                    "Note": selectedExpense.note || "No note provided."
+                                }).map(([label, value]) => (
+                                    <div key={label} className="flex flex-col sm:flex-row border-b border-slate-200 dark:border-zinc-800 pb-2 text-sm">
+                                        <p className="font-semibold text-slate-700 dark:text-zinc-300 w-full sm:w-1/3">{label}:</p>
+                                        <div className="text-slate-700 dark:text-zinc-300 w-full sm:w-2/3">{value}</div>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex justify-end mt-8">
+                                <button onClick={() => setIsViewModalOpen(false)} className="btn rounded-xl dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-700">Close</button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

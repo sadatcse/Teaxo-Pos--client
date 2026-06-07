@@ -107,13 +107,13 @@ const AverageIngredientCost = () => {
         return (<span className={`flex items-center gap-1 font-semibold ${color}`}>{icon} {Math.abs(change).toFixed(2)}%</span>);
     };
     
-    const filterClass = "border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
+    const filterClass = "border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 dark:text-zinc-100">
             <Mtitle title="Ingredient Cost Analysis" rightcontent={
                 <div className="flex items-center gap-2 flex-wrap justify-end">
-                    <FiFilter className="text-slate-500" />
+                    <FiFilter className="text-slate-500 dark:text-zinc-400" />
                     <select name="category" value={filters.category} onChange={handleFilterChange} className={filterClass} disabled={categoriesLoading}>
                         <option value="">{categoriesLoading ? "Loading..." : "All Categories"}</option>
                         {categoriesError && <option disabled>Error</option>}
@@ -128,7 +128,7 @@ const AverageIngredientCost = () => {
                 </div>
             } />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl mt-6">
                 <div className="card-body p-4 sm:p-6">
                     <div className="mb-4">
        
@@ -150,15 +150,15 @@ const AverageIngredientCost = () => {
                                 <tbody>
                                     <AnimatePresence>
                                         {analysisData.length === 0 ? (
-                                            <tr><td colSpan="5" className="text-center py-12 text-slate-700"><div className="flex flex-col items-center gap-4"><FiX size={48} className="text-slate-400" /><span className="font-semibold">No data found for the selected period/filter.</span></div></td></tr>
+                                            <tr><td colSpan="5" className="text-center py-12 text-slate-700 dark:text-zinc-400"><div className="flex flex-col items-center gap-4"><FiX size={48} className="text-slate-400 dark:text-zinc-500" /><span className="font-semibold">No data found for the selected period/filter.</span></div></td></tr>
                                         ) : (
                                             analysisData.map((item) => (
-                                                <motion.tr key={item.ingredientId} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm">
-                                                    <td className="p-3 font-semibold text-slate-700">{item.ingredientName} <span className="text-xs text-slate-500">({item.unit})</span></td>
-                                                    <td className="p-3 font-bold text-slate-800 text-right">৳{item.averageUnitPrice.toFixed(2)}</td>
+                                                <motion.tr key={item.ingredientId} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-800 text-sm">
+                                                    <td className="p-3 font-semibold text-slate-700 dark:text-zinc-300">{item.ingredientName} <span className="text-xs text-slate-500 dark:text-zinc-400">({item.unit})</span></td>
+                                                    <td className="p-3 font-bold text-slate-800 dark:text-zinc-200 text-right">৳{item.averageUnitPrice.toFixed(2)}</td>
                                                     <td className="p-3 text-center">{renderChangePercentage(item.comparison.change.unitPriceChangePercent)}</td>
-                                                    <td className="p-3 text-slate-700 text-right">{item.totalQuantity.toFixed(2)}</td>
-                                                    <td className="p-3 text-slate-700 text-right">৳{item.totalAmount.toFixed(2)}</td>
+                                                    <td className="p-3 text-slate-700 dark:text-zinc-300 text-right">{item.totalQuantity.toFixed(2)}</td>
+                                                    <td className="p-3 text-slate-700 dark:text-zinc-300 text-right">৳{item.totalAmount.toFixed(2)}</td>
                                                 </motion.tr>
                                             ))
                                         )}
@@ -171,9 +171,9 @@ const AverageIngredientCost = () => {
                     {!isLoading && pagination.totalPages > 1 && (
                         <div className="flex justify-center items-center mt-6">
                             <div className="join">
-                                <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="join-item btn btn-sm"><FiChevronLeft /></button>
-                                <button className="join-item btn btn-sm btn-active">Page {pagination.currentPage} of {pagination.totalPages}</button>
-                                <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="join-item btn btn-sm"><FiChevronRight /></button>
+                                <button onClick={() => handlePageChange(pagination.currentPage - 1)} disabled={pagination.currentPage === 1} className="join-item btn btn-sm dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-700"><FiChevronLeft /></button>
+                                <button className="join-item btn btn-sm btn-active dark:bg-zinc-700 dark:text-zinc-100 dark:border-zinc-650">Page {pagination.currentPage} of {pagination.totalPages}</button>
+                                <button onClick={() => handlePageChange(pagination.currentPage + 1)} disabled={pagination.currentPage === pagination.totalPages} className="join-item btn btn-sm dark:bg-zinc-800 dark:text-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-700"><FiChevronRight /></button>
                             </div>
                         </div>
                     )}

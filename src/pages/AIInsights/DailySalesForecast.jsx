@@ -11,10 +11,10 @@ import MtableLoading from "../../components library/MtableLoading";
 
 // Component for Displaying an Empty or Error State
 const MEmptyState = ({ message, details }) => (
-    <div className="text-center py-20 px-6 bg-slate-50 rounded-xl">
+    <div className="text-center py-20 px-6 bg-slate-50 dark:bg-zinc-900 border dark:border-zinc-800 rounded-xl">
         <FaExclamationCircle className="mx-auto text-4xl text-yellow-400 mb-4" />
-        <h3 className="text-lg font-semibold text-slate-700">{message}</h3>
-        <p className="text-slate-500 text-sm mt-1">{details}</p>
+        <h3 className="text-lg font-semibold text-slate-700 dark:text-zinc-200">{message}</h3>
+        <p className="text-slate-500 dark:text-zinc-400 text-sm mt-1">{details}</p>
     </div>
 );
 
@@ -77,14 +77,14 @@ const DailySalesForecast = () => {
     const today = moment().format("dddd, MMMM Do YYYY");
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200 dark:bg-zinc-950 dark:text-zinc-100">
             <Mtitle 
                 title="Today's Sales Forecast" 
-                rightcontent={<div className="text-slate-500 font-medium">{today}</div>} 
+                rightcontent={<div className="text-slate-500 dark:text-zinc-400 font-medium">{today}</div>} 
             />
             
             <motion.div 
-                className="mt-4 text-slate-600 max-w-2xl"
+                className="mt-4 text-slate-600 dark:text-zinc-350 max-w-2xl"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}

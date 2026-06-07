@@ -33,43 +33,43 @@ const TrendingOrders = () => {
 
   if (isLoading) {
     return (
-      <div className="bg-white p-6 rounded-lg shadow-md w-full">
-        <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">
+      <div className="bg-white dark:bg-zinc-900 p-6 rounded-lg shadow-md border dark:border-zinc-800 w-full">
+        <h3 className="text-sm font-bold text-gray-600 dark:text-zinc-400 uppercase tracking-wider mb-4">
           Trending Orders
         </h3>
-        <p>Loading...</p>
+        <p className="text-gray-500 dark:text-zinc-400">Loading...</p>
       </div>
     );
   }
 
   return (
-    <div className="bg-white p-4 sm:p-6 rounded-lg shadow-md w-full">
-      <h3 className="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4">
+    <div className="bg-white dark:bg-zinc-900 p-4 sm:p-6 rounded-lg shadow-md border dark:border-zinc-800 w-full">
+      <h3 className="text-sm font-bold text-gray-600 dark:text-zinc-400 uppercase tracking-wider mb-4">
         Trending Orders
       </h3>
       {trendingProducts.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
           {trendingProducts.map((product, index) => (
-            <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden">
-              <img 
-                src={product.imgSrc} 
-                alt={product.name} 
-                className="w-full h-32 sm:h-40 object-cover" 
+            <div key={index} className="bg-white dark:bg-zinc-950 rounded-lg shadow-sm border border-gray-100 dark:border-zinc-800 overflow-hidden">
+              <img
+                src={product.imgSrc}
+                alt={product.name}
+                className="w-full h-32 sm:h-40 object-cover"
               />
               <div className="p-4">
                 <div className="flex justify-between items-center mb-3">
-                  <p className="font-bold text-gray-800">{product.name}</p>
-                  <p className="font-semibold text-green-600">
-                    {product.price.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                  <p className="font-bold text-gray-800 dark:text-zinc-100">{product.name}</p>
+                  <p className="font-semibold text-green-600 dark:text-emerald-400">
+                    {product.price.toLocaleString('en-US', { style: 'currency', currency: 'BDT' })}
                   </p>
                 </div>
                 <div className="flex justify-between items-center text-sm">
-                  <p className="text-gray-500">
-                    Orders <span className="font-medium text-gray-700">{product.orders}</span>
+                  <p className="text-gray-500 dark:text-zinc-400">
+                    Orders <span className="font-medium text-gray-700 dark:text-zinc-300">{product.orders}</span>
                   </p>
-                  <p className="text-gray-500">
-                    Income <span className="font-medium text-gray-700">
-                      {product.income.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}
+                  <p className="text-gray-500 dark:text-zinc-400">
+                    Income <span className="font-medium text-gray-700 dark:text-zinc-300">
+                      {product.income.toLocaleString('en-US', { style: 'currency', currency: 'BDT' })}
                     </span>
                   </p>
                 </div>
@@ -78,7 +78,7 @@ const TrendingOrders = () => {
           ))}
         </div>
       ) : (
-        <p className="text-gray-500">No trending orders found for this branch.</p>
+        <p className="text-gray-500 dark:text-zinc-400">No trending orders found for this branch.</p>
       )}
     </div>
   );

@@ -50,10 +50,10 @@ const DashboardHome = () => {
   } = dashboardData;
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50">
+    <div className="p-4 md:p-6 bg-gray-50 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen">
       <div className="grid grid-cols-12 gap-6">
         <div className="col-span-12">
-        <Mtitle title={`Welcome, ${user?.name || "Admin"}!`} />
+          <Mtitle title={`Welcome, ${user?.name || "Admin"}!`} />
         </div>
 
         <div className="col-span-12">
@@ -75,22 +75,22 @@ const DashboardHome = () => {
         <div className="col-span-12 lg:col-span-3">
           <MonthlyRevenue />
         </div>
-        
+
         {/* --- Other Components (2x2 Grid) --- */}
         <div className="col-span-12 lg:col-span-12">
-            <TrendingOrders />
+          <TrendingOrders />
         </div>
-        
+
         <div className="col-span-12 lg:col-span-8">
-            <OrderTimingChart />
+          <OrderTimingChart />
         </div>
-        
+
         <div className="col-span-12 lg:col-span-4">
-            <FavouriteCharts />
+          <FavouriteCharts />
         </div>
-        
+
         <div className="col-span-12 lg:col-span-12">
-            <RecentlyPlacedOrders />
+          <RecentlyPlacedOrders />
         </div>
 
 

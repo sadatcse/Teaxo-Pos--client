@@ -420,7 +420,7 @@ const CustomerManagement = () => {
 
 
     return (
-        <div className="p-4 bg-gray-50 min-h-screen font-sans">
+        <div className="p-4 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen font-sans transition-colors duration-250">
             <Mtitle title="Customer Management" rightcontent={
                 canPerform("Customer Management", "add") && (
                     <div className="flex justify-end gap-4">
@@ -430,6 +430,7 @@ const CustomerManagement = () => {
                                 setFormData({
                                     name: "", address: "", mobile: "", email: "", dateOfBirth: "", anniversary: "",
                                     dateOfFirstVisit: new Date().toISOString().split("T")[0], branch: branch,
+                                    status: "active",
                                 });
                                 setIsModalOpen(true);
                             }}
@@ -441,9 +442,8 @@ const CustomerManagement = () => {
                 )
             } />
 
-            <div className="bg-white p-6 rounded-xl shadow-lg mt-6">
+            <div className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-6 rounded-xl shadow-lg mt-6">
                 <div className="flex justify-between items-center mb-4">
-       
                     {rowsPerPageAndTotal}
                 </div>
 
@@ -451,9 +451,9 @@ const CustomerManagement = () => {
                     <Preloader />
                 ) : (
                     <section className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
-                                <tr className="bg-blue-600 text-white uppercase text-xs font-medium tracking-wider text-left rounded-t-lg">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-zinc-800">
+                            <thead className="bg-gray-50 dark:bg-zinc-800">
+                                <tr className="bg-blue-600 dark:bg-zinc-800/80 text-white uppercase text-xs font-medium tracking-wider text-left rounded-t-lg">
                                     <th className="p-4">Name</th>
                                     <th className="p-4">Mobile</th>
                                     <th className="p-4">Total Orders</th>
@@ -462,19 +462,19 @@ const CustomerManagement = () => {
                                     <th className="p-4 text-center">Action</th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white divide-y divide-gray-200">
+                            <tbody className="bg-white dark:bg-zinc-900 divide-y divide-gray-200 dark:divide-zinc-800">
                                 {customers.length === 0 ? (
                                     <tr>
-                                        <td colSpan="6" className="text-center py-6 text-gray-500">No customers found</td>
+                                        <td colSpan="6" className="text-center py-6 text-gray-500 dark:text-zinc-400 bg-transparent">No customers found</td>
                                     </tr>
                                 ) : (
                                     customers.map((customer, index) => (
-                                        <tr key={index} className="hover:bg-gray-100 transition duration-150">
-                                            <td className="p-4 whitespace-nowrap text-sm font-medium text-gray-900">{customer.name}</td>
-                                            <td className="p-4 whitespace-nowrap text-sm text-gray-600">{customer.mobile}</td>
-                                            <td className="p-4 whitespace-nowrap text-sm text-gray-600">{customer.numberOfOrders || 0}</td>
-                                            <td className="p-4 whitespace-nowrap text-sm text-gray-600">৳ <span></span>{(customer.totalAmountSpent || 0).toFixed(2)}</td>
-                                            <td className="p-4 whitespace-nowrap text-sm text-blue-600 font-bold">{customer.currentPoints || 0}</td>
+                                        <tr key={index} className="hover:bg-gray-100 dark:hover:bg-zinc-800/50 transition duration-150">
+                                            <td className="p-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-zinc-200">{customer.name}</td>
+                                            <td className="p-4 whitespace-nowrap text-sm text-gray-600 dark:text-zinc-400">{customer.mobile}</td>
+                                            <td className="p-4 whitespace-nowrap text-sm text-gray-600 dark:text-zinc-400">{customer.numberOfOrders || 0}</td>
+                                            <td className="p-4 whitespace-nowrap text-sm text-gray-600 dark:text-zinc-400">৳ <span></span>{(customer.totalAmountSpent || 0).toFixed(2)}</td>
+                                            <td className="p-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-bold">{customer.currentPoints || 0}</td>
                                          <td className="p-4 whitespace-nowrap text-center text-sm font-medium">
     <div className="flex justify-center items-center space-x-4">
         {canPerform("Customer Management", "view") && (
@@ -543,37 +543,37 @@ const CustomerManagement = () => {
 
             {/* Customer Add/Edit Modal */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 animate-modal-in">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6">{editId !== null ? "Edit Customer" : "Add New Customer"}</h2>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 animate-modal-in text-slate-800 dark:text-zinc-100">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-zinc-150 mb-6">{editId !== null ? "Edit Customer" : "Add New Customer"}</h2>
                         <form onSubmit={(e) => { e.preventDefault(); handleAddOrEditCustomer(); }}>
                             <div className="space-y-4">
                                 <input
                                     type="text"
                                     value={formData.name}
                                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                    className="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                     placeholder="Name"
                                 />
                                 <input
                                     type="text"
                                     value={formData.address}
                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                    className="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                     placeholder="Address"
                                 />
                                 <input
                                     type="text"
                                     value={formData.mobile}
                                     onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                    className="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                     placeholder="Mobile"
                                 />
                                 <input
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                    className="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                     placeholder="Email"
                                 />
                                 <div className="flex gap-4">
@@ -581,14 +581,14 @@ const CustomerManagement = () => {
                                         type="date"
                                         value={formData.dateOfBirth}
                                         onChange={(e) => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                                        className="w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                        className="w-1/2 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                         placeholder="Date of Birth"
                                     />
                                     <input
                                         type="date"
                                         value={formData.anniversary}
                                         onChange={(e) => setFormData({ ...formData, anniversary: e.target.value })}
-                                        className="w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+                                        className="w-1/2 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
                                         placeholder="Anniversary"
                                     />
                                 </div>
@@ -597,7 +597,7 @@ const CustomerManagement = () => {
                                 <button
                                     type="button"
                                     onClick={() => setIsModalOpen(false)}
-                                    className="bg-gray-300 text-gray-700 py-2 px-6 rounded-full hover:bg-gray-400 transition duration-300"
+                                    className="bg-gray-300 dark:bg-zinc-800 text-gray-700 dark:text-zinc-350 py-2 px-6 rounded-full hover:bg-gray-400 dark:hover:bg-zinc-700 transition duration-300 border border-transparent dark:border-zinc-700"
                                 >
                                     Cancel
                                 </button>
@@ -616,26 +616,26 @@ const CustomerManagement = () => {
 
             {/* SMS Modal */}
             {isSmsModalOpen && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 animate-modal-in">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6">Send SMS</h2>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 animate-modal-in text-slate-800 dark:text-zinc-100">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-zinc-150 mb-6">Send SMS</h2>
                         <input
                             type="text"
                             value={smsMobile}
                             readOnly
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 bg-gray-100"
+                            className="w-full border border-gray-300 dark:border-zinc-700 bg-gray-100 dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 mb-4"
                         />
                         <textarea
                             value={smsMessage}
                             onChange={(e) => setSmsMessage(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                            className="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 mb-6 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                             placeholder="Enter message"
                             rows="4"
                         />
                         <div className="flex justify-end gap-4">
                             <button
                                 onClick={() => setIsSmsModalOpen(false)}
-                                className="bg-gray-300 text-gray-700 py-2 px-6 rounded-full hover:bg-gray-400 transition duration-300"
+                                className="bg-gray-300 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 py-2 px-6 rounded-full hover:bg-gray-400 dark:hover:bg-zinc-700 transition duration-300 border border-transparent dark:border-zinc-700"
                             >
                                 Cancel
                             </button>
@@ -652,16 +652,16 @@ const CustomerManagement = () => {
 
             {/* Redeem Points Modal */}
             {isRedeemModalOpen && selectedCustomer && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 animate-modal-in">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-4">Redeem Points</h2>
-                        <p className="text-gray-600 mb-6">Redeeming points for <span className="font-semibold text-indigo-600">{selectedCustomer.name}</span></p>
-                        <p className="mb-4 text-gray-700">Current Points: <span className="font-bold text-blue-600 text-lg">{selectedCustomer.currentPoints}</span></p>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-8 rounded-xl shadow-2xl w-full max-w-md transform transition-all duration-300 scale-95 animate-modal-in text-slate-800 dark:text-zinc-100">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-zinc-150 mb-4">Redeem Points</h2>
+                        <p className="text-gray-600 dark:text-zinc-400 mb-6">Redeeming points for <span className="font-semibold text-indigo-600 dark:text-indigo-400">{selectedCustomer.name}</span></p>
+                        <p className="mb-4 text-gray-700 dark:text-zinc-300">Current Points: <span className="font-bold text-blue-600 dark:text-blue-400 text-lg">{selectedCustomer.currentPoints}</span></p>
                         <input
                             type="number"
                             value={redeemPoints}
                             onChange={(e) => setRedeemPoints(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg px-4 py-2 mb-6 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
+                            className="w-full border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150 rounded-lg px-4 py-2 mb-6 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-colors"
                             placeholder="Enter points to redeem"
                             min="1"
                             max={selectedCustomer.currentPoints}
@@ -669,7 +669,7 @@ const CustomerManagement = () => {
                         <div className="flex justify-end gap-4">
                             <button
                                 onClick={() => setIsRedeemModalOpen(false)}
-                                className="bg-gray-300 text-gray-700 py-2 px-6 rounded-full hover:bg-gray-400 transition duration-300"
+                                className="bg-gray-300 dark:bg-zinc-800 text-gray-700 dark:text-zinc-350 py-2 px-6 rounded-full hover:bg-gray-400 dark:hover:bg-zinc-700 transition duration-300 border border-transparent dark:border-zinc-700"
                             >
                                 Cancel
                             </button>
@@ -686,114 +686,114 @@ const CustomerManagement = () => {
 
             {/* Customer Details Modal */}
             {isDetailModalOpen && selectedCustomer && (
-                <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white p-8 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 animate-modal-in">
-                        <h2 className="text-2xl font-bold text-gray-800 mb-6 border-b pb-4">Customer Details</h2>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-8 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-95 animate-modal-in text-slate-800 dark:text-zinc-100">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-zinc-150 mb-6 border-b border-slate-200 dark:border-zinc-800 pb-4">Customer Details</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm mb-8">
-                            <div><p className="text-gray-600"><span className="font-semibold text-gray-800">Name:</span> {selectedCustomer.name}</p></div>
-                            <div><p className="text-gray-600"><span className="font-semibold text-gray-800">Mobile:</span> {selectedCustomer.mobile}</p></div>
-                            <div><p className="text-gray-600"><span className="font-semibold text-gray-800">Email:</span> {selectedCustomer.email || 'N/A'}</p></div>
-                            <div><p className="text-gray-600"><span className="font-semibold text-gray-800">Orders:</span> {selectedCustomer.numberOfOrders || 0}</p></div>
-                            <div><p className="text-gray-600"><span className="font-semibold text-gray-800">Points:</span> {selectedCustomer.currentPoints || 0}</p></div>
-                            <div><p className="text-gray-600"><span className="font-semibold text-gray-800">Total Spent:</span> ${(selectedCustomer.totalAmountSpent || 0).toFixed(2)}</p></div>
-                            <div><p className="text-gray-600"><span className="font-semibold text-gray-800">Date of Birth:</span> {selectedCustomer.dateOfBirth ? moment(selectedCustomer.dateOfBirth).format('L') : 'N/A'}</p></div>
-                            <div><p className="text-gray-600"><span className="font-semibold text-gray-800">Anniversary:</span> {selectedCustomer.anniversary ? moment(selectedCustomer.anniversary).format('L') : 'N/A'}</p></div>
+                            <div><p className="text-gray-600 dark:text-zinc-400"><span className="font-semibold text-gray-800 dark:text-zinc-200">Name:</span> {selectedCustomer.name}</p></div>
+                            <div><p className="text-gray-600 dark:text-zinc-400"><span className="font-semibold text-gray-800 dark:text-zinc-200">Mobile:</span> {selectedCustomer.mobile}</p></div>
+                            <div><p className="text-gray-600 dark:text-zinc-400"><span className="font-semibold text-gray-800 dark:text-zinc-200">Email:</span> {selectedCustomer.email || 'N/A'}</p></div>
+                            <div><p className="text-gray-600 dark:text-zinc-400"><span className="font-semibold text-gray-800 dark:text-zinc-200">Orders:</span> {selectedCustomer.numberOfOrders || 0}</p></div>
+                            <div><p className="text-gray-600 dark:text-zinc-400"><span className="font-semibold text-gray-800 dark:text-zinc-200">Points:</span> {selectedCustomer.currentPoints || 0}</p></div>
+                            <div><p className="text-gray-600 dark:text-zinc-400"><span className="font-semibold text-gray-800 dark:text-zinc-200">Total Spent:</span> ${(selectedCustomer.totalAmountSpent || 0).toFixed(2)}</p></div>
+                            <div><p className="text-gray-600 dark:text-zinc-400"><span className="font-semibold text-gray-800 dark:text-zinc-200">Date of Birth:</span> {selectedCustomer.dateOfBirth ? moment(selectedCustomer.dateOfBirth).format('L') : 'N/A'}</p></div>
+                            <div><p className="text-gray-600 dark:text-zinc-400"><span className="font-semibold text-gray-800 dark:text-zinc-200">Anniversary:</span> {selectedCustomer.anniversary ? moment(selectedCustomer.anniversary).format('L') : 'N/A'}</p></div>
                         </div>
 
                         {/* Invoice History Section with Pagination */}
-                        <h3 className="text-xl font-bold text-gray-800 mt-6 mb-4 border-b pb-2">Invoice History</h3>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-zinc-200 mt-6 mb-4 border-b border-slate-200 dark:border-zinc-800 pb-2">Invoice History</h3>
                         {selectedCustomer.invoices?.length > 0 ? (
-                            <div className="overflow-x-auto border rounded-xl shadow-sm">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-100">
+                            <div className="overflow-x-auto border border-slate-200 dark:border-zinc-800 rounded-xl shadow-sm">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-zinc-800">
+                                    <thead className="bg-gray-150 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300">
                                         <tr>
-                                            <th className="p-3 text-left text-sm font-semibold text-gray-600">Invoice</th>
-                                            <th className="p-3 text-left text-sm font-semibold text-gray-600">Date</th>
-                                            <th className="p-3 text-left text-sm font-semibold text-gray-600">Amount</th>
-                                            <th className="p-3 text-left text-sm font-semibold text-gray-600">Earned Points</th>
+                                            <th className="p-3 text-left text-sm font-semibold">Invoice</th>
+                                            <th className="p-3 text-left text-sm font-semibold">Date</th>
+                                            <th className="p-3 text-left text-sm font-semibold">Amount</th>
+                                            <th className="p-3 text-left text-sm font-semibold">Earned Points</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white dark:bg-zinc-900 divide-y divide-gray-250 dark:divide-zinc-800">
                                         {paginatedInvoices.map((invoice, invIndex) => (
-                                            <tr key={invIndex} className="hover:bg-gray-50 transition duration-150">
-                                                <td className="p-3 text-sm text-gray-800">{invoice.invoiceSerial}</td>
-                                                <td className="p-3 text-sm text-gray-800">{moment(invoice.dateTime).format('MMM Do YYYY')}</td>
-                                                <td className="p-3 text-sm text-gray-800">${(invoice.totalAmount || 0).toFixed(2)}</td>
-                                                <td className="p-3 text-sm text-blue-600 font-medium">{invoice.earnedPoints}</td>
+                                            <tr key={invIndex} className="hover:bg-gray-50 dark:hover:bg-zinc-800/40 transition duration-150">
+                                                <td className="p-3 text-sm text-gray-800 dark:text-zinc-305">{invoice.invoiceSerial}</td>
+                                                <td className="p-3 text-sm text-gray-800 dark:text-zinc-305">{moment(invoice.dateTime).format('MMM Do YYYY')}</td>
+                                                <td className="p-3 text-sm text-gray-800 dark:text-zinc-305">${(invoice.totalAmount || 0).toFixed(2)}</td>
+                                                <td className="p-3 text-sm text-blue-600 dark:text-blue-400 font-medium">{invoice.earnedPoints}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                                 {/* Invoice Pagination Controls */}
-                                <div className="flex justify-end items-center p-3 space-x-2 bg-gray-50 rounded-b-xl">
+                                <div className="flex justify-end items-center p-3 space-x-2 bg-gray-50 dark:bg-zinc-800 rounded-b-xl">
                                     <button
                                         onClick={() => setInvoiceCurrentPage(prev => Math.max(0, prev - 1))}
                                         disabled={invoiceCurrentPage === 0}
-                                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 disabled:opacity-50"
+                                        className="px-3 py-1 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 rounded-md text-sm hover:bg-gray-300 dark:hover:bg-zinc-650 disabled:opacity-50"
                                     >
                                         Prev
                                     </button>
-                                    <span className="text-sm text-gray-600">
+                                    <span className="text-sm text-gray-650 dark:text-zinc-400">
                                         Page {invoiceCurrentPage + 1} of {invoiceTotalPages}
                                     </span>
                                     <button
                                         onClick={() => setInvoiceCurrentPage(prev => Math.min(invoiceTotalPages - 1, prev + 1))}
                                         disabled={invoiceCurrentPage === invoiceTotalPages - 1}
-                                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 disabled:opacity-50"
+                                        className="px-3 py-1 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 rounded-md text-sm hover:bg-gray-300 dark:hover:bg-zinc-650 disabled:opacity-50"
                                     >
                                         Next
                                     </button>
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-gray-500 text-center py-4">No invoice history found.</p>
+                            <p className="text-gray-500 dark:text-zinc-450 text-center py-4">No invoice history found.</p>
                         )}
 
                         {/* Redeemed Points History Section with Pagination */}
-                        <h3 className="text-xl font-bold text-gray-800 mt-8 mb-4 border-b pb-2">Redeemed Points History</h3>
+                        <h3 className="text-xl font-bold text-gray-800 dark:text-zinc-200 mt-8 mb-4 border-b border-slate-200 dark:border-zinc-800 pb-2">Redeemed Points History</h3>
                         {selectedCustomer.redeemHistory?.length > 0 ? (
-                            <div className="overflow-x-auto border rounded-xl shadow-sm">
-                                <table className="min-w-full divide-y divide-gray-200">
-                                    <thead className="bg-gray-100">
+                            <div className="overflow-x-auto border border-slate-200 dark:border-zinc-800 rounded-xl shadow-sm">
+                                <table className="min-w-full divide-y divide-gray-200 dark:divide-zinc-800">
+                                    <thead className="bg-gray-150 dark:bg-zinc-800 text-gray-600 dark:text-zinc-300">
                                         <tr>
-                                            <th className="p-3 text-left text-sm font-semibold text-gray-600">Redeemed Points</th>
-                                            <th className="p-3 text-left text-sm font-semibold text-gray-600">Date</th>
-                                            <th className="p-3 text-left text-sm font-semibold text-gray-600">User</th>
+                                            <th className="p-3 text-left text-sm font-semibold">Redeemed Points</th>
+                                            <th className="p-3 text-left text-sm font-semibold">Date</th>
+                                            <th className="p-3 text-left text-sm font-semibold">User</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="bg-white divide-y divide-gray-200">
+                                    <tbody className="bg-white dark:bg-zinc-900 divide-y divide-gray-250 dark:divide-zinc-800">
                                         {paginatedRedeemHistory.map((redeem, redeemIndex) => (
-                                            <tr key={redeemIndex} className="hover:bg-gray-50 transition duration-150">
-                                                <td className="p-3 text-sm text-purple-600 font-medium">{redeem.redeemedPoints}</td>
-                                                <td className="p-3 text-sm text-gray-800">{moment(redeem.redeemedDate).format('MMM Do YYYY')}</td>
-                                                <td className="p-3 text-sm text-gray-800">{redeem.user?.name || 'N/A'}</td>
+                                            <tr key={redeemIndex} className="hover:bg-gray-50 dark:hover:bg-zinc-800/40 transition duration-150">
+                                                <td className="p-3 text-sm text-purple-600 dark:text-purple-400 font-medium">{redeem.redeemedPoints}</td>
+                                                <td className="p-3 text-sm text-gray-800 dark:text-zinc-305">{moment(redeem.redeemedDate).format('MMM Do YYYY')}</td>
+                                                <td className="p-3 text-sm text-gray-800 dark:text-zinc-305">{redeem.user?.name || 'N/A'}</td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                                 {/* Redeem History Pagination Controls */}
-                                <div className="flex justify-end items-center p-3 space-x-2 bg-gray-50 rounded-b-xl">
+                                <div className="flex justify-end items-center p-3 space-x-2 bg-gray-50 dark:bg-zinc-800 rounded-b-xl">
                                     <button
                                         onClick={() => setRedeemCurrentPage(prev => Math.max(0, prev - 1))}
                                         disabled={redeemCurrentPage === 0}
-                                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 disabled:opacity-50"
+                                        className="px-3 py-1 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 rounded-md text-sm hover:bg-gray-300 dark:hover:bg-zinc-650 disabled:opacity-50"
                                     >
                                         Prev
                                     </button>
-                                    <span className="text-sm text-gray-600">
+                                    <span className="text-sm text-gray-655 dark:text-zinc-400">
                                         Page {redeemCurrentPage + 1} of {redeemTotalPages}
                                     </span>
                                     <button
                                         onClick={() => setRedeemCurrentPage(prev => Math.min(redeemTotalPages - 1, prev + 1))}
                                         disabled={redeemCurrentPage === redeemTotalPages - 1}
-                                        className="px-3 py-1 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 disabled:opacity-50"
+                                        className="px-3 py-1 bg-gray-200 dark:bg-zinc-700 text-gray-700 dark:text-zinc-300 rounded-md text-sm hover:bg-gray-300 dark:hover:bg-zinc-650 disabled:opacity-50"
                                     >
                                         Next
                                     </button>
                                 </div>
                             </div>
                         ) : (
-                            <p className="text-gray-500 text-center py-4">No redemption history found.</p>
+                            <p className="text-gray-500 dark:text-zinc-450 text-center py-4">No redemption history found.</p>
                         )}
                         <div className="flex justify-end mt-8">
                             <button

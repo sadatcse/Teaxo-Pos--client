@@ -109,10 +109,10 @@ const Counter = () => {
     };
 
     const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: counters });
-    const inputClass = "w-full border border-gray-300 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
+    const inputClass = "w-full border border-gray-300 dark:border-zinc-700 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-150";
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-base-200">
+        <div className="p-4 sm:p-6 lg:p-8 min-h-screen bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 transition-colors duration-200">
             <Mtitle title="Counter Management" rightcontent={
                 <motion.button
                     whileHover={{ scale: 1.05 }}
@@ -128,14 +128,14 @@ const Counter = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="card bg-base-100 shadow-xl mt-6"
+                className="card bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 shadow-xl mt-6"
             >
                 <div className="card-body p-4 sm:p-6">
-                    <div className="text-sm text-slate-700 mb-4">{rowsPerPageAndTotal}</div>
+                    <div className="text-sm text-slate-700 dark:text-zinc-300 mb-4">{rowsPerPageAndTotal}</div>
                     {loading ? <MtableLoading /> : (
                         <div className="overflow-x-auto">
                             <table className="table w-full">
-                                <thead className="bg-blue-600 text-white uppercase text-xs">
+                                <thead className="bg-blue-600 dark:bg-zinc-800 text-white uppercase text-xs border-b border-blue-700 dark:border-zinc-700">
                                     <tr>
                                         <th className="p-3 rounded-tl-lg">Counter Name</th>
                                         <th className="p-3">Counter Serial</th>
@@ -145,10 +145,10 @@ const Counter = () => {
                                 <tbody>
                                     <AnimatePresence>
                                         {paginatedData.length === 0 ? (
-                                            <tr><td colSpan="3" className="text-center py-12 text-slate-700">No counters found.</td></tr>
+                                            <tr><td colSpan="3" className="text-center py-12 text-slate-700 dark:text-zinc-400 bg-transparent">No counters found.</td></tr>
                                         ) : (
                                             paginatedData.map((counter) => (
-                                                <motion.tr key={counter._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                <motion.tr key={counter._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/50 border-b border-slate-200 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-300">
                                                     <td className="p-3 font-medium">{counter.counterName}</td>
                                                     <td className="p-3">{counter.counterSerial}</td>
                                                     <td className="p-3">
@@ -171,15 +171,15 @@ const Counter = () => {
 
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
-                            <h3 className="text-xl font-semibold text-blue-600 mb-6">{editId ? 'Edit Counter' : 'Add New Counter'}</h3>
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-md">
+                            <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-6">{editId ? 'Edit Counter' : 'Add New Counter'}</h3>
                             <div className="space-y-4">
-                                <div><label className="label-text text-slate-700">Counter Name</label><input type="text" value={formData.counterName} onChange={(e) => setFormData({ ...formData, counterName: e.target.value })} className={`${inputClass} mt-1`} placeholder="e.g., Main Counter" /></div>
-                                <div><label className="label-text text-slate-700">Counter Serial</label><input type="number" value={formData.counterSerial} onChange={(e) => setFormData({ ...formData, counterSerial: parseInt(e.target.value) || "" })} className={`${inputClass} mt-1`} placeholder="e.g., 1" /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300 font-medium">Counter Name</label><input type="text" value={formData.counterName} onChange={(e) => setFormData({ ...formData, counterName: e.target.value })} className={`${inputClass} mt-1`} placeholder="e.g., Main Counter" /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-300 font-medium">Counter Serial</label><input type="number" value={formData.counterSerial} onChange={(e) => setFormData({ ...formData, counterSerial: parseInt(e.target.value) || "" })} className={`${inputClass} mt-1`} placeholder="e.g., 1" /></div>
                             </div>
                             <div className="flex justify-end gap-4 mt-8">
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn rounded-xl">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeModal} className="btn rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-750 dark:text-zinc-350 hover:bg-slate-100 dark:hover:bg-zinc-700">Cancel</motion.button>
                                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditCounter} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isLoading}>{isLoading ? <span className="loading loading-spinner"></span> : editId ? 'Save Changes' : 'Add Counter'}</motion.button>
                             </div>
                         </motion.div>

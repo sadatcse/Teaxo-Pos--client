@@ -43,12 +43,12 @@ const SalesSummaryFooter = ({ data }) => {
         <motion.div 
             whileHover={{ scale: 1.03, boxShadow: "0 8px 16px rgba(0,0,0,0.1)" }}
             transition={{ type: "spring", stiffness: 300 }}
-            className="flex items-center gap-4 bg-base-100 p-4 rounded-xl shadow-sm border border-slate-100"
+            className="flex items-center gap-4 bg-white dark:bg-zinc-900 p-4 rounded-xl shadow-sm border border-slate-100 dark:border-zinc-800"
         >
             <div className="flex-shrink-0">{iconMap[label] || <FaClipboardList className="text-2xl text-slate-400" />}</div>
             <div>
-                <p className="text-xs text-slate-500 uppercase font-medium truncate">{label}</p>
-                <p className={`text-xl font-bold ${valueColor || 'text-blue-600'}`}>
+                <p className="text-xs text-slate-500 dark:text-zinc-400 uppercase font-medium truncate">{label}</p>
+                <p className={`text-xl font-bold ${valueColor || 'text-blue-600 dark:text-blue-400'}`}>
                     {isAmount ? `৳${value.toFixed(2)}` : value}
                 </p>
             </div>
@@ -65,29 +65,29 @@ const SalesSummaryFooter = ({ data }) => {
     };
 
     return (
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="card bg-base-100 shadow-xl mt-6">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="card bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-850 shadow-xl mt-6">
             <div className="card-body p-4 sm:p-6 lg:p-8">
-                <div className="text-center mb-8 border-b border-slate-200 pb-6">
-                    <p className="text-sm text-slate-700 uppercase tracking-widest font-semibold mb-2">Total Net Sales</p>
-                    <p className="text-5xl md:text-6xl font-extrabold text-blue-700 tracking-tight leading-none">
+                <div className="text-center mb-8 border-b border-slate-200 dark:border-zinc-800 pb-6">
+                    <p className="text-sm text-slate-700 dark:text-zinc-350 uppercase tracking-widest font-semibold mb-2">Total Net Sales</p>
+                    <p className="text-5xl md:text-6xl font-extrabold text-blue-700 dark:text-blue-450 tracking-tight leading-none">
                         ৳{netSales.toFixed(2)}
                     </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     <SummaryItem label="Gross Sales" value={grossSales} />
-                    <SummaryItem label="Total Discount" value={data.totalDiscount} valueColor="text-red-600" />
-                    <SummaryItem label="Table Discount" value={data.totalTableDiscount} valueColor="text-red-600" />
-                    <SummaryItem label="Total VAT" value={data.totalVat} valueColor="text-purple-600" />
-                    <SummaryItem label="Total SD" value={data.totalSd} valueColor="text-orange-600" />
-                    <SummaryItem label="Cash Collection" value={data.cashPayments} valueColor="text-green-600" />
-                    <SummaryItem label="Card Collection" value={data.cardPayments} valueColor="text-indigo-600" />
-                    <SummaryItem label="Mobile Banking" value={data.mobilePayments} valueColor="text-teal-600" />
-                    <SummaryItem label="Bank Collection" value={data.bankPayments} valueColor="text-slate-600" />
-                    <SummaryItem label="Total Guest Count" value={data.totalGuestCount} isAmount={false} valueColor="text-yellow-600" />
-                    <SummaryItem label="Avg Per Person" value={avgPerPerson} valueColor="text-cyan-600" />
-                    <SummaryItem label="Complimentary" value={data.totalComplimentaryAmount} valueColor="text-pink-600" />
-                    {data.salesByOrderType && Object.entries(data.salesByOrderType).map(([type, amount]) => amount > 0 && <SummaryItem key={type} label={`${type.replace('-', ' ')} Order`} value={amount} valueColor={type === 'dine-in' ? 'text-amber-600' : type === 'takeaway' ? 'text-lime-600' : 'text-rose-600'} />)}
-                    {data.salesByDeliveryProvider && Object.entries(data.salesByDeliveryProvider).map(([provider, amount]) => amount > 0 && <SummaryItem key={provider} label={deliveryProviderLabels[provider] || provider} value={amount} valueColor="text-violet-600" />)}
+                    <SummaryItem label="Total Discount" value={data.totalDiscount} valueColor="text-red-650 dark:text-red-400" />
+                    <SummaryItem label="Table Discount" value={data.totalTableDiscount} valueColor="text-red-650 dark:text-red-400" />
+                    <SummaryItem label="Total VAT" value={data.totalVat} valueColor="text-purple-600 dark:text-purple-400" />
+                    <SummaryItem label="Total SD" value={data.totalSd} valueColor="text-orange-650 dark:text-orange-400" />
+                    <SummaryItem label="Cash Collection" value={data.cashPayments} valueColor="text-green-600 dark:text-green-400" />
+                    <SummaryItem label="Card Collection" value={data.cardPayments} valueColor="text-indigo-600 dark:text-indigo-400" />
+                    <SummaryItem label="Mobile Banking" value={data.mobilePayments} valueColor="text-teal-650 dark:text-teal-400" />
+                    <SummaryItem label="Bank Collection" value={data.bankPayments} valueColor="text-slate-650 dark:text-zinc-400" />
+                    <SummaryItem label="Total Guest Count" value={data.totalGuestCount} isAmount={false} valueColor="text-yellow-600 dark:text-yellow-405" />
+                    <SummaryItem label="Avg Per Person" value={avgPerPerson} valueColor="text-cyan-600 dark:text-cyan-405" />
+                    <SummaryItem label="Complimentary" value={data.totalComplimentaryAmount} valueColor="text-pink-600 dark:text-pink-400" />
+                    {data.salesByOrderType && Object.entries(data.salesByOrderType).map(([type, amount]) => amount > 0 && <SummaryItem key={type} label={`${type.replace('-', ' ')} Order`} value={amount} valueColor={type === 'dine-in' ? 'text-amber-600 dark:text-amber-400' : type === 'takeaway' ? 'text-lime-650 dark:text-lime-400' : 'text-rose-600 dark:text-rose-455'} />)}
+                    {data.salesByDeliveryProvider && Object.entries(data.salesByDeliveryProvider).map(([provider, amount]) => amount > 0 && <SummaryItem key={provider} label={deliveryProviderLabels[provider] || provider} value={amount} valueColor="text-violet-600 dark:text-violet-405" />)}
                 </div>
             </div>
         </motion.div>
@@ -156,44 +156,42 @@ const OrderHistory = () => {
     };
 
     const pageCount = Math.ceil(orderData.length / ordersPerPage);
-    const currentOrders = orderData.slice((currentPage - 1) * ordersPerPage, currentPage * ordersPerPage);
-
-    return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+    const currentOrders = orderData.slice((currentPage - 1) * ordersPerPage, currentPage * ordersPerPage);    return (
+        <div className="p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen transition-colors duration-200">
             <Mtitle title="Daily Order Report" rightcontent={
                 <div className="flex items-center gap-2">
                     <div className="relative">
-                        <DatePicker selected={date} onChange={handleDateChange} className="border border-slate-200 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 pl-10" dateFormat="MMMM d, yyyy" />
-                        <MdCalendarToday className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <DatePicker selected={date} onChange={handleDateChange} className="border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150 pl-10" dateFormat="MMMM d, yyyy" />
+                        <MdCalendarToday className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-zinc-400" />
                     </div>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handlePrintSummary} className="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100" title="Print POS Summary"><MdPrint className="text-xl" /></motion.button>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleExportPdf} className="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100" title="Export as PDF"><MdPictureAsPdf className="text-xl" /></motion.button>
-                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleExportExcel} className="btn btn-ghost btn-circle text-blue-600 hover:bg-blue-100" title="Export as Excel"><MdGridOn className="text-xl" /></motion.button>
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handlePrintSummary} className="btn btn-ghost btn-circle text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-zinc-800" title="Print POS Summary"><MdPrint className="text-xl" /></motion.button>
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleExportPdf} className="btn btn-ghost btn-circle text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-zinc-800" title="Export as PDF"><MdPictureAsPdf className="text-xl" /></motion.button>
+                    <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleExportExcel} className="btn btn-ghost btn-circle text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-zinc-800" title="Export as Excel"><MdGridOn className="text-xl" /></motion.button>
                 </div>
             } />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 shadow-xl mt-6">
                 <div className="card-body p-4 sm:p-6 lg:p-8">
-                    <h3 className="text-xl font-semibold text-blue-600 mb-4">Details for {moment(date).format("MMMM Do, YYYY")}</h3>
+                    <h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-4">Details for {moment(date).format("MMMM Do, YYYY")}</h3>
                     {isLoading ? <MtableLoading /> : (
                         <>
                             <div className="overflow-x-auto">
                                 <table className="table w-full">
-                                    <thead><tr className="bg-blue-600 text-white uppercase text-xs tracking-wider"><th className="p-3 rounded-tl-lg">#</th><th className="p-3">Time</th><th className="p-3">Invoice ID</th><th className="p-3">Items</th><th className="p-3 text-right">Amount</th><th className="p-3 text-center rounded-tr-lg">Action</th></tr></thead>
+                                    <thead><tr className="bg-blue-600 dark:bg-zinc-800 text-white uppercase text-xs tracking-wider border-b border-blue-700 dark:border-zinc-700"><th className="p-3 rounded-tl-lg">#</th><th className="p-3">Time</th><th className="p-3">Invoice ID</th><th className="p-3">Items</th><th className="p-3 text-right">Amount</th><th className="p-3 text-center rounded-tr-lg">Action</th></tr></thead>
                                     <tbody>
                                         <AnimatePresence>
                                             {currentOrders.length > 0 ? (
                                                 currentOrders.map((order, index) => (
-                                                    <motion.tr key={order._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700">
+                                                    <motion.tr key={order._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-850/50 border-b border-slate-200 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-305">
                                                         <td className="p-3">{(currentPage - 1) * ordersPerPage + index + 1}</td>
                                                         <td className="p-3 whitespace-nowrap">{moment(order.dateTime).format('h:mm A')}</td>
-                                                        <td className="p-3 font-mono text-blue-600 whitespace-nowrap">{order.invoiceSerial}</td>
+                                                        <td className="p-3 font-mono text-blue-600 dark:text-blue-400 whitespace-nowrap">{order.invoiceSerial}</td>
                                                         <td className="p-3">{order.totalQty}</td>
-                                                        <td className="p-3 font-bold text-right text-green-600">৳{order.totalAmount.toFixed(2)}</td>
-                                                        <td className="p-3"><div className="flex justify-center items-center gap-2"><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleViewDetails(order)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Details"><MdVisibility /></motion.button><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handlePrintOrder(order)} className="btn btn-ghost btn-circle btn-sm text-blue-600 hover:bg-blue-100" title="Print Receipt"><MdPrint /></motion.button></div></td>
+                                                        <td className="p-3 font-bold text-right text-green-600 dark:text-green-400">৳{order.totalAmount.toFixed(2)}</td>
+                                                        <td className="p-3"><div className="flex justify-center items-center gap-2"><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleViewDetails(order)} className="btn btn-circle btn-sm bg-blue-600 hover:bg-blue-700 text-white" title="View Details"><MdVisibility /></motion.button><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handlePrintOrder(order)} className="btn btn-ghost btn-circle btn-sm text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-zinc-800" title="Print Receipt"><MdPrint /></motion.button></div></td>
                                                     </motion.tr>
                                                 ))
-                                            ) : (<tr><td colSpan="6" className="text-center py-16 text-slate-700">No orders found for this date.</td></tr>)}
+                                            ) : (<tr><td colSpan="6" className="text-center py-16 text-slate-700 dark:text-zinc-405 bg-transparent">No orders found for this date.</td></tr>)}
                                         </AnimatePresence>
                                     </tbody>
                                 </table>
@@ -201,9 +199,9 @@ const OrderHistory = () => {
                             {orderData.length > ordersPerPage && (
                                 <div className="mt-8 flex justify-center">
                                     <div className="join">
-                                        <button onClick={() => setCurrentPage(c => Math.max(1, c - 1))} disabled={currentPage === 1} className="join-item btn btn-sm"><MdChevronLeft /></button>
-                                        <button className="join-item btn btn-sm">Page {currentPage} of {pageCount}</button>
-                                        <button onClick={() => setCurrentPage(c => Math.min(pageCount, c + 1))} disabled={currentPage === pageCount} className="join-item btn btn-sm"><MdChevronRight /></button>
+                                        <button onClick={() => setCurrentPage(c => Math.max(1, c - 1))} disabled={currentPage === 1} className="join-item btn btn-sm border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300"><MdChevronLeft /></button>
+                                        <button className="join-item btn btn-sm border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-850 text-slate-700 dark:text-zinc-300">Page {currentPage} of {pageCount}</button>
+                                        <button onClick={() => setCurrentPage(c => Math.min(pageCount, c + 1))} disabled={currentPage === pageCount} className="join-item btn btn-sm border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300"><MdChevronRight /></button>
                                     </div>
                                 </div>
                             )}
@@ -216,31 +214,31 @@ const OrderHistory = () => {
 
             <AnimatePresence>
                 {showModal && selectedOrder && (
-                     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col">
-                            <div className="flex justify-between items-center p-5 border-b border-slate-200"><h2 className="text-xl font-semibold text-blue-600">Order Details: {selectedOrder.invoiceSerial}</h2><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setShowModal(false)} className="btn btn-sm btn-circle btn-ghost"><MdClose /></motion.button></div>
+                     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-xl shadow-xl w-full max-w-3xl max-h-[90vh] flex flex-col text-slate-800 dark:text-zinc-100">
+                            <div className="flex justify-between items-center p-5 border-b border-slate-200 dark:border-zinc-800"><h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400">Order Details: {selectedOrder.invoiceSerial}</h2><motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => setShowModal(false)} className="btn btn-sm btn-circle btn-ghost text-slate-500 dark:text-zinc-400 hover:bg-slate-100 dark:hover:bg-zinc-800"><MdClose /></motion.button></div>
                             <div className="p-6 space-y-6 overflow-y-auto">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm border-b border-slate-200 pb-4"><div className="space-y-1.5"><p><strong>Staff:</strong> {selectedOrder.loginUserName}</p><p><strong>Order Type:</strong> <span className="capitalize">{selectedOrder.orderType.replace('-', ' ')}</span></p></div><div className="space-y-1.5"><p><strong>Payment:</strong> <span className="font-semibold">{selectedOrder.paymentMethod}</span></p><p><strong>Counter:</strong> {selectedOrder.counter}</p></div></div>
-                                <div><h3 className="text-xl font-semibold text-blue-600 mb-3">Products</h3><div className="overflow-x-auto border border-slate-200 rounded-lg"><table className="min-w-full text-sm"><thead className="bg-slate-100 text-slate-700"><tr><th className="p-3 text-left font-semibold">Product</th><th className="p-3 text-center font-semibold">Qty</th><th className="p-3 text-right font-semibold">Rate</th><th className="p-3 text-right font-semibold">VAT</th><th className="p-3 text-right font-semibold">SD</th><th className="p-3 text-right font-semibold">Subtotal</th></tr></thead><tbody className="divide-y divide-slate-200">{selectedOrder.products.map((item, index) => (<tr key={index} className="hover:bg-blue-50"><td className="p-3 font-medium text-slate-700">{item.productName}{item.isComplimentary && <span className="ml-1 text-[10px] text-green-600 font-bold">(Free)</span>}</td><td className="p-3 text-center text-slate-700">{item.qty}</td><td className="p-3 text-right text-slate-700">{item.isComplimentary ? <span className="line-through text-slate-400">৳{item.rate.toFixed(2)}</span> : `৳${item.rate.toFixed(2)}`}</td><td className="p-3 text-right text-slate-700">{`৳${(item.vat || 0).toFixed(2)}`}</td><td className="p-3 text-right text-slate-700">{`৳${(item.sd || 0).toFixed(2)}`}</td><td className="p-3 text-right font-bold text-slate-700">{item.isComplimentary ? "৳0.00" : `৳${item.subtotal.toFixed(2)}`}</td></tr>))}</tbody></table></div></div>
-                                <div className="flex justify-end pt-4 border-t border-slate-200"><div className="text-sm space-y-2 w-full max-w-xs ml-auto"><div className="flex justify-between"><span className="text-slate-700">Subtotal:</span><span className="font-medium text-slate-700">৳{(selectedOrder.totalSale - selectedOrder.vat - (selectedOrder.sd || 0)).toFixed(2)}</span></div><div className="flex justify-between"><span className="text-slate-700">Total VAT:</span><span className="font-medium text-slate-700">+ ৳{selectedOrder.vat.toFixed(2)}</span></div><div className="flex justify-between"><span className="text-slate-700">Total SD:</span><span className="font-medium text-slate-700">+ ৳{(selectedOrder.sd || 0).toFixed(2)}</span></div><div className="flex justify-between"><span className="text-slate-700">Discount:</span><span className="font-medium text-red-600">- ৳{selectedOrder.discount.toFixed(2)}</span></div><div className="flex justify-between text-lg font-bold pt-2 border-t mt-2"><span className="text-slate-700">Grand Total:</span><span className="font-bold text-lg text-blue-600">৳{selectedOrder.totalAmount.toFixed(2)}</span></div></div></div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm border-b border-slate-200 dark:border-zinc-800 pb-4"><div className="space-y-1.5"><p><strong>Staff:</strong> {selectedOrder.loginUserName}</p><p><strong>Order Type:</strong> <span className="capitalize">{selectedOrder.orderType.replace('-', ' ')}</span></p></div><div className="space-y-1.5"><p><strong>Payment:</strong> <span className="font-semibold">{selectedOrder.paymentMethod}</span></p><p><strong>Counter:</strong> {selectedOrder.counter}</p></div></div>
+                                <div><h3 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-3">Products</h3><div className="overflow-x-auto border border-slate-200 dark:border-zinc-800 rounded-lg"><table className="min-w-full text-sm"><thead className="bg-slate-100 dark:bg-zinc-805 text-slate-700 dark:text-zinc-300"><tr><th className="p-3 text-left font-semibold">Product</th><th className="p-3 text-center font-semibold">Qty</th><th className="p-3 text-right font-semibold">Rate</th><th className="p-3 text-right font-semibold">VAT</th><th className="p-3 text-right font-semibold">SD</th><th className="p-3 text-right font-semibold">Subtotal</th></tr></thead><tbody className="divide-y divide-slate-250 dark:divide-zinc-800">{selectedOrder.products.map((item, index) => (<tr key={index} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40"><td className="p-3 font-medium text-slate-700 dark:text-zinc-305">{item.productName}{item.isComplimentary && <span className="ml-1 text-[10px] text-green-650 dark:text-green-400 font-bold">(Free)</span>}</td><td className="p-3 text-center text-slate-700 dark:text-zinc-305">{item.qty}</td><td className="p-3 text-right text-slate-700 dark:text-zinc-305">{item.isComplimentary ? <span className="line-through text-slate-400 dark:text-zinc-500">৳{item.rate.toFixed(2)}</span> : `৳${item.rate.toFixed(2)}`}</td><td className="p-3 text-right text-slate-700 dark:text-zinc-305">{`৳${(item.vat || 0).toFixed(2)}`}</td><td className="p-3 text-right text-slate-700 dark:text-zinc-305">{`৳${(item.sd || 0).toFixed(2)}`}</td><td className="p-3 text-right font-bold text-slate-700 dark:text-zinc-305">{item.isComplimentary ? "৳0.00" : `৳${item.subtotal.toFixed(2)}`}</td></tr>))}</tbody></table></div></div>
+                                <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-zinc-800"><div className="text-sm space-y-2 w-full max-w-xs ml-auto"><div className="flex justify-between"><span className="text-slate-700 dark:text-zinc-350">Subtotal:</span><span className="font-medium text-slate-700 dark:text-zinc-200">৳{(selectedOrder.totalSale - selectedOrder.vat - (selectedOrder.sd || 0)).toFixed(2)}</span></div><div className="flex justify-between"><span className="text-slate-700 dark:text-zinc-350">Total VAT:</span><span className="font-medium text-slate-700 dark:text-zinc-200">+ ৳{selectedOrder.vat.toFixed(2)}</span></div><div className="flex justify-between"><span className="text-slate-700 dark:text-zinc-350">Total SD:</span><span className="font-medium text-slate-700 dark:text-zinc-200">+ ৳{(selectedOrder.sd || 0).toFixed(2)}</span></div><div className="flex justify-between"><span className="text-slate-700 dark:text-zinc-350">Discount:</span><span className="font-medium text-red-650 dark:text-red-400">- ৳{selectedOrder.discount.toFixed(2)}</span></div><div className="flex justify-between text-lg font-bold pt-2 border-t border-slate-200 dark:border-zinc-800 mt-2"><span className="text-slate-700 dark:text-zinc-200">Grand Total:</span><span className="font-bold text-lg text-blue-600 dark:text-blue-400">৳{selectedOrder.totalAmount.toFixed(2)}</span></div></div></div>
                             </div>
-                            <div className="p-4 bg-slate-50 border-t border-slate-200 rounded-b-lg flex flex-wrap justify-end gap-3"><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowModal(false)} className="btn btn-ghost rounded-xl">Close</motion.button><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handlePrintOrder(selectedOrder)} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md flex items-center gap-2"><MdPrint /> Print Receipt</motion.button></div>
+                            <div className="p-4 bg-slate-50 dark:bg-zinc-850 border-t border-slate-200 dark:border-zinc-800 rounded-b-lg flex flex-wrap justify-end gap-3"><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowModal(false)} className="btn btn-ghost rounded-xl border border-slate-200 dark:border-zinc-700 hover:bg-slate-100 dark:hover:bg-zinc-850 text-slate-700 dark:text-zinc-300">Close</motion.button><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handlePrintOrder(selectedOrder)} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md flex items-center gap-2"><MdPrint /> Print Receipt</motion.button></div>
                         </motion.div>
                     </div>
                 )}
                 {isPrintModalOpen && printData && companies[0] && (
-                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
-                            <h2 className="text-xl font-semibold text-blue-600 mb-4">Print Receipt</h2><p className="text-slate-700 mb-6">Click "Print Now" to generate the receipt for Invoice: <span className="font-semibold">{printData.invoiceSerial}</span>.</p><div className="hidden"><ReceiptTemplate ref={receiptRef} onPrintComplete={handlePrintComplete} profileData={companies[0]} invoiceData={printData} /></div>
-                            <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-slate-200"><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsPrintModalOpen(false)} className="btn rounded-xl">Cancel</motion.button><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { if (receiptRef.current) { receiptRef.current.printReceipt(); } }} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md">Print Now</motion.button></div>
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-md text-slate-800 dark:text-zinc-100">
+                            <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-4">Print Receipt</h2><p className="text-slate-700 dark:text-zinc-300 mb-6">Click "Print Now" to generate the receipt for Invoice: <span className="font-semibold">{printData.invoiceSerial}</span>.</p><div className="hidden"><ReceiptTemplate ref={receiptRef} onPrintComplete={handlePrintComplete} profileData={companies[0]} invoiceData={printData} /></div>
+                            <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-slate-200 dark:border-zinc-800"><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIsPrintModalOpen(false)} className="btn rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700">Cancel</motion.button><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { if (receiptRef.current) { receiptRef.current.printReceipt(); } }} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md">Print Now</motion.button></div>
                         </motion.div>
                     </div>
                 )}
                 {isSummaryPrintModalOpen && companies[0] && (
-                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
-                            <h2 className="text-xl font-semibold text-blue-600 mb-4">Print Daily Summary</h2><p className="text-slate-700 mb-6">Click "Print Now" to generate the summary report for <span className="font-semibold">{moment(date).format("MMMM Do, YYYY")}</span>.</p><div className="hidden"><DailySummaryPrint ref={summaryReceiptRef} profileData={companies[0]} summaryData={showcaseData} reportDate={date} /></div>
-                            <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-slate-200"><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSummaryPrintComplete} className="btn rounded-xl">Cancel</motion.button><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { if (summaryReceiptRef.current) { summaryReceiptRef.current.printReceipt(); } }} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md">Print Now</motion.button></div>
+                    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-md text-slate-800 dark:text-zinc-100">
+                            <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-4">Print Daily Summary</h2><p className="text-slate-700 dark:text-zinc-300 mb-6">Click "Print Now" to generate the summary report for <span className="font-semibold">{moment(date).format("MMMM Do, YYYY")}</span>.</p><div className="hidden"><DailySummaryPrint ref={summaryReceiptRef} profileData={companies[0]} summaryData={showcaseData} reportDate={date} /></div>
+                            <div className="flex justify-end gap-4 mt-6 pt-4 border-t border-slate-200 dark:border-zinc-800"><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleSummaryPrintComplete} className="btn rounded-xl border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-100 dark:hover:bg-zinc-700">Cancel</motion.button><motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => { if (summaryReceiptRef.current) { summaryReceiptRef.current.printReceipt(); } }} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md">Print Now</motion.button></div>
                         </motion.div>
                     </div>
                 )}

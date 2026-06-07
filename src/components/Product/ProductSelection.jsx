@@ -95,12 +95,12 @@ const ProductSelection = ({
     ];
 
     return (
-        <div className="w-full lg:w-4/6 p-1 sm:p-1 font-inter">
+        <div className="w-full lg:w-4/6 p-1 sm:p-1 font-inter text-gray-800 dark:text-zinc-100">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, ease: "easeInOut" }}
-                className="card bg-base-100 shadow-xl"
+                className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl"
             >
                 <div className="card-body p-3 sm:p-6">
                     
@@ -108,19 +108,19 @@ const ProductSelection = ({
                     <div className="mb-2 px-2">
                         <div className="relative w-full">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <FaSearch className="text-gray-400" />
+                                <FaSearch className="text-gray-400 dark:text-zinc-500" />
                             </div>
                             <input
                                 type="text"
                                 placeholder="Search active products..."
-                                className="input input-bordered w-full pl-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                className="input input-bordered w-full pl-10 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                             {searchQuery && (
                                 <button 
                                     onClick={clearSearch}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 dark:text-zinc-400 dark:hover:text-zinc-200"
                                 >
                                     ✕
                                 </button>
@@ -141,7 +141,7 @@ const ProductSelection = ({
                                     className={`btn btn-sm md:btn-md rounded-full shadow-sm transition-colors duration-300 ${
                                         selectedCategory === category && searchQuery === ""
                                         ? "bg-blue-600 hover:bg-blue-700 border-blue-700 text-white" 
-                                        : "btn-ghost"
+                                        : "btn-ghost dark:text-zinc-300 dark:hover:bg-zinc-800"
                                     }`}
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
@@ -178,10 +178,10 @@ const ProductSelection = ({
                                 <table className="table table-pin-rows table-zebra min-w-full">
                                     <thead>
                                         <tr>
-                                            <th className="bg-base-300 p-2 sm:p-4 rounded-tl-lg">Picture</th>
-                                            <th className="bg-base-300 p-2 sm:p-4">Product</th>
-                                            <th className="bg-base-300 p-2 sm:p-4">Rate</th>
-                                            <th className="bg-base-300 p-2 sm:p-4 text-center rounded-tr-lg">Action</th>
+                                            <th className="bg-base-300 dark:bg-zinc-800 dark:text-zinc-200 p-2 sm:p-4 rounded-tl-lg">Picture</th>
+                                            <th className="bg-base-300 dark:bg-zinc-800 dark:text-zinc-200 p-2 sm:p-4">Product</th>
+                                            <th className="bg-base-300 dark:bg-zinc-800 dark:text-zinc-200 p-2 sm:p-4">Rate</th>
+                                            <th className="bg-base-300 dark:bg-zinc-800 dark:text-zinc-200 p-2 sm:p-4 text-center rounded-tr-lg">Action</th>
                                         </tr>
                                     </thead>
                                     
@@ -196,7 +196,7 @@ const ProductSelection = ({
                                                         initial="hidden"
                                                         animate="visible"
                                                         exit="exit"
-                                                        className="hover"
+                                                        className="hover dark:hover:bg-zinc-800/40 border-b dark:border-zinc-800"
                                                     >
                                                         <td className="p-2 sm:px-4">
                                                             <div className="avatar">
@@ -212,16 +212,16 @@ const ProductSelection = ({
                                                                 </div>
                                                             </div>
                                                         </td>
-                                                        <td className="font-bold text-sm sm:text-base text-base-content">
+                                                        <td className="font-bold text-sm sm:text-base text-base-content dark:text-zinc-200">
                                                             {product.productName}
                                                             {/* Show Category Badge if Searching */}
                                                             {searchQuery && (
-                                                                <span className="badge badge-ghost badge-xs ml-2 font-normal text-gray-400">
+                                                                <span className="badge badge-ghost dark:bg-zinc-800 dark:text-zinc-400 badge-xs ml-2 font-normal text-gray-400 border dark:border-zinc-700">
                                                                     {product.category}
                                                                 </span>
                                                             )}
                                                         </td>
-                                                        <td className="font-semibold text-sm sm:text-base">{product.price} TK</td>
+                                                        <td className="font-semibold text-sm sm:text-base dark:text-zinc-300">{product.price} TK</td>
                                                         <td className="text-center p-2 sm:px-4">
                                                             <motion.button
                                                                 onClick={() => addProduct(product)}
@@ -237,7 +237,7 @@ const ProductSelection = ({
                                                 ))
                                             ) : (
                                                 <tr>
-                                                    <td colSpan="4" className="text-center py-8 text-gray-500">
+                                                    <td colSpan="4" className="text-center py-8 text-gray-500 dark:text-zinc-400">
                                                         {isSearching 
                                                             ? "Searching..." 
                                                             : `No products found matching "${searchQuery}"`
@@ -253,11 +253,11 @@ const ProductSelection = ({
                     </div>
 
                     {/* --- PAYMENT METHOD SECTION (Unchanged) --- */}
-                    <div className="divider mt-2 mb-2">Payment Options</div>
+                    <div className="divider mt-2 mb-2 dark:text-zinc-400">Payment Options</div>
                     <div className="p-2 rounded-xl">
                         <div className="flex justify-center flex-wrap gap-3">
                             {["Cash", "Card", "Mobile", "Bank"].map((method) => (
-                                <button key={method} onClick={() => handleMainPaymentButtonClick(method)} className={`btn btn-md min-w-[110px] ${selectedPaymentMethod === method || (selectedSubMethod && cardOptions.some(o => o.name === selectedSubMethod) && method === 'Card') || (selectedSubMethod && mobileOptions.some(o => o.name === selectedSubMethod) && method === 'Mobile') || (selectedPaymentMethod === 'Bank' && method === 'Bank') ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600" : "btn-ghost"}`} disabled={isProcessing}>
+                                <button key={method} onClick={() => handleMainPaymentButtonClick(method)} className={`btn btn-md min-w-[110px] ${selectedPaymentMethod === method || (selectedSubMethod && cardOptions.some(o => o.name === selectedSubMethod) && method === 'Card') || (selectedSubMethod && mobileOptions.some(o => o.name === selectedSubMethod) && method === 'Mobile') || (selectedPaymentMethod === 'Bank' && method === 'Bank') ? "bg-blue-500 hover:bg-blue-600 text-white border-blue-600" : "btn-ghost dark:text-zinc-300 dark:hover:bg-zinc-800 border dark:border-zinc-800/60"}`} disabled={isProcessing}>
                                     {method === "Cash" && <FaMoneyBillWave />}
                                     {method === "Card" && (selectedCardIcon || <FaCreditCard />)}
                                     {method === "Mobile" && <MdOutlineSendToMobile />}
@@ -266,8 +266,8 @@ const ProductSelection = ({
                                 </button>
                             ))}
                         </div>
-                        {selectedPaymentMethod === 'Card' && (<div className="mt-4 flex flex-wrap justify-center gap-3">{cardOptions.map((card) => (<button key={card.name} onClick={() => handleSubPaymentButtonClick(card.name, card.icon)} className={`btn btn-sm ${selectedSubMethod === card.name ? "bg-blue-500 hover:bg-blue-600 text-white" : "btn-ghost"}`} disabled={isProcessing}>{card.icon}<span>{card.name}</span></button>))}</div>)}
-                        {selectedPaymentMethod === 'Mobile' && (<div className="mt-4 flex flex-wrap justify-center gap-3">{mobileOptions.map((mobile) => (<button key={mobile.name} onClick={() => handleSubPaymentButtonClick(mobile.name)} className={`btn btn-sm ${selectedSubMethod === mobile.name ? "bg-blue-500 hover:bg-blue-600 text-white" : "btn-ghost"}`} disabled={isProcessing}><span>{mobile.name}</span></button>))}</div>)}
+                        {selectedPaymentMethod === 'Card' && (<div className="mt-4 flex flex-wrap justify-center gap-3">{cardOptions.map((card) => (<button key={card.name} onClick={() => handleSubPaymentButtonClick(card.name, card.icon)} className={`btn btn-sm ${selectedSubMethod === card.name ? "bg-blue-500 hover:bg-blue-600 text-white" : "btn-ghost dark:text-zinc-300 dark:hover:bg-zinc-800 border dark:border-zinc-800/60"}`} disabled={isProcessing}>{card.icon}<span>{card.name}</span></button>))}</div>)}
+                        {selectedPaymentMethod === 'Mobile' && (<div className="mt-4 flex flex-wrap justify-center gap-3">{mobileOptions.map((mobile) => (<button key={mobile.name} onClick={() => handleSubPaymentButtonClick(mobile.name)} className={`btn btn-sm ${selectedSubMethod === mobile.name ? "bg-blue-500 hover:bg-blue-600 text-white" : "btn-ghost dark:text-zinc-300 dark:hover:bg-zinc-800 border dark:border-zinc-800/60"}`} disabled={isProcessing}><span>{mobile.name}</span></button>))}</div>)}
                     </div>
 
                 </div>

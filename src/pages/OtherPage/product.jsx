@@ -329,14 +329,14 @@ const Product = () => {
     const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: filteredProducts });
 
     return (
-        <div className="p-4 min-h-screen bg-gray-50">
+        <div className="p-4 min-h-screen bg-gray-50 dark:bg-zinc-950">
             {/* Title Bar */}
             <Mtitle title="Product Management" rightcontent={
                 <div className="flex justify-end gap-3 items-center flex-wrap sm:flex-nowrap">
                     
                     {/* --- NEW: ATTRIBUTE FILTER DROPDOWN --- */}
                     <select 
-                        className="w-full sm:w-40 bg-white border outline-none shadow-sm py-2 px-3 text-sm rounded-xl text-gray-600 focus:border-blue-500 transition duration-200"
+                        className="w-full sm:w-40 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 outline-none shadow-sm py-2 px-3 text-sm rounded-xl text-gray-600 dark:text-zinc-300 focus:border-blue-500 dark:focus:border-blue-400 transition duration-200"
                         value={selectedAttributeFilter}
                         onChange={(e) => setSelectedAttributeFilter(e.target.value)}
                     >
@@ -349,7 +349,7 @@ const Product = () => {
 
                     {/* Category Filter */}
                     <select 
-                        className="w-full sm:w-40 bg-white border outline-none shadow-sm py-2 px-3 text-sm rounded-xl text-gray-600 focus:border-blue-500 transition duration-200"
+                        className="w-full sm:w-40 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 outline-none shadow-sm py-2 px-3 text-sm rounded-xl text-gray-600 dark:text-zinc-300 focus:border-blue-500 dark:focus:border-blue-400 transition duration-200"
                         value={selectedCategoryFilter}
                         onChange={(e) => setSelectedCategoryFilter(e.target.value)}
                     >
@@ -362,34 +362,34 @@ const Product = () => {
                     </select>
 
                     {/* Search Input */}
-                    <div className="flex items-center w-full sm:w-48 border shadow-sm py-2 px-3 bg-white rounded-xl">
-                        <TfiSearch className="text-xl font-bold text-gray-500" />
-                        <input type="text" className="outline-none w-full ml-2 text-sm" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    <div className="flex items-center w-full sm:w-48 border border-slate-200 dark:border-zinc-800 shadow-sm py-2 px-3 bg-white dark:bg-zinc-900 rounded-xl">
+                        <TfiSearch className="text-xl font-bold text-gray-500 dark:text-zinc-400" />
+                        <input type="text" className="outline-none w-full ml-2 text-sm bg-transparent text-gray-700 dark:text-zinc-150" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
                     
                     {/* Bulk Add Button */}
                     {canPerform('Product List', 'add') && (
-                        <button onClick={() => setIsBulkModalOpen(true)} className="flex items-center justify-center gap-2 btn btn-outline text-blue-600 border-blue-600 hover:bg-blue-600 hover:text-white rounded-xl shadow transition duration-300 px-4 py-2">
+                        <button onClick={() => setIsBulkModalOpen(true)} className="flex items-center justify-center gap-2 btn btn-outline text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-500/30 hover:bg-blue-600 dark:hover:bg-blue-500 hover:text-white rounded-xl shadow transition duration-300 px-4 py-2">
                             <span className="font-semibold text-sm">Bulk</span><FaLayerGroup />
                         </button>
                     )}
                     
                     {/* Add Product Button */}
                     {canPerform('Product List', 'add') && (
-                        <button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-700 transition duration-300">
+                        <button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-xl shadow transition duration-300">
                             <span className="font-semibold text-sm">Add</span><GoPlus className="text-xl" />
                         </button>
                     )}
                 </div>
             } />
             
-            <div className="mt-4 text-sm md:text-base text-gray-700">{rowsPerPageAndTotal}</div>
+            <div className="mt-4 text-sm md:text-base text-gray-700 dark:text-zinc-350">{rowsPerPageAndTotal}</div>
 
             {/* Table */}
             {loading ? <Preloader /> : (
-                <section className="overflow-x-auto border shadow-sm rounded-xl p-4 mt-5 bg-white">
+                <section className="overflow-x-auto border border-slate-200 dark:border-zinc-800 shadow-sm rounded-xl p-4 mt-5 bg-white dark:bg-zinc-900">
                     <table className="min-w-full table-auto">
-                        <thead className="bg-blue-600 text-white">
+                        <thead className="bg-blue-600 dark:bg-zinc-800 text-white dark:text-zinc-200">
                             <tr className="text-sm text-left">
                                 <th className="p-3 rounded-l-xl">Product Name</th>
                                 <th className="p-3">Category</th>
@@ -400,46 +400,46 @@ const Product = () => {
                                 <th className="p-3 rounded-r-xl text-right px-8">Action</th>
                             </tr>
                         </thead>
-<tbody>
-    {paginatedData.map((product) => (
-        <tr key={product._id} className="border-b hover:bg-slate-100 last:border-0 group">
-            <td className="px-4 py-4 font-medium text-gray-800 relative overflow-hidden">
-                {/* --- DRINK BAR RIBBON START --- */}
-                {product.drinkBar && (
-                    <div className="absolute top-0 left-0 bg-red-400 text-white text-[10px] font-bold px-2 py-0.5 rounded-br-lg shadow-sm z-10">
-                        Drink Bar
-                    </div>
-                )}
-                {/* --- DRINK BAR RIBBON END --- */}
-                
-                <span className={product.drinkBar ? "pl-1" : ""}>
-                    {product.productName}
-                </span>
-            </td>
-            <td className="px-4 py-4 text-gray-600">{product.category}</td>
-            <td className="px-4 py-4 text-gray-600">৳{product.price}</td>
-            <td className="px-4 py-4 text-gray-600">৳{product.vat || 0}</td>
-            <td className="px-4 py-4 text-gray-600">৳{product.sd || 0}</td>
-            <td className="px-4 py-4">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${product.status === 'available' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                    {product.status}
-                </span>
-            </td>
-            <td className="py-4 px-6 flex justify-end gap-3 text-lg">
-                {canPerform('Product List', 'edit') && (
-                    <button onClick={() => handleEdit(product._id)} className="text-blue-500 hover:scale-110">
-                        <FiEdit />
-                    </button>
-                )}
-                {canPerform('Product List', 'delete') && (
-                    <button onClick={() => handleRemove(product._id)} className="text-red-500 hover:scale-110">
-                        <FiTrash2 />
-                    </button>
-                )}
-            </td>
-        </tr>
-    ))}
-</tbody>
+                        <tbody>
+                            {paginatedData.map((product) => (
+                                <tr key={product._id} className="border-b border-slate-100 dark:border-zinc-800/80 hover:bg-slate-100 dark:hover:bg-zinc-800/50 last:border-0 group">
+                                    <td className="px-4 py-4 font-medium text-gray-800 dark:text-zinc-150 relative overflow-hidden">
+                                        {/* --- DRINK BAR RIBBON START --- */}
+                                        {product.drinkBar && (
+                                            <div className="absolute top-0 left-0 bg-red-400 dark:bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-br-lg shadow-sm z-10">
+                                                Drink Bar
+                                            </div>
+                                        )}
+                                        {/* --- DRINK BAR RIBBON END --- */}
+                                        
+                                        <span className={product.drinkBar ? "pl-1" : ""}>
+                                            {product.productName}
+                                        </span>
+                                    </td>
+                                    <td className="px-4 py-4 text-gray-600 dark:text-zinc-400">{product.category}</td>
+                                    <td className="px-4 py-4 text-gray-600 dark:text-zinc-400">৳{product.price}</td>
+                                    <td className="px-4 py-4 text-gray-600 dark:text-zinc-400">৳{product.vat || 0}</td>
+                                    <td className="px-4 py-4 text-gray-600 dark:text-zinc-400">৳{product.sd || 0}</td>
+                                    <td className="px-4 py-4">
+                                        <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${product.status === 'available' ? 'bg-green-100 text-green-800 dark:bg-green-950/40 dark:text-green-400' : 'bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400'}`}>
+                                            {product.status}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-6 flex justify-end gap-3 text-lg">
+                                        {canPerform('Product List', 'edit') && (
+                                            <button onClick={() => handleEdit(product._id)} className="text-blue-500 dark:text-blue-400 hover:scale-110">
+                                                <FiEdit />
+                                            </button>
+                                        )}
+                                        {canPerform('Product List', 'delete') && (
+                                            <button onClick={() => handleRemove(product._id)} className="text-red-500 dark:text-red-400 hover:scale-110">
+                                                <FiTrash2 />
+                                            </button>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
                     </table>
                     <MtableLoading data={products} />
                     {paginationControls}
@@ -448,38 +448,38 @@ const Product = () => {
 
             {/* BULK ADD MODAL */}
             {isBulkModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-2xl shadow-lg w-full max-w-6xl max-h-[90vh] flex flex-col animate-fadeInUp">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-lg w-full max-w-6xl max-h-[90vh] flex flex-col animate-fadeInUp">
                         {/* Modal Header */}
-                        <div className="flex justify-between items-center p-4 border-b">
-                            <h2 className="text-xl font-semibold text-blue-600 flex items-center gap-2"><FaLayerGroup /> Bulk Add Products</h2>
-                            <button onClick={() => setIsBulkModalOpen(false)} className="text-gray-500 hover:text-red-500 transition"><FiX size={24} /></button>
+                        <div className="flex justify-between items-center p-4 border-b dark:border-zinc-800">
+                            <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-2"><FaLayerGroup /> Bulk Add Products</h2>
+                            <button onClick={() => setIsBulkModalOpen(false)} className="text-gray-500 dark:text-zinc-400 hover:text-red-500 dark:hover:text-red-400 transition"><FiX size={24} /></button>
                         </div>
 
                         {/* Top Controls */}
                         <div className="px-6 pt-6 pb-2 grid grid-cols-1 md:grid-cols-3 gap-6">
                              <div className="form-control">
-                                <label className="label pt-0"><span className="label-text font-bold text-gray-700">Category (All Items)</span></label>
-                                <select className="select select-bordered w-full" value={bulkCategory} onChange={(e) => setBulkCategory(e.target.value)}>
+                                <label className="label pt-0"><span className="label-text font-bold text-gray-700 dark:text-zinc-350">Category (All Items)</span></label>
+                                <select className="select select-bordered w-full bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" value={bulkCategory} onChange={(e) => setBulkCategory(e.target.value)}>
                                     <option value="">-- Choose Category --</option>
                                     {categoryNames.map(cat => (<option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>))}
                                 </select>
                              </div>
                              <div className="form-control">
-                                <label className="label pt-0"><span className="label-text font-bold text-gray-700 flex items-center gap-1"><FaMagic className="text-blue-500 text-xs"/> Auto-Fill VAT</span></label>
+                                <label className="label pt-0"><span className="label-text font-bold text-gray-700 dark:text-zinc-350 flex items-center gap-1"><FaMagic className="text-blue-500 text-xs"/> Auto-Fill VAT</span></label>
                                 <div className="flex gap-2">
-                                    <input type="number" className="input input-bordered w-full" placeholder="0" value={globalVat} onChange={(e) => handleGlobalUpdate('vat', e.target.value)} />
-                                    <select className="select select-bordered w-24 px-2" value={globalVatType} onChange={(e) => handleGlobalUpdate('vatType', e.target.value)}>
+                                    <input type="number" className="input input-bordered w-full bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" placeholder="0" value={globalVat} onChange={(e) => handleGlobalUpdate('vat', e.target.value)} />
+                                    <select className="select select-bordered w-24 px-2 bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" value={globalVatType} onChange={(e) => handleGlobalUpdate('vatType', e.target.value)}>
                                         <option value="percentage">%</option>
                                         <option value="amount">৳</option>
                                     </select>
                                 </div>
                              </div>
                              <div className="form-control">
-                                <label className="label pt-0"><span className="label-text font-bold text-gray-700 flex items-center gap-1"><FaMagic className="text-blue-500 text-xs"/> Auto-Fill SD</span></label>
+                                <label className="label pt-0"><span className="label-text font-bold text-gray-700 dark:text-zinc-350 flex items-center gap-1"><FaMagic className="text-blue-500 text-xs"/> Auto-Fill SD</span></label>
                                 <div className="flex gap-2">
-                                    <input type="number" className="input input-bordered w-full" placeholder="0" value={globalSd} onChange={(e) => handleGlobalUpdate('sd', e.target.value)} />
-                                    <select className="select select-bordered w-24 px-2" value={globalSdType} onChange={(e) => handleGlobalUpdate('sdType', e.target.value)}>
+                                    <input type="number" className="input input-bordered w-full bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" placeholder="0" value={globalSd} onChange={(e) => handleGlobalUpdate('sd', e.target.value)} />
+                                    <select className="select select-bordered w-24 px-2 bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" value={globalSdType} onChange={(e) => handleGlobalUpdate('sdType', e.target.value)}>
                                         <option value="percentage">%</option>
                                         <option value="amount">৳</option>
                                     </select>
@@ -490,7 +490,7 @@ const Product = () => {
                         {/* Table Body */}
                         <div className="p-6 overflow-y-auto custom-scrollbar flex-grow">
                             <table className="min-w-full text-left text-sm">
-                                <thead className="bg-blue-50 text-blue-700 font-semibold uppercase">
+                                <thead className="bg-blue-50 dark:bg-zinc-850 text-blue-700 dark:text-blue-300 font-semibold uppercase">
                                     <tr>
                                         <th className="px-4 py-3 rounded-l-lg">Product Name</th>
                                         <th className="px-4 py-3 w-32">Price</th>
@@ -500,19 +500,19 @@ const Product = () => {
                                         <th className="px-4 py-3 rounded-r-lg text-center">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-gray-100">
+                                <tbody className="divide-y divide-gray-100 dark:divide-zinc-800">
                                     {bulkItems.map((item, index) => (
-                                        <tr key={index} className="hover:bg-gray-50 transition">
+                                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-zinc-800/30 transition">
                                             <td className="px-2 py-2">
-                                                <input type="text" className="input input-bordered input-sm w-full rounded-lg" placeholder="Item Name" value={item.productName} onChange={(e) => handleBulkChange(index, 'productName', e.target.value)} />
+                                                <input type="text" className="input input-bordered input-sm w-full rounded-lg bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" placeholder="Item Name" value={item.productName} onChange={(e) => handleBulkChange(index, 'productName', e.target.value)} />
                                             </td>
                                             <td className="px-2 py-2">
-                                                <input type="number" className="input input-bordered input-sm w-full rounded-lg" placeholder="0" value={item.price} onChange={(e) => handleBulkChange(index, 'price', e.target.value)} />
+                                                <input type="number" className="input input-bordered input-sm w-full rounded-lg bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" placeholder="0" value={item.price} onChange={(e) => handleBulkChange(index, 'price', e.target.value)} />
                                             </td>
                                             <td className="px-2 py-2">
                                                 <div className="flex gap-1">
-                                                    <input type="number" className="input input-bordered input-sm w-2/3 rounded-lg" placeholder="0" value={item.vat} onChange={(e) => handleBulkChange(index, 'vat', e.target.value)} />
-                                                    <select className="select select-bordered select-sm w-1/3 px-1 rounded-lg" value={item.vatType} onChange={(e) => handleBulkChange(index, 'vatType', e.target.value)}>
+                                                    <input type="number" className="input input-bordered input-sm w-2/3 rounded-lg bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" placeholder="0" value={item.vat} onChange={(e) => handleBulkChange(index, 'vat', e.target.value)} />
+                                                    <select className="select select-bordered select-sm w-1/3 px-1 rounded-lg bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" value={item.vatType} onChange={(e) => handleBulkChange(index, 'vatType', e.target.value)}>
                                                         <option value="percentage">%</option>
                                                         <option value="amount">৳</option>
                                                     </select>
@@ -520,16 +520,16 @@ const Product = () => {
                                             </td>
                                             <td className="px-2 py-2">
                                                 <div className="flex gap-1">
-                                                    <input type="number" className="input input-bordered input-sm w-2/3 rounded-lg" placeholder="0" value={item.sd} onChange={(e) => handleBulkChange(index, 'sd', e.target.value)} />
-                                                    <select className="select select-bordered select-sm w-1/3 px-1 rounded-lg" value={item.sdType} onChange={(e) => handleBulkChange(index, 'sdType', e.target.value)}>
+                                                    <input type="number" className="input input-bordered input-sm w-2/3 rounded-lg bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" placeholder="0" value={item.sd} onChange={(e) => handleBulkChange(index, 'sd', e.target.value)} />
+                                                    <select className="select select-bordered select-sm w-1/3 px-1 rounded-lg bg-white dark:bg-zinc-800 dark:text-zinc-150 border-slate-200 dark:border-zinc-700" value={item.sdType} onChange={(e) => handleBulkChange(index, 'sdType', e.target.value)}>
                                                         <option value="percentage">%</option>
                                                         <option value="amount">৳</option>
                                                     </select>
                                                 </div>
                                             </td>
-                                            <td className="px-4 py-2 text-right font-medium text-gray-600">{calculateRowTotal(item)}</td>
+                                            <td className="px-4 py-2 text-right font-medium text-gray-600 dark:text-zinc-300">{calculateRowTotal(item)}</td>
                                             <td className="px-2 py-2 text-center">
-                                                <button onClick={() => removeBulkRow(index)} disabled={bulkItems.length === 1} className={`btn btn-sm btn-square btn-ghost ${bulkItems.length === 1 ? 'text-gray-300' : 'text-red-500 hover:bg-red-50'}`}>
+                                                <button onClick={() => removeBulkRow(index)} disabled={bulkItems.length === 1} className={`btn btn-sm btn-square btn-ghost ${bulkItems.length === 1 ? 'text-gray-350 dark:text-zinc-600' : 'text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-zinc-800'}`}>
                                                     <FiTrash2 size={16} />
                                                 </button>
                                             </td>
@@ -538,15 +538,15 @@ const Product = () => {
                                 </tbody>
                             </table>
                             <div className="mt-4">
-                                <button onClick={addBulkRow} className="btn btn-outline btn-sm gap-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700 border-blue-200 hover:border-blue-400">
+                                <button onClick={addBulkRow} className="btn btn-outline btn-sm gap-2 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-zinc-800 hover:text-blue-700 border-blue-200 dark:border-zinc-700 hover:border-blue-400">
                                     <FiPlus /> Add Item
                                 </button>
                             </div>
                         </div>
 
                         {/* Footer */}
-                        <div className="flex justify-end gap-4 p-4 border-t bg-gray-50 rounded-b-2xl">
-                            <button onClick={() => setIsBulkModalOpen(false)} className="px-6 py-2 rounded-xl bg-gray-200 text-gray-700 font-semibold hover:bg-gray-300 transition">Cancel</button>
+                        <div className="flex justify-end gap-4 p-4 border-t dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 rounded-b-2xl">
+                            <button onClick={() => setIsBulkModalOpen(false)} className="px-6 py-2 rounded-xl bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 font-semibold hover:bg-gray-300 dark:hover:bg-zinc-700 transition">Cancel</button>
                             <button onClick={handleBulkSubmit} disabled={isLoading} className="px-6 py-2 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 shadow-md transition disabled:opacity-50">
                                 {isLoading ? "Uploading..." : "Save All Items"}
                             </button>
@@ -557,52 +557,52 @@ const Product = () => {
             
             {/* SINGLE ADD/EDIT MODAL */}
             {isModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                   <div className="bg-white rounded-2xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col animate-fadeInUp">
-                       <div className="flex justify-between items-center p-4 border-b">
-                           <h2 className="text-xl font-semibold text-gray-800">{editId ? "Edit Product" : "Add New Product"}</h2>
-                           <button onClick={closeModal} className="text-gray-500 hover:text-gray-800 transition"><FiX size={24} /></button>
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                   <div className="bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col animate-fadeInUp">
+                       <div className="flex justify-between items-center p-4 border-b dark:border-zinc-800">
+                           <h2 className="text-xl font-semibold text-gray-800 dark:text-zinc-150">{editId ? "Edit Product" : "Add New Product"}</h2>
+                           <button onClick={closeModal} className="text-gray-500 dark:text-zinc-400 hover:text-gray-800 dark:hover:text-zinc-200 transition"><FiX size={24} /></button>
                        </div>
                        <div className="p-6 overflow-y-auto custom-scrollbar">
                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
                                {/* Standard Inputs */}
                                <div>
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Product Name</label>
-                                   <input type="text" value={formData.productName} onChange={(e) => setFormData({ ...formData, productName: e.target.value })} className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder="Enter product name" />
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Product Name</label>
+                                   <input type="text" value={formData.productName} onChange={(e) => setFormData({ ...formData, productName: e.target.value })} className="focus:border-blue-500 appearance-none text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder="Enter product name" />
                                </div>
                                <div>
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                                   <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none">
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Category</label>
+                                   <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="focus:border-blue-500 appearance-none text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none">
                                            <option value="">Select Category</option>
                                            {categoriesLoading ? <option disabled>Loading...</option> : categoriesError ? <option disabled>Error</option> : categoryNames.map((cat) => (<option key={cat._id} value={cat.categoryName}>{cat.categoryName}</option>))}
                                    </select>
                                </div>
                                <div>
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Price</label>
-                                   <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || "" })} className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder="Enter price" />
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Price</label>
+                                   <input type="number" value={formData.price} onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) || "" })} className="focus:border-blue-500 appearance-none text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder="Enter price" />
                                </div>
                                <div>
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                                   <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none">
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Status</label>
+                                   <select value={formData.status} onChange={(e) => setFormData({ ...formData, status: e.target.value })} className="focus:border-blue-500 appearance-none text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none">
                                            <option value="available">Available</option>
                                            <option value="unavailable">Unavailable</option>
                                    </select>
                                </div>
                                <div className="md:col-span-2">
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">VAT</label>
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">VAT</label>
                                    <div className="flex gap-2">
-                                           <input type="number" value={vatInput} onChange={(e) => setVatInput(e.target.value)} className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder={formData.vatType === "percentage" ? "e.g., 15" : "e.g., 25.50"} />
-                                           <select value={formData.vatType} onChange={(e) => { setFormData({ ...formData, vatType: e.target.value }); setVatInput(formData.vat); }} className="focus:border-blue-500 w-40 text-gray-700 border shadow-sm rounded-xl py-2 px-3 focus:outline-none">
+                                           <input type="number" value={vatInput} onChange={(e) => setVatInput(e.target.value)} className="focus:border-blue-500 appearance-none text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder={formData.vatType === "percentage" ? "e.g., 15" : "e.g., 25.50"} />
+                                           <select value={formData.vatType} onChange={(e) => { setFormData({ ...formData, vatType: e.target.value }); setVatInput(formData.vat); }} className="focus:border-blue-500 w-40 text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl py-2 px-3 focus:outline-none">
                                                    <option value="amount">Amount (৳)</option>
                                                    <option value="percentage">Percent (%)</option>
                                            </select>
                                    </div>
                                </div>
                                <div className="md:col-span-2">
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">SD</label>
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">SD</label>
                                    <div className="flex gap-2">
-                                           <input type="number" value={sdInput} onChange={(e) => setSdInput(e.target.value)} className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder={formData.sdType === "percentage" ? "e.g., 10" : "e.g., 10.00"} />
-                                           <select value={formData.sdType} onChange={(e) => { setFormData({ ...formData, sdType: e.target.value }); setSdInput(formData.sd); }} className="focus:border-blue-500 w-40 text-gray-700 border shadow-sm rounded-xl py-2 px-3 focus:outline-none">
+                                           <input type="number" value={sdInput} onChange={(e) => setSdInput(e.target.value)} className="focus:border-blue-500 appearance-none text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none" placeholder={formData.sdType === "percentage" ? "e.g., 10" : "e.g., 10.00"} />
+                                           <select value={formData.sdType} onChange={(e) => { setFormData({ ...formData, sdType: e.target.value }); setSdInput(formData.sd); }} className="focus:border-blue-500 w-40 text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl py-2 px-3 focus:outline-none">
                                                    <option value="amount">Amount (৳)</option>
                                                    <option value="percentage">Percent (%)</option>
                                            </select>
@@ -610,49 +610,49 @@ const Product = () => {
                                </div>
 
                                <div className="md:col-span-2 mt-2">
-                                   <label className="block text-sm font-medium text-gray-700 mb-3 border-b pb-2">Product Attributes</label>
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-350 mb-3 border-b dark:border-zinc-800 pb-2">Product Attributes</label>
                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                        <label className="flex items-center space-x-2 cursor-pointer">
-                                           <input type="checkbox" checked={formData.flavour || false} onChange={(e) => setFormData({ ...formData, flavour: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
-                                           <span className="text-sm font-medium text-gray-700">Flavour</span>
+                                           <input type="checkbox" checked={formData.flavour || false} onChange={(e) => setFormData({ ...formData, flavour: e.target.checked })} className="w-4 h-4 text-blue-600 dark:bg-zinc-800 dark:border-zinc-700 rounded focus:ring-blue-500 cursor-pointer" />
+                                           <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Flavour</span>
                                        </label>
                                        <label className="flex items-center space-x-2 cursor-pointer">
-                                           <input type="checkbox" checked={formData.cFlavor || false} onChange={(e) => setFormData({ ...formData, cFlavor: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
-                                           <span className="text-sm font-medium text-gray-700">C-Flavor</span>
+                                           <input type="checkbox" checked={formData.cFlavor || false} onChange={(e) => setFormData({ ...formData, cFlavor: e.target.checked })} className="w-4 h-4 text-blue-600 dark:bg-zinc-800 dark:border-zinc-700 rounded focus:ring-blue-500 cursor-pointer" />
+                                           <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">C-Flavor</span>
                                        </label>
                                        <label className="flex items-center space-x-2 cursor-pointer">
-                                           <input type="checkbox" checked={formData.addOns || false} onChange={(e) => setFormData({ ...formData, addOns: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
-                                           <span className="text-sm font-medium text-gray-700">Add-Ons</span>
+                                           <input type="checkbox" checked={formData.addOns || false} onChange={(e) => setFormData({ ...formData, addOns: e.target.checked })} className="w-4 h-4 text-blue-600 dark:bg-zinc-800 dark:border-zinc-700 rounded focus:ring-blue-500 cursor-pointer" />
+                                           <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Add-Ons</span>
                                        </label>
                                        <label className="flex items-center space-x-2 cursor-pointer">
-                                           <input type="checkbox" checked={formData.drinkBar || false} onChange={(e) => setFormData({ ...formData, drinkBar: e.target.checked })} className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer" />
-                                           <span className="text-sm font-medium text-gray-700">Drink Bar</span>
+                                           <input type="checkbox" checked={formData.drinkBar || false} onChange={(e) => setFormData({ ...formData, drinkBar: e.target.checked })} className="w-4 h-4 text-blue-600 dark:bg-zinc-800 dark:border-zinc-700 rounded focus:ring-blue-500 cursor-pointer" />
+                                           <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Drink Bar</span>
                                        </label>
                                    </div>
                                </div>
 
                                <div className="md:col-span-2">
-                                   <label className="block text-sm font-medium text-gray-700 mb-1 mt-2">Product Details</label>
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1 mt-2">Product Details</label>
                                    <textarea
                                        value={formData.productDetails}
                                        onChange={(e) => setFormData({ ...formData, productDetails: e.target.value })}
-                                       className="focus:border-blue-500 appearance-none text-gray-700 border shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none h-24 resize-none"
+                                       className="focus:border-blue-500 appearance-none text-gray-700 dark:text-zinc-150 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 shadow-sm rounded-xl w-full py-2 px-3 leading-tight focus:outline-none h-24 resize-none"
                                        placeholder="Enter product details..."
                                    />
                                </div>
 
                                <div className="md:col-span-2">
-                                   <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                                   <label className="block text-sm font-medium text-gray-700 dark:text-zinc-350 mb-1">Image</label>
                                    <ImageUpload setImageUrl={(url) => setFormData({ ...formData, photo: url })} />
                                </div>
                            </div>
                        </div>
-                       <div className="flex justify-end space-x-4 p-4 border-t bg-gray-50 rounded-b-2xl">
-                           <button onClick={closeModal} className="bg-gray-200 text-gray-800 py-2 px-5 font-semibold hover:bg-gray-300 rounded-xl transition">Cancel</button>
+                       <div className="flex justify-end space-x-4 p-4 border-t dark:border-zinc-800 bg-gray-50 dark:bg-zinc-950 rounded-b-2xl">
+                           <button onClick={closeModal} className="bg-gray-200 dark:bg-zinc-800 text-gray-800 dark:text-zinc-250 py-2 px-5 font-semibold hover:bg-gray-300 dark:hover:bg-zinc-700 rounded-xl transition">Cancel</button>
                            <button onClick={handleAddOrEditProduct} disabled={isLoading} className="bg-blue-600 text-white py-2 px-5 font-semibold hover:bg-blue-700 rounded-xl transition disabled:opacity-50">{isLoading ? "Saving..." : "Save"}</button>
                        </div>
-                   </div>
-               </div>
+                    </div>
+                </div>
             )}
         </div>
     );

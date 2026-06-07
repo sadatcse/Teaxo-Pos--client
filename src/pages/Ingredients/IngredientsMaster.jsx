@@ -45,27 +45,27 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
 
     return (
         <div className="flex items-center justify-between pt-4">
-            <span className="text-sm text-slate-700">
-                Page <span className="font-bold text-blue-600">{currentPage}</span> of <span className="font-bold text-blue-600">{totalPages}</span>
+            <span className="text-sm text-slate-700 dark:text-zinc-400">
+                Page <span className="font-bold text-blue-600 dark:text-blue-400">{currentPage}</span> of <span className="font-bold text-blue-600 dark:text-blue-400">{totalPages}</span>
             </span>
             <div className="flex items-center gap-1">
                 <motion.button
                     whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                     onClick={() => onPageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="btn btn-ghost btn-sm btn-circle text-blue-600 hover:bg-blue-100 disabled:bg-transparent disabled:text-slate-400"
+                    className="btn btn-ghost btn-sm btn-circle text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-zinc-800 disabled:bg-transparent disabled:text-slate-400 dark:disabled:text-zinc-600"
                 >
                     <FiChevronLeft className="h-5 w-5" />
                 </motion.button>
                 {getPageNumbers().map((page, index) =>
                     page === '...' ? (
-                        <span key={index} className="px-2 text-slate-500">...</span>
+                        <span key={index} className="px-2 text-slate-500 dark:text-zinc-600">...</span>
                     ) : (
                         <motion.button
                             key={index}
                             whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                             onClick={() => onPageChange(page)}
-                            className={`btn btn-sm btn-circle ${currentPage === page ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-ghost text-slate-700 hover:bg-blue-100'}`}
+                            className={`btn btn-sm btn-circle ${currentPage === page ? 'bg-blue-600 text-white hover:bg-blue-700' : 'btn-ghost text-slate-700 dark:text-zinc-300 hover:bg-blue-100 dark:hover:bg-zinc-800'}`}
                         >
                             {page}
                         </motion.button>
@@ -75,7 +75,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange }) => {
                     whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
                     onClick={() => onPageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="btn btn-ghost btn-sm btn-circle text-blue-600 hover:bg-blue-100 disabled:bg-transparent disabled:text-slate-400"
+                    className="btn btn-ghost btn-sm btn-circle text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-zinc-800 disabled:bg-transparent disabled:text-slate-400 dark:disabled:text-zinc-600"
                 >
                     <FiChevronRight className="h-5 w-5" />
                 </motion.button>
@@ -300,21 +300,21 @@ const Ingredients = () => {
         });
     };
     
-    const inputClass = "w-full border border-slate-200 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
+    const inputClass = "w-full border border-slate-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-xl p-2 shadow-sm focus:ring-blue-500 focus:border-blue-500 transition duration-150";
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 min-h-screen dark:text-zinc-100">
             <Mtitle title="Ingredients & Categories" 
      
                 rightcontent={
                     <div className='flex items-center gap-4'>
                                   <div className='relative w-full md:w-80'>
-                        <TfiSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400' />
+                        <TfiSearch className='absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400 dark:text-zinc-500' />
                         <input type="text" className={`${inputClass} pl-10`} placeholder='Search...' value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
                     {canPerform("Ingredient Management", "add") && (
                         <>      <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setCategoryModalOpen(true)} className="flex items-center gap-2 bg-green-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-green-700 transition duration-300">
-                            <FiPlusCircle className="text-lg" /> Add Category
+                             <FiPlusCircle className="text-lg" /> Add Category
                         </motion.button>
                         <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setIngredientModalOpen(true)} className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300">
                             <GoPlus className="text-xl" /> Add Ingredient
@@ -324,9 +324,9 @@ const Ingredients = () => {
     } 
 />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl mt-6">
                 <div className="card-body p-4 sm:p-6 lg:p-8">
-                    <div role="tablist" className="tabs tabs-boxed mb-6"><a role="tab" className={`tab ${activeTab === 'ingredients' ? 'bg-blue-600 text-white' : ''}`} onClick={() => setActiveTab('ingredients')}>Ingredients</a><a role="tab" className={`tab ${activeTab === 'categories' ? 'bg-blue-600 text-white' : ''}`} onClick={() => setActiveTab('categories')}>Categories</a></div>
+                    <div role="tablist" className="tabs tabs-boxed dark:bg-zinc-800 mb-6"><a role="tab" className={`tab ${activeTab === 'ingredients' ? 'bg-blue-600 text-white' : 'dark:text-zinc-300'}`} onClick={() => setActiveTab('ingredients')}>Ingredients</a><a role="tab" className={`tab ${activeTab === 'categories' ? 'bg-blue-600 text-white' : 'dark:text-zinc-300'}`} onClick={() => setActiveTab('categories')}>Categories</a></div>
                     
                     {activeTab === 'ingredients' ? (
                         <div>
@@ -334,7 +334,7 @@ const Ingredients = () => {
                                 <div className="overflow-x-auto">
                                     <table className="table w-full">
                                         <thead className="bg-blue-600 text-white uppercase text-xs font-medium tracking-wider"><tr><th className="p-3 rounded-tl-lg">Name</th><th className="p-3">Category</th><th className="p-3">Unit</th><th className="p-3">SKU</th><th className="p-3">Status</th><th className="p-3 rounded-tr-lg text-center">Actions</th></tr></thead>
-                                        <tbody><AnimatePresence>{ingredients.length === 0 ? (<tr><td colSpan="6" className="text-center py-8 text-slate-700">No ingredients found.</td></tr>) : (ingredients.map((item) => (<motion.tr key={item._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700"><td className="p-3 font-medium">{item.name}</td><td className="p-3">{item.category?.categoryName || <span className="text-red-500">N/A</span>}</td><td className="p-3">{item.unit}</td><td className="p-3">{item.sku}</td><td className="p-3"><span className={`px-3 py-1 text-xs font-medium rounded-full ${item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{item.isActive ? 'Active' : 'Inactive'}</span></td>
+                                        <tbody><AnimatePresence>{ingredients.length === 0 ? (<tr><td colSpan="6" className="text-center py-8 text-slate-700 dark:text-zinc-400">No ingredients found.</td></tr>) : (ingredients.map((item) => (<motion.tr key={item._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-300"><td className="p-3 font-medium">{item.name}</td><td className="p-3">{item.category?.categoryName || <span className="text-red-500">N/A</span>}</td><td className="p-3">{item.unit}</td><td className="p-3">{item.sku}</td><td className="p-3"><span className={`px-3 py-1 text-xs font-medium rounded-full ${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400'}`}>{item.isActive ? 'Active' : 'Inactive'}</span></td>
                                        <td className="p-3 text-center">
     <div className="flex justify-center items-center gap-2">
         {canPerform("Ingredient Management", "edit") && (
@@ -356,7 +356,7 @@ const Ingredients = () => {
                                 <div className="overflow-x-auto">
                                     <table className="table w-full">
                                         <thead className="bg-blue-600 text-white uppercase text-xs font-medium tracking-wider"><tr><th className="p-3 rounded-tl-lg">Category Name</th><th className="p-3">Status</th><th className="p-3 rounded-tr-lg text-center">Actions</th></tr></thead>
-                                        <tbody><AnimatePresence>{categories.length === 0 ? (<tr><td colSpan="3" className="text-center py-8 text-slate-700">No categories found.</td></tr>) : (categories.map((cat) => (<motion.tr key={cat._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 border-b border-slate-200 text-sm text-slate-700"><td className="p-3 font-medium">{cat.categoryName}</td><td className="p-3"><span className={`px-3 py-1 text-xs font-medium rounded-full ${cat.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>{cat.isActive ? 'Active' : 'Inactive'}</span></td><td className="p-3 text-center">
+                                        <tbody><AnimatePresence>{categories.length === 0 ? (<tr><td colSpan="3" className="text-center py-8 text-slate-700 dark:text-zinc-400">No categories found.</td></tr>) : (categories.map((cat) => (<motion.tr key={cat._id} layout initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="hover:bg-blue-50 dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-800 text-sm text-slate-700 dark:text-zinc-300"><td className="p-3 font-medium">{cat.categoryName}</td><td className="p-3"><span className={`px-3 py-1 text-xs font-medium rounded-full ${cat.isActive ? 'bg-green-100 text-green-700 dark:bg-green-950/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400'}`}>{cat.isActive ? 'Active' : 'Inactive'}</span></td><td className="p-3 text-center">
     <div className="flex justify-center items-center gap-2">
         {canPerform("Ingredient Management", "edit") && (
             <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} onClick={() => handleEditCategory(cat)} className="btn btn-circle btn-sm bg-yellow-600 hover:bg-yellow-700 text-white" title="Edit Category"><FiEdit /></motion.button>
@@ -378,17 +378,17 @@ const Ingredients = () => {
             <AnimatePresence>
                 {isIngredientModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-lg">
-                            <h2 className="text-xl font-semibold text-blue-600 mb-6">{editIngredientId ? 'Edit Ingredient' : 'Create New Ingredient'}</h2>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-lg">
+                            <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-6">{editIngredientId ? 'Edit Ingredient' : 'Create New Ingredient'}</h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                <div className="md:col-span-2"><label className="label-text text-slate-700">Ingredient Name *</label><input type="text" name="name" value={ingredientFormData.name} onChange={handleIngredientInputChange} className={`${inputClass} mt-1`} placeholder="e.g., Flour" required /></div>
-                                <div><label className="label-text text-slate-700">Category *</label><select name="category" value={ingredientFormData.category} onChange={handleIngredientInputChange} className={`${inputClass} mt-1`} required><option value="" disabled>Select a category</option>{activeCategories.map(cat => <option key={cat._id} value={cat._id}>{cat.categoryName}</option>)}</select></div>
-                                <div><label className="label-text text-slate-700">SKU (Stock Code) *</label><input type="text" name="sku" value={ingredientFormData.sku} onChange={handleIngredientInputChange} className={`${inputClass} mt-1`} placeholder="e.g., ING-001" required /></div>
-                                <div><label className="label-text text-slate-700">Purchase Unit *</label><select name="unit" value={ingredientFormData.unit} onChange={handleIngredientInputChange} className={`${inputClass} mt-1`} required><option value="" disabled>Select a unit</option>{['Kg', 'Ltr', 'Lbs', 'Ml', 'Pcs', 'Bottle', 'Can', 'Jar', 'Box', 'Tray', 'Roll', 'Sheet', 'Bag', 'Slice'].map(unit => (<option key={unit} value={unit}>{unit}</option>))}</select></div>
-                                <div className="flex items-center gap-3 mt-4"><label className="label-text text-slate-700">Status:</label><input type="checkbox" name="isActive" checked={ingredientFormData.isActive} onChange={handleIngredientInputChange} className="checkbox checkbox-primary" /></div>
+                                <div className="md:col-span-2"><label className="label-text text-slate-700 dark:text-zinc-350">Ingredient Name *</label><input type="text" name="name" value={ingredientFormData.name} onChange={handleIngredientInputChange} className={`${inputClass} mt-1`} placeholder="e.g., Flour" required /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-350">Category *</label><select name="category" value={ingredientFormData.category} onChange={handleIngredientInputChange} className={`${inputClass} mt-1`} required><option value="" disabled>Select a category</option>{activeCategories.map(cat => <option key={cat._id} value={cat._id}>{cat.categoryName}</option>)}</select></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-350">SKU (Stock Code) *</label><input type="text" name="sku" value={ingredientFormData.sku} onChange={handleIngredientInputChange} className={`${inputClass} mt-1`} placeholder="e.g., ING-001" required /></div>
+                                <div><label className="label-text text-slate-700 dark:text-zinc-350">Purchase Unit *</label><select name="unit" value={ingredientFormData.unit} onChange={handleIngredientInputChange} className={`${inputClass} mt-1`} required><option value="" disabled>Select a unit</option>{['Kg', 'Ltr', 'Lbs', 'Ml', 'Pcs', 'Bottle', 'Can', 'Jar', 'Box', 'Tray', 'Roll', 'Sheet', 'Bag', 'Slice'].map(unit => (<option key={unit} value={unit}>{unit}</option>))}</select></div>
+                                <div className="flex items-center gap-3 mt-4"><label className="label-text text-slate-700 dark:text-zinc-350">Status:</label><input type="checkbox" name="isActive" checked={ingredientFormData.isActive} onChange={handleIngredientInputChange} className="checkbox checkbox-primary" /></div>
                             </div>
                             <div className="flex justify-end space-x-4 mt-8">
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeIngredientModal} className="btn rounded-xl">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeIngredientModal} className="btn rounded-xl dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700">Cancel</motion.button>
                                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditIngredient} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isIngredientFormLoading}>{isIngredientFormLoading ? 'Saving...' : editIngredientId ? 'Save Changes' : 'Create Ingredient'}</motion.button>
                             </div>
                         </motion.div>
@@ -396,12 +396,12 @@ const Ingredients = () => {
                 )}
                 {isCategoryModalOpen && (
                     <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-md">
-                            <h2 className="text-xl font-semibold text-blue-600 mb-6">{editCategoryId ? 'Edit Category' : 'Create New Category'}</h2>
-                            <div><label className="label-text text-slate-700">Category Name *</label><input type="text" name="categoryName" value={categoryFormData.categoryName} onChange={handleCategoryInputChange} className={`${inputClass} mt-1`} placeholder="e.g., Dairy, Vegetables" required /></div>
-                            <div className="flex items-center gap-3 mt-4"><label className="label-text text-slate-700">Status:</label><input type="checkbox" name="isActive" checked={categoryFormData.isActive} onChange={handleCategoryInputChange} className="checkbox checkbox-primary" /></div>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 p-6 rounded-xl shadow-xl w-full max-w-md">
+                            <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-6">{editCategoryId ? 'Edit Category' : 'Create New Category'}</h2>
+                            <div><label className="label-text text-slate-700 dark:text-zinc-350">Category Name *</label><input type="text" name="categoryName" value={categoryFormData.categoryName} onChange={handleCategoryInputChange} className={`${inputClass} mt-1`} placeholder="e.g., Dairy, Vegetables" required /></div>
+                            <div className="flex items-center gap-3 mt-4"><label className="label-text text-slate-700 dark:text-zinc-350">Status:</label><input type="checkbox" name="isActive" checked={categoryFormData.isActive} onChange={handleCategoryInputChange} className="checkbox checkbox-primary" /></div>
                             <div className="flex justify-end space-x-4 mt-8">
-                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeCategoryModal} className="btn rounded-xl">Cancel</motion.button>
+                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={closeCategoryModal} className="btn rounded-xl dark:bg-zinc-800 dark:text-zinc-200 dark:border-zinc-700">Cancel</motion.button>
                                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={handleAddOrEditCategory} className="btn bg-blue-600 text-white hover:bg-blue-700 rounded-xl shadow-md" disabled={isCategoryFormLoading}>{isCategoryFormLoading ? 'Saving...' : editCategoryId ? 'Save Changes' : 'Create Category'}</motion.button>
                             </div>
                         </motion.div>

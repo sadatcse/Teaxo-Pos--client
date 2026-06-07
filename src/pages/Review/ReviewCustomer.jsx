@@ -5,8 +5,8 @@ import UseAxiosSecure from '../../Hook/useAxiosPublic';
 
 // --- SVG Icon Components ---
 
-const StarIcon = ({ color }) => (
-    <svg className="w-8 h-8 transition-colors duration-200" fill={color} viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+const StarIcon = ({ color, className }) => (
+    <svg className={`w-8 h-8 transition-colors duration-200 ${className}`} fill={color} viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
     </svg>
 );
@@ -66,7 +66,7 @@ const StarRating = ({ rating, setRating }) => {
                             className="hidden"
                         />
                         <StarIcon
-                            color={ratingValue <= (hover || rating) ? "#ffc107" : "#e4e5e9"}
+                            className={ratingValue <= (hover || rating) ? "text-amber-400 fill-current" : "text-gray-200 dark:text-zinc-700 fill-current"}
                         />
                     </motion.label>
                 );
@@ -109,7 +109,7 @@ const ReviewCustomer = () => {
     const [error, setError] = useState('');
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [notification, setNotification] = useState({ show: false, message: '', type: 'warning' });
-
+ 
     const fetchOrderDetails = useCallback(async () => {
         try {
             setLoading(true);
@@ -191,7 +191,7 @@ const ReviewCustomer = () => {
 
     if (loading) {
         return (
-            <div className="bg-gray-50 min-h-screen flex items-center justify-center">
+            <div className="bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen flex items-center justify-center">
                 <span className="loading loading-spinner loading-lg text-blue-600"></span>
             </div>
         );
@@ -199,17 +199,17 @@ const ReviewCustomer = () => {
 
     if (error) {
         return (
-            <div className="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+            <div className="bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen flex items-center justify-center p-4">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="card w-full max-w-lg bg-white shadow-xl"
+                    className="card w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 shadow-xl"
                 >
                     <div className="card-body items-center text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="text-red-500 h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <h2 className="card-title text-2xl font-bold text-red-600">Oops! Something went wrong.</h2>
-                        <p className="text-gray-600 mt-2">{error}</p>
+                        <h2 className="card-title text-2xl font-bold text-red-655 dark:text-red-400">Oops! Something went wrong.</h2>
+                        <p className="text-gray-650 dark:text-zinc-400 mt-2">{error}</p>
                     </div>
                 </motion.div>
             </div>
@@ -218,17 +218,17 @@ const ReviewCustomer = () => {
     
     if (formSubmitted) {
         return (
-            <div className="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+            <div className="bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen flex items-center justify-center p-4">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
-                    className="card w-full max-w-lg bg-white shadow-xl"
+                    className="card w-full max-w-lg bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 shadow-xl text-slate-800 dark:text-zinc-100"
                 >
                     <div className="card-body items-center text-center">
                         <svg xmlns="http://www.w3.org/2000/svg" className="text-green-500 h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <h1 className="card-title text-3xl font-bold text-green-600">Thank You!</h1>
-                        <p className="text-lg text-gray-700 mt-2">Your review has been submitted successfully.</p>
+                        <h1 className="card-title text-3xl font-bold text-green-655 dark:text-green-400">Thank You!</h1>
+                        <p className="text-lg text-slate-700 dark:text-zinc-300 mt-2">Your review has been submitted successfully.</p>
                     </div>
                 </motion.div>
             </div>
@@ -236,12 +236,12 @@ const ReviewCustomer = () => {
     }
 
     return (
-        <div className="bg-gray-50 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div className="bg-slate-50 dark:bg-zinc-950 text-slate-800 dark:text-zinc-100 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8 transition-colors duration-250">
             <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-8 space-y-6"
+                className="w-full max-w-2xl bg-white dark:bg-zinc-900 border border-slate-100 dark:border-zinc-800 rounded-2xl shadow-lg p-8 space-y-6 text-slate-800 dark:text-zinc-100"
             >
                 <header className="text-center">
                     {branchInfo?.logo && (
@@ -251,45 +251,45 @@ const ReviewCustomer = () => {
                              className="mx-auto h-20 w-auto object-contain mb-4"
                          />
                     )}
-                    <h1 className="text-3xl font-bold text-gray-800">{branchInfo?.name || 'Review Your Order'}</h1>
-                    <p className="text-sm text-gray-500 mt-1">{branchInfo?.address}</p>
+                    <h1 className="text-3xl font-bold text-gray-800 dark:text-zinc-100">{branchInfo?.name || 'Review Your Order'}</h1>
+                    <p className="text-sm text-gray-500 dark:text-zinc-400 mt-1">{branchInfo?.address}</p>
                     
                     <div className="mt-6">
-                        <h2 className="text-sm font-semibold text-gray-600 uppercase tracking-wider">Order Details</h2>
-                        <div className="mt-3 flex justify-center bg-blue-50/50 rounded-xl p-4 shadow-inner space-x-4">
+                        <h2 className="text-sm font-semibold text-gray-600 dark:text-zinc-400 uppercase tracking-wider">Order Details</h2>
+                        <div className="mt-3 flex justify-center bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100/40 dark:border-blue-900/40 rounded-xl p-4 shadow-inner space-x-4">
                             
                             {/* --- CONDITIONAL RENDERING LOGIC STARTS HERE --- */}
                             {orderInfo?.orderType === 'dine-in' && (
                                 <div className="text-center flex-1">
-                                    <p className="text-xs text-blue-800 font-semibold">Table</p>
-                                    <p className="text-lg font-bold text-blue-900">{orderInfo?.tableName || 'N/A'}</p>
+                                    <p className="text-xs text-blue-800 dark:text-blue-300 font-semibold">Table</p>
+                                    <p className="text-lg font-bold text-blue-900 dark:text-blue-200">{orderInfo?.tableName || 'N/A'}</p>
                                 </div>
                             )}
 
                             {orderInfo?.orderType === 'delivery' && (
                                 <div className="text-center flex-1">
-                                    <p className="text-xs text-blue-800 font-semibold">Delivery Via</p>
-                                    <p className="text-lg font-bold text-blue-900">{orderInfo?.deliveryProvider || 'N/A'}</p>
+                                    <p className="text-xs text-blue-800 dark:text-blue-300 font-semibold">Delivery Via</p>
+                                    <p className="text-lg font-bold text-blue-900 dark:text-blue-200">{orderInfo?.deliveryProvider || 'N/A'}</p>
                                 </div>
                             )}
 
                             {orderInfo?.orderType === 'takeaway' && (
                                 <div className="text-center flex-1">
-                                    <p className="text-xs text-blue-800 font-semibold">Order Type</p>
-                                    <p className="text-lg font-bold text-blue-900">Takeaway</p>
+                                    <p className="text-xs text-blue-800 dark:text-blue-300 font-semibold">Order Type</p>
+                                    <p className="text-lg font-bold text-blue-900 dark:text-blue-200">Takeaway</p>
                                 </div>
                             )}
                             {/* --- CONDITIONAL RENDERING LOGIC ENDS HERE --- */}
 
-                            <div className="border-l border-blue-200"></div>
+                            <div className="border-l border-blue-200 dark:border-zinc-800"></div>
                             <div className="text-center flex-1">
-                                <p className="text-xs text-blue-800 font-semibold">Token</p>
-                                <p className="text-lg font-bold text-blue-900">{orderInfo?.invoiceSerial || 'N/A'}</p>
+                                <p className="text-xs text-blue-800 dark:text-blue-300 font-semibold">Token</p>
+                                <p className="text-lg font-bold text-blue-900 dark:text-blue-200">{orderInfo?.invoiceSerial || 'N/A'}</p>
                             </div>
-                             <div className="border-l border-blue-200"></div>
+                             <div className="border-l border-blue-200 dark:border-zinc-800"></div>
                             <div className="text-center flex-1">
-                                <p className="text-xs text-blue-800 font-semibold">Amount</p>
-                                <p className="text-lg font-bold text-blue-900">৳{orderInfo?.totalAmount?.toFixed(2) || 'N/A'}</p>
+                                <p className="text-xs text-blue-800 dark:text-blue-300 font-semibold">Amount</p>
+                                <p className="text-lg font-bold text-blue-900 dark:text-blue-200">৳{orderInfo?.totalAmount?.toFixed(2) || 'N/A'}</p>
                             </div>
                         </div>
                     </div>
@@ -298,10 +298,10 @@ const ReviewCustomer = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {notification.show && <Notification message={notification.message} type={notification.type} onDismiss={() => setNotification({ show: false, message: '' })} />}
                     
-                    <div className="p-6 border rounded-xl bg-gray-50 space-y-5">
-                         <h3 className="text-lg font-semibold text-gray-700">Your Details</h3>
+                    <div className="p-6 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50 dark:bg-zinc-850/50 space-y-5">
+                         <h3 className="text-lg font-semibold text-gray-700 dark:text-zinc-200">Your Details</h3>
                          <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-1">Phone Number</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-zinc-400 mb-1">Phone Number</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><PhoneIcon /></div>
                                 <input
@@ -310,13 +310,13 @@ const ReviewCustomer = () => {
                                     onChange={(e) => setCustomer({ ...customer, mobile: e.target.value })}
                                     onBlur={handleMobileBlur}
                                     placeholder="Enter your phone to see if we know you"
-                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                                     required
                                 />
                             </div>
                          </div>
                         <div>
-                            <label className="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
+                            <label className="block text-sm font-medium text-gray-600 dark:text-zinc-400 mb-1">Full Name</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UserIcon /></div>
                                 <input
@@ -324,15 +324,15 @@ const ReviewCustomer = () => {
                                     value={customer.name}
                                     onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
                                     placeholder="Your full name"
-                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                    className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                                     required
                                 />
                             </div>
                         </div>
                     </div>
                     
-                    <div className="p-6 border rounded-xl bg-gray-50">
-                        <h3 className="text-lg font-semibold text-gray-700 mb-3">Rate Your Experience</h3>
+                    <div className="p-6 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50 dark:bg-zinc-850/50">
+                        <h3 className="text-lg font-semibold text-gray-700 dark:text-zinc-200 mb-3">Rate Your Experience</h3>
                         <div className="flex justify-center mb-4"><StarRating rating={ratings.overall} setRating={(r) => setRatings({...ratings, overall: r})} /></div>
                         <div className="relative">
                             <div className="absolute top-3 left-0 pl-3 flex items-center pointer-events-none"><CommentIcon /></div>
@@ -340,24 +340,24 @@ const ReviewCustomer = () => {
                                 placeholder="Write your overall feedback..."
                                 value={ratings.comment}
                                 onChange={(e) => setRatings({ ...ratings, comment: e.target.value })}
-                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                                className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:outline-none"
                                 rows="3"
                             ></textarea>
                         </div>
                     </div>
 
-                    <div className="p-6 border rounded-xl bg-gray-50">
-                        <h3 className="text-lg font-semibold text-gray-700 mb-3">Which food did you like best?</h3>
+                    <div className="p-6 border border-slate-200 dark:border-zinc-800 rounded-xl bg-slate-50 dark:bg-zinc-850/50">
+                        <h3 className="text-lg font-semibold text-gray-700 dark:text-zinc-200 mb-3">Which food did you like best?</h3>
                          <div className="relative">
-                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UtensilsIcon /></div>
+                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><UtensilsIcon /></div>
                             <select
                                  value={ratings.bestFoodName}
                                  onChange={(e) => setRatings({ ...ratings, bestFoodName: e.target.value })}
-                                 className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 appearance-none"
+                                 className="w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-slate-800 dark:text-zinc-100 rounded-lg focus:ring-blue-500 focus:border-blue-500 focus:outline-none appearance-none"
                              >
-                                 <option value="">Select an item (optional)</option>
+                                 <option value="" className="bg-white dark:bg-zinc-800 text-slate-805 dark:text-zinc-100">Select an item (optional)</option>
                                  {orderInfo?.products.map(p => (
-                                     <option key={p.productId} value={p.productName}>{p.productName}</option>
+                                     <option key={p.productId} value={p.productName} className="bg-white dark:bg-zinc-800 text-slate-805 dark:text-zinc-100">{p.productName}</option>
                                  ))}
                              </select>
                          </div>

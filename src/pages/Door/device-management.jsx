@@ -89,16 +89,16 @@ const DeviceManagement = () => {
     const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: devices });
 
     return (
-        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8 bg-base-200 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen">
             <Mtitle title="Device Management" rightcontent={
                 <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => openModal()} className="flex items-center gap-2 bg-blue-600 text-white py-2 px-4 rounded-xl shadow-md hover:bg-blue-700 transition duration-300">
                     <FiPlus className="text-xl" /> Add New Device
                 </motion.button>
             } />
 
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card bg-base-100 shadow-xl mt-6">
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="card bg-base-100 dark:bg-zinc-900 border dark:border-zinc-800 shadow-xl mt-6">
                 <div className="p-4">
-                    <div className="text-sm text-slate-700 mb-4">{rowsPerPageAndTotal}</div>
+                    <div className="text-sm text-slate-700 dark:text-zinc-400 mb-4">{rowsPerPageAndTotal}</div>
                     {isPageLoading ? <MtableLoading /> : (
                         <div className="overflow-x-auto">
                             <table className="table w-full">
@@ -112,13 +112,13 @@ const DeviceManagement = () => {
                                 </thead>
                                 <tbody>
                                     {paginatedData.map((device) => (
-                                        <tr key={device._id} className="hover">
+                                        <tr key={device._id} className="hover dark:hover:bg-zinc-800/40 border-b border-slate-200 dark:border-zinc-800 text-slate-700 dark:text-zinc-300">
                                             <td>{device.deviceName}</td>
                                             <td>{device.sn}</td>
-                                            <td><span className={`badge ${device.status === 'active' ? 'badge-success' : 'badge-ghost'}`}>{device.status}</span></td>
+                                            <td><span className={`badge ${device.status === 'active' ? 'badge-success dark:bg-green-950/40 dark:text-green-400 dark:border-green-900/50' : 'badge-ghost dark:bg-zinc-800 dark:text-zinc-300 dark:border-zinc-700'}`}>{device.status}</span></td>
                                             <td className="text-center">
-                                                <button onClick={() => openModal(device)} className="btn btn-ghost btn-sm text-yellow-600"><FiEdit /></button>
-                                                <button onClick={() => handleRemove(device._id)} className="btn btn-ghost btn-sm text-red-600"><FiTrash2 /></button>
+                                                <button onClick={() => openModal(device)} className="btn btn-ghost btn-sm text-yellow-600 hover:bg-yellow-50 dark:hover:bg-yellow-950/30"><FiEdit /></button>
+                                                <button onClick={() => handleRemove(device._id)} className="btn btn-ghost btn-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"><FiTrash2 /></button>
                                             </td>
                                         </tr>
                                     ))}
@@ -132,17 +132,17 @@ const DeviceManagement = () => {
 
             <AnimatePresence>
                 {isModalOpen && (
-                    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-                        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-base-100 p-6 rounded-xl shadow-xl w-full max-w-lg">
-                            <h2 className="text-xl font-semibold mb-6">{editId ? "Edit Device" : "Add New Device"}</h2>
+                    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                        <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }} className="bg-base-100 dark:bg-zinc-900 border dark:border-zinc-850 p-6 rounded-xl shadow-xl w-full max-w-lg">
+                            <h2 className="text-xl font-semibold text-blue-600 dark:text-blue-400 mb-6">{editId ? "Edit Device" : "Add New Device"}</h2>
                             <div className="space-y-4">
-                                <input type="text" value={formData.deviceName} onChange={(e) => setFormData({ ...formData, deviceName: e.target.value })} className="input input-bordered w-full" placeholder="Device Name (e.g. Main Entrance)" />
-                                <input type="text" value={formData.sn} onChange={(e) => setFormData({ ...formData, sn: e.target.value })} className="input input-bordered w-full" placeholder="Device Serial Number (SN)" disabled={!!editId} />
-                                <input type="text" value={formData.deptId} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })} className="input input-bordered w-full" placeholder="Device Department ID" />
+                                <input type="text" value={formData.deviceName} onChange={(e) => setFormData({ ...formData, deviceName: e.target.value })} className="input input-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 w-full" placeholder="Device Name (e.g. Main Entrance)" />
+                                <input type="text" value={formData.sn} onChange={(e) => setFormData({ ...formData, sn: e.target.value })} className="input input-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 w-full" placeholder="Device Serial Number (SN)" disabled={!!editId} />
+                                <input type="text" value={formData.deptId} onChange={(e) => setFormData({ ...formData, deptId: e.target.value })} className="input input-bordered dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 w-full" placeholder="Device Department ID" />
                             </div>
                             <div className="flex justify-end gap-4 mt-8">
-                                <button onClick={closeModal} className="btn">Cancel</button>
-                                <button onClick={handleFormSubmit} className="btn btn-primary" disabled={isLoading}>{isLoading ? "Saving..." : "Save"}</button>
+                                <button onClick={closeModal} className="btn-cancel">Cancel</button>
+                                <button onClick={handleFormSubmit} className="btn-confirm" disabled={isLoading}>{isLoading ? "Saving..." : "Save"}</button>
                             </div>
                         </motion.div>
                     </div>

@@ -233,19 +233,19 @@ const Ingredients = () => {
     const { paginatedData, paginationControls, rowsPerPageAndTotal } = Mpagination({ totalData: filteredIngredients });
 
     return (
-        <div className="p-4 min-h-screen">
+        <div className="p-4 bg-base-200 dark:bg-zinc-950 dark:text-zinc-100 min-h-screen">
             <Mtitle title="Ingredients Management" rightcontent={
                 <div className='flex items-center gap-4'>
                     <button
                         onClick={() => setIngredientModalOpen(true)}
-                        className="flex gap-2 cursor-pointer items-center bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-700 transition duration-300"
+                        className="flex gap-2 cursor-pointer items-center bg-blue-600 text-white py-2 px-4 rounded-xl shadow hover:bg-blue-700 transition duration-300 animate-scale-in"
                     >
                         <span className="font-semibold">Add Ingredient</span>
                         <GoPlus className="text-xl" />
                     </button>
                     <button
                         onClick={() => setCategoryModalOpen(true)}
-                        className="flex gap-2 cursor-pointer items-center bg-green-600 text-white py-2 px-4 rounded-xl shadow hover:bg-green-700 transition duration-300"
+                        className="flex gap-2 cursor-pointer items-center bg-green-600 text-white py-2 px-4 rounded-xl shadow hover:bg-green-700 transition duration-300 animate-scale-in"
                     >
                         <span className="font-semibold">Add Category</span>
                         <FiPlusCircle className="text-lg" />
@@ -254,17 +254,17 @@ const Ingredients = () => {
             } />
 
             {/* Tab Navigation */}
-            <div className="mt-6 border-b border-gray-200">
+            <div className="mt-6 border-b border-gray-200 dark:border-zinc-800">
                 <nav className="-mb-px flex space-x-6">
                     <button
                         onClick={() => setActiveTab('ingredients')}
-                        className={`py-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'ingredients' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                        className={`py-3 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${activeTab === 'ingredients' ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:border-gray-300 dark:hover:border-zinc-700'}`}
                     >
                         Ingredients
                     </button>
                     <button
                         onClick={() => setActiveTab('categories')}
-                        className={`py-3 px-1 border-b-2 font-medium text-sm ${activeTab === 'categories' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'}`}
+                        className={`py-3 px-1 border-b-2 font-medium text-sm transition-all duration-300 ${activeTab === 'categories' ? 'border-blue-500 text-blue-600 dark:text-blue-400 dark:border-blue-400' : 'border-transparent text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 hover:border-gray-300 dark:hover:border-zinc-700'}`}
                     >
                         Categories
                     </button>
@@ -276,13 +276,13 @@ const Ingredients = () => {
                 // Ingredients View
                 <div>
                     <div className="flex justify-between items-center mt-4">
-                        <div className="text-sm md:text-base">{rowsPerPageAndTotal}</div>
-                        <div className='md:w-72 border shadow-sm py-2 px-3 bg-white rounded-xl'>
+                        <div className="text-sm md:text-base text-gray-700 dark:text-zinc-400">{rowsPerPageAndTotal}</div>
+                        <div className='md:w-72 border border-gray-200 dark:border-zinc-700 shadow-sm py-2 px-3 bg-white dark:bg-zinc-900 rounded-xl'>
                             <div className='flex items-center gap-2'>
                                 <TfiSearch className='text-xl font-bold text-gray-500' />
                                 <input
                                     type="text"
-                                    className='outline-none w-full'
+                                    className='outline-none w-full dark:bg-zinc-900 dark:text-zinc-100'
                                     placeholder='Search by Name, SKU, Category...'
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -291,10 +291,10 @@ const Ingredients = () => {
                         </div>
                     </div>
                     {isIngredientTableLoading ? <Preloader /> : (
-                        <section className="overflow-x-auto border shadow-sm rounded-xl bg-white mt-5">
+                        <section className="overflow-x-auto border border-gray-200 dark:border-zinc-800 shadow-sm rounded-xl bg-white dark:bg-zinc-900 mt-5">
                             <table className="table w-full">
-                                <thead className='bg-gray-50'>
-                                    <tr className="text-sm font-semibold text-gray-600 text-left">
+                                <thead className='bg-gray-50 dark:bg-zinc-800'>
+                                    <tr className="text-sm font-semibold text-gray-600 dark:text-zinc-305 text-left border-b border-gray-200 dark:border-zinc-800">
                                         <td className="p-4 rounded-l-xl">Name</td>
                                         <td className="p-4">Category</td>
                                         <td className="p-4">Unit</td>
@@ -305,22 +305,22 @@ const Ingredients = () => {
                                 </thead>
                                 <tbody>
                                     {paginatedData.length === 0 ? (
-                                        <tr><td colSpan="6" className="text-center py-8 text-gray-500">No ingredients found.</td></tr>
+                                        <tr><td colSpan="6" className="text-center py-8 text-gray-500 dark:text-zinc-400">No ingredients found.</td></tr>
                                     ) : (
                                         paginatedData.map((item) => (
-                                            <tr key={item._id} className="hover:bg-slate-50 border-b border-gray-100 last:border-b-0">
-                                                <td className="p-4 font-medium text-gray-800">{item.name}</td>
-                                                <td className="p-4 text-gray-600">{item.category?.categoryName || <span className="text-red-500">N/A</span>}</td>
-                                                <td className="p-4 text-gray-600">{item.unit}</td>
-                                                <td className="p-4 text-gray-600">{item.sku}</td>
+                                            <tr key={item._id} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40 border-b border-gray-100 dark:border-zinc-800 last:border-b-0 text-gray-700 dark:text-zinc-300">
+                                                <td className="p-4 font-medium text-gray-800 dark:text-zinc-100">{item.name}</td>
+                                                <td className="p-4 text-gray-600 dark:text-zinc-400">{item.category?.categoryName || <span className="text-red-500">N/A</span>}</td>
+                                                <td className="p-4 text-gray-600 dark:text-zinc-400">{item.unit}</td>
+                                                <td className="p-4 text-gray-600 dark:text-zinc-400">{item.sku}</td>
                                                 <td className="p-4">
-                                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${item.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${item.isActive ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400'}`}>
                                                         {item.isActive ? 'Active' : 'Inactive'}
                                                     </span>
                                                 </td>
                                                 <td className="p-4 text-lg flex justify-center items-center space-x-4">
-                                                    <button onClick={() => handleEditIngredient(item)} className="text-gray-400 hover:text-yellow-600"><FiEdit /></button>
-                                                    <button onClick={() => handleRemoveIngredient(item._id)} className="text-gray-400 hover:text-red-600"><FiTrash2 /></button>
+                                                    <button onClick={() => handleEditIngredient(item)} className="text-gray-400 dark:text-zinc-500 hover:text-yellow-600 dark:hover:text-yellow-400"><FiEdit /></button>
+                                                    <button onClick={() => handleRemoveIngredient(item._id)} className="text-gray-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 /></button>
                                                 </td>
                                             </tr>
                                         ))
@@ -338,10 +338,10 @@ const Ingredients = () => {
                 // Categories View
                 <div>
                     {isIngredientTableLoading ? <Preloader /> : (
-                         <section className="overflow-x-auto border shadow-sm rounded-xl bg-white mt-5">
+                         <section className="overflow-x-auto border border-gray-200 dark:border-zinc-800 shadow-sm rounded-xl bg-white dark:bg-zinc-900 mt-5">
                             <table className="table w-full">
-                                <thead className='bg-gray-50'>
-                                    <tr className="text-sm font-semibold text-gray-600 text-left">
+                                <thead className='bg-gray-50 dark:bg-zinc-800'>
+                                    <tr className="text-sm font-semibold text-gray-600 dark:text-zinc-305 text-left border-b border-gray-200 dark:border-zinc-800">
                                         <td className="p-4 rounded-l-xl">Category Name</td>
                                         <td className="p-4">Status</td>
                                         <td className="p-4 rounded-r-xl text-center">Actions</td>
@@ -349,19 +349,19 @@ const Ingredients = () => {
                                 </thead>
                                 <tbody>
                                      {categories.length === 0 ? (
-                                        <tr><td colSpan="3" className="text-center py-8 text-gray-500">No categories found.</td></tr>
+                                        <tr><td colSpan="3" className="text-center py-8 text-gray-500 dark:text-zinc-400">No categories found.</td></tr>
                                     ) : (
                                         categories.map((cat) => (
-                                            <tr key={cat._id} className="hover:bg-slate-50 border-b border-gray-100 last:border-b-0">
-                                                <td className="p-4 font-medium text-gray-800">{cat.categoryName}</td>
+                                            <tr key={cat._id} className="hover:bg-slate-50 dark:hover:bg-zinc-800/40 border-b border-gray-100 dark:border-zinc-800 last:border-b-0 text-gray-700 dark:text-zinc-300">
+                                                <td className="p-4 font-medium text-gray-800 dark:text-zinc-100">{cat.categoryName}</td>
                                                 <td className="p-4">
-                                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${cat.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                    <span className={`px-3 py-1 text-xs font-medium rounded-full ${cat.isActive ? 'bg-green-100 text-green-700 dark:bg-green-950/40 dark:text-green-400' : 'bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-400'}`}>
                                                         {cat.isActive ? 'Active' : 'Inactive'}
                                                     </span>
                                                 </td>
                                                 <td className="p-4 text-lg flex justify-center items-center space-x-4">
-                                                    <button onClick={() => handleEditCategory(cat)} className="text-gray-400 hover:text-yellow-600"><FiEdit /></button>
-                                                    <button onClick={() => handleRemoveCategory(cat._id)} className="text-gray-400 hover:text-red-600"><FiTrash2 /></button>
+                                                    <button onClick={() => handleEditCategory(cat)} className="text-gray-400 dark:text-zinc-500 hover:text-yellow-600 dark:hover:text-yellow-400"><FiEdit /></button>
+                                                    <button onClick={() => handleRemoveCategory(cat._id)} className="text-gray-400 dark:text-zinc-500 hover:text-red-600 dark:hover:text-red-400"><FiTrash2 /></button>
                                                 </td>
                                             </tr>
                                         ))
@@ -376,27 +376,27 @@ const Ingredients = () => {
 
             {/* MODAL for Add/Edit Ingredient */}
             {isIngredientModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg max-h-screen overflow-y-auto">
-                        <h2 className="text-2xl mb-5 font-semibold text-gray-800">{editIngredientId ? 'Edit Ingredient' : 'Create a New Ingredient'}</h2>
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-lg max-h-screen overflow-y-auto border dark:border-zinc-800">
+                        <h2 className="text-2xl mb-5 font-semibold text-gray-800 dark:text-zinc-100">{editIngredientId ? 'Edit Ingredient' : 'Create a New Ingredient'}</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="flex flex-col md:col-span-2">
-                                <label className="mb-1 text-sm font-medium text-gray-600">Ingredient Name *</label>
+                                <label className="mb-1 text-sm font-medium text-gray-600 dark:text-zinc-300">Ingredient Name *</label>
                                 <input type="text" name="name" value={ingredientFormData.name} onChange={handleIngredientInputChange} className="input-style" placeholder="e.g., Flour" required />
                             </div>
                             <div className="flex flex-col">
-                                <label className="mb-1 text-sm font-medium text-gray-600">Category *</label>
+                                <label className="mb-1 text-sm font-medium text-gray-600 dark:text-zinc-300">Category *</label>
                                 <select name="category" value={ingredientFormData.category} onChange={handleIngredientInputChange} className="input-style" required>
                                     <option value="" disabled>Select a category</option>
                                     {categories.filter(c => c.isActive).map(cat => <option key={cat._id} value={cat._id}>{cat.categoryName}</option>)}
                                 </select>
                             </div>
                             <div className="flex flex-col">
-                                <label className="mb-1 text-sm font-medium text-gray-600">SKU (Stock Code) *</label>
+                                <label className="mb-1 text-sm font-medium text-gray-600 dark:text-zinc-300">SKU (Stock Code) *</label>
                                 <input type="text" name="sku" value={ingredientFormData.sku} onChange={handleIngredientInputChange} className="input-style" placeholder="e.g., ING-001" required />
                             </div>
                             <div className="flex flex-col">
-                                <label className="mb-1 text-sm font-medium text-gray-600">Purchase Unit *</label>
+                                <label className="mb-1 text-sm font-medium text-gray-600 dark:text-zinc-300">Purchase Unit *</label>
                                 <select name="unit" value={ingredientFormData.unit} onChange={handleIngredientInputChange} className="input-style" required>
                                     <option value="" disabled>Select a unit</option>
                                     {['Kg', 'Ltr', 'Lbs', 'Ml', 'Pcs', 'Bottle', 'Can', 'Jar', 'Box', 'Tray', 'Roll', 'Sheet', 'Bag', 'Slice'].map(unit => (
@@ -404,10 +404,10 @@ const Ingredients = () => {
                                     ))}
                                 </select>
                             </div>
-                            <div className="flex items-center gap-3 mt-4">
-                                <label className="text-sm font-medium text-gray-600">Status:</label>
-                                <input type="checkbox" name="isActive" checked={ingredientFormData.isActive} onChange={handleIngredientInputChange} className="h-4 w-4 rounded" />
-                                <span className="text-sm text-gray-700">Active</span>
+                            <div className="flex items-center gap-3 mt-4 md:col-span-2">
+                                <label className="text-sm font-medium text-gray-600 dark:text-zinc-300">Status:</label>
+                                <input type="checkbox" name="isActive" checked={ingredientFormData.isActive} onChange={handleIngredientInputChange} className="h-4 w-4 rounded dark:bg-zinc-800 dark:border-zinc-700" />
+                                <span className="text-sm text-gray-700 dark:text-zinc-300">Active</span>
                             </div>
                         </div>
                         <div className="flex justify-end space-x-4 mt-6">
@@ -422,17 +422,17 @@ const Ingredients = () => {
 
             {/* MODAL for Add/Edit Category */}
             {isCategoryModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                    <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
-                        <h2 className="text-2xl mb-5 font-semibold text-gray-800">{editCategoryId ? 'Edit Category' : 'Create New Category'}</h2>
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-zinc-900 p-6 rounded-xl shadow-xl w-full max-w-md border dark:border-zinc-800">
+                        <h2 className="text-2xl mb-5 font-semibold text-gray-800 dark:text-zinc-100">{editCategoryId ? 'Edit Category' : 'Create New Category'}</h2>
                         <div className="flex flex-col">
-                            <label className="mb-1 text-sm font-medium text-gray-600">Category Name *</label>
+                            <label className="mb-1 text-sm font-medium text-gray-600 dark:text-zinc-300">Category Name *</label>
                             <input type="text" name="categoryName" value={categoryFormData.categoryName} onChange={handleCategoryInputChange} className="input-style" placeholder="e.g., Dairy, Vegetables" required />
                         </div>
                         <div className="flex items-center gap-3 mt-4">
-                            <label className="text-sm font-medium text-gray-600">Status:</label>
-                            <input type="checkbox" name="isActive" checked={categoryFormData.isActive} onChange={handleCategoryInputChange} className="h-4 w-4 rounded" />
-                            <span className="text-sm text-gray-700">Active</span>
+                            <label className="text-sm font-medium text-gray-600 dark:text-zinc-300">Status:</label>
+                            <input type="checkbox" name="isActive" checked={categoryFormData.isActive} onChange={handleCategoryInputChange} className="h-4 w-4 rounded dark:bg-zinc-800 dark:border-zinc-700" />
+                            <span className="text-sm text-gray-700 dark:text-zinc-300">Active</span>
                         </div>
                         <div className="flex justify-end space-x-4 mt-6">
                             <button onClick={closeCategoryModal} className="btn-cancel">Cancel</button>
