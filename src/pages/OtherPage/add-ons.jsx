@@ -9,6 +9,7 @@ import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import { AuthContext } from "../../providers/AuthProvider";
 import MtableLoading from "../../components library/MtableLoading"; 
 import useActionPermissions from "../../Hook/useActionPermissions";
+import { dbBulkPut, dbGetAll, dbClear } from "../../utilities/db";
 
 const Addons = () => {
     const axiosSecure = UseAxiosSecure();
@@ -31,10 +32,24 @@ const Addons = () => {
         setLoading(true);
         try {
             const response = await axiosSecure.get(`/addons/${branch}/get-all`);
+            
+            // Cache in IndexedDB (clear first)
+            await dbClear('addons');
+            await dbBulkPut('addons', response.data);
+
             setAddons(response.data);
             setFilteredAddons(response.data);
         } catch (error) {
-            console.error("Error fetching addons:", error);
+            console.error("Error fetching addons, checking IndexedDB cache:", error);
+            try {
+                const cached = await dbGetAll('addons');
+                if (cached && cached.length > 0) {
+                    setAddons(cached);
+                    setFilteredAddons(cached);
+                }
+            } catch (dbErr) {
+                console.error("Failed to read addons from IndexedDB", dbErr);
+            }
         } finally {
             setLoading(false);
         }

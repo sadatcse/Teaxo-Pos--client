@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../providers/AuthProvider";
 import UseAxiosSecure from "./UseAxioSecure";
+import { dbPut, dbGet } from "../utilities/db";
 
 const useUserPermissions = () => {
   const { user } = useContext(AuthContext);
@@ -30,11 +31,24 @@ const useUserPermissions = () => {
           .filter(permission => permission.isAllowed)
           .map(permission => permission.path);
         
+        // Save to IndexedDB
+        await dbPut('userPermissions', { role: user.role, allowedRoutes: allowedPaths });
+
         setAllowedRoutes(allowedPaths);
       } catch (err) {
-        console.error("Failed to fetch user permissions:", err);
-        setError(err);
-        setAllowedRoutes([]); // Ensure it's empty array on error
+        console.error("Failed to fetch user permissions, checking IndexedDB cache:", err);
+        try {
+          const cached = await dbGet('userPermissions', user.role);
+          if (cached && cached.allowedRoutes) {
+            setAllowedRoutes(cached.allowedRoutes);
+          } else {
+            setError(err);
+            setAllowedRoutes([]);
+          }
+        } catch (dbErr) {
+          setError(err);
+          setAllowedRoutes([]);
+        }
       } finally {
         setLoading(false);
       }

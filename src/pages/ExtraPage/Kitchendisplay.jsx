@@ -3,6 +3,7 @@ import moment from 'moment';
 import { AuthContext } from '../../providers/AuthProvider';
 import UseAxiosSecure from '../../Hook/UseAxioSecure';
 import io from 'socket.io-client';
+import { dbPut, dbGetAll, dbGet, syncPendingInvoices } from '../../utilities/db';
 
 // --- Icons ---
 import { 
@@ -309,12 +310,47 @@ const Kitchendisplay = () => {
 
         const fetchOrders = async () => {
             try {
-                const response = await axiosSecure.get(`/invoice/${branchName}/kitchen`);
-                const sorted = response.data.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
-                setOrders(sorted);
+                if (navigator.onLine) {
+                    const response = await axiosSecure.get(`/invoice/${branchName}/kitchen`);
+                    const serverOrders = response.data;
+                    
+                    // Write retrieved kitchen orders to local cache
+                    for (const order of serverOrders) {
+                        await dbPut('invoices', { ...order, isSyncPending: false });
+                    }
+                    
+                    // Also merge any local unsynced offline orders that are not served
+                    const cached = await dbGetAll('invoices');
+                    const localUnsynced = cached.filter(inv => inv.isSyncPending && inv.orderStatus !== 'served');
+                    
+                    // Deduplicate and merge
+                    const merged = [...serverOrders];
+                    localUnsynced.forEach(localInv => {
+                        const idx = merged.findIndex(o => o._id === localInv._id);
+                        if (idx === -1) {
+                            merged.push(localInv);
+                        } else {
+                            merged[idx] = localInv;
+                        }
+                    });
+
+                    const sorted = merged.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+                    setOrders(sorted);
+                    setError(null);
+                } else {
+                    throw new Error("Device offline");
+                }
             } catch (err) {
-                console.error(err);
-                setError("Waiting for connection...");
+                console.warn("Failed fetching from server, reading from IndexedDB:", err);
+                try {
+                    const cached = await dbGetAll('invoices');
+                    const activeLocal = cached.filter(inv => inv.orderStatus !== 'served');
+                    const sorted = activeLocal.sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+                    setOrders(sorted);
+                    setError(null);
+                } catch (dbErr) {
+                    setError("Failed to load local data.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -325,47 +361,71 @@ const Kitchendisplay = () => {
         // Standard fallback polling once every 30 seconds for serverless environments (where WebSockets fail)
         const pollInterval = setInterval(fetchOrders, 30000);
 
-        const socket = io(process.env.REACT_APP_UPLOAD_URL, {
-            transports: ['websocket'],
-            reconnectionAttempts: 3,
-            timeout: 5000,
-        });
-        socket.emit('join-branch', branchName);
-
-        socket.on('kitchen-update', (updatedOrder) => {
-            if (!updatedOrder?._id) return;
-            
-            // Play sound for genuinely NEW orders or Rounds
-            if (isAlertEnabled && updatedOrder.orderStatus !== 'served') {
-                // Simple logic: if not in list, or kotRound increased
-                setOrders(prev => {
-                    const exists = prev.find(o => o._id === updatedOrder._id);
-                    if (!exists || (updatedOrder.kotRound > exists.kotRound)) {
-                        audioRef.current.currentTime = 0;
-                        audioRef.current.play().catch(()=>{});
-                        setShowAlert(true);
-                        setTimeout(() => setShowAlert(false), 4000);
-                    }
-                    return prev; 
-                });
+        // Local cross-tab sync listener
+        const channel = new BroadcastChannel('teaxo-pos-offline-sync');
+        channel.onmessage = (event) => {
+            if (event.data.type === 'INVOICE_UPDATED') {
+                fetchOrders();
             }
+        };
 
-            setOrders(prev => {
-                const index = prev.findIndex(o => o._id === updatedOrder._id);
-                let newList = [...prev];
-                if (index !== -1) newList[index] = updatedOrder;
-                else newList.push(updatedOrder);
-                
-                return newList
-                    .filter(o => o.orderStatus !== 'served')
-                    .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+        // Sync helper on connection recovery
+        const handleOnline = () => {
+            syncPendingInvoices(axiosSecure, branchName);
+            fetchOrders();
+        };
+        window.addEventListener("online", handleOnline);
+
+        let socket;
+        if (navigator.onLine) {
+            socket = io(process.env.REACT_APP_UPLOAD_URL, {
+                transports: ['websocket'],
+                reconnectionAttempts: 3,
+                timeout: 5000,
             });
-        });
+            socket.emit('join-branch', branchName);
+
+            socket.on('kitchen-update', (updatedOrder) => {
+                if (!updatedOrder?._id) return;
+                
+                // Cache socket updates
+                dbPut('invoices', { ...updatedOrder, isSyncPending: false });
+
+                // Play sound for genuinely NEW orders or Rounds
+                if (isAlertEnabled && updatedOrder.orderStatus !== 'served') {
+                    setOrders(prev => {
+                        const exists = prev.find(o => o._id === updatedOrder._id);
+                        if (!exists || (updatedOrder.kotRound > exists.kotRound)) {
+                            audioRef.current.currentTime = 0;
+                            audioRef.current.play().catch(()=>{});
+                            setShowAlert(true);
+                            setTimeout(() => setShowAlert(false), 4000);
+                        }
+                        return prev; 
+                    });
+                }
+
+                setOrders(prev => {
+                    const index = prev.findIndex(o => o._id === updatedOrder._id);
+                    let newList = [...prev];
+                    if (index !== -1) newList[index] = updatedOrder;
+                    else newList.push(updatedOrder);
+                    
+                    return newList
+                        .filter(o => o.orderStatus !== 'served')
+                        .sort((a, b) => new Date(a.dateTime) - new Date(b.dateTime));
+                });
+            });
+        }
 
         return () => { 
             clearInterval(pollInterval);
-            socket.off('kitchen-update'); 
-            socket.disconnect(); 
+            channel.close();
+            window.removeEventListener("online", handleOnline);
+            if (socket) {
+                socket.off('kitchen-update'); 
+                socket.disconnect(); 
+            }
         };
     }, [branchName, axiosSecure, isAlertEnabled]);
 
@@ -374,11 +434,21 @@ const Kitchendisplay = () => {
         setOrders(prev => prev.map(o => o._id === updatedOrder._id ? updatedOrder : o).filter(o => o.orderStatus !== 'served'));
         
         try {
-            // Ensure we send the FULL updated structure including the nested history status
-            await axiosSecure.put(`/invoice/update/${updatedOrder._id}`, updatedOrder);
+            if (navigator.onLine && !updatedOrder._id.toString().startsWith('local_')) {
+                // Ensure we send the FULL updated structure including the nested history status
+                await axiosSecure.put(`/invoice/update/${updatedOrder._id}`, updatedOrder);
+                await dbPut('invoices', { ...updatedOrder, isSyncPending: false });
+            } else {
+                await dbPut('invoices', { ...updatedOrder, isSyncPending: true });
+            }
         } catch (err) {
-            console.error("Update failed", err);
-            // In a real app, you might revert state here or show a toaster
+            console.warn("Update API failed. Saving update locally to IndexedDB:", err);
+            await dbPut('invoices', { ...updatedOrder, isSyncPending: true });
+        } finally {
+            // Broadcast the local offline update to other tabs
+            const channel = new BroadcastChannel('teaxo-pos-offline-sync');
+            channel.postMessage({ type: 'INVOICE_UPDATED' });
+            channel.close();
         }
     };
 

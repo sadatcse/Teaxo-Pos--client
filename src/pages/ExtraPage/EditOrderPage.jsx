@@ -625,7 +625,7 @@ const EditOrderPage = () => {
         <div className="font-sans antialiased bg-gray-100 dark:bg-zinc-950 text-gray-800 dark:text-zinc-100 min-h-screen">
             <TableSelectionModal isOpen={isTableSelectionModalOpen} tables={tables} selectedTable={selectedTable} handleTableSelect={handleTableSelect} onConfirm={handleTableSelectionConfirm} onClose={() => setIsTableSelectionModalOpen(false)} />
             <DeliveryProviderSelectionModal isOpen={isDeliveryProviderModalOpen} onSelect={handleDeliveryProviderSelect} onClose={() => setIsDeliveryProviderModalOpen(false)} />
-            <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} />
+            <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} onCustomerAdded={setCustomer} />
             
             {/* --- NEW UPDATE HISTORY MODAL COMPONENT --- */}
 <UpdateHistoryModal 

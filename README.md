@@ -23,6 +23,7 @@ The application integrates real-time communications for kitchen sync, advanced r
   - [📊 Finance, Sales & Activity Auditing](#-finance-sales--activity-auditing)
   - [🛡️ Security & Fine-grained RBAC](#-security--fine-grained-rbac)
   - [🏢 Multi-Branch & Super Admin Suite](#-multi-branch--super-admin-suite)
+- [📴 Offline POS & Sync Capabilities](#-offline-pos--sync-capabilities)
 - [🛠️ Technology Stack](#-technology-stack)
 - [⚙️ Setup & Installation](#-setup--installation)
   - [1. Prerequisites](#1-prerequisites)
@@ -79,6 +80,22 @@ The application integrates real-time communications for kitchen sync, advanced r
 ### 🏢 Multi-Branch & Super Admin Suite
 *   **New Branch Wizard**: Easily provision new branch databases, default settings, and inventories.
 *   **Global Settings Manager**: Manage multi-company options, unified tax brackets (VAT, BIN), system settings, and logo branding.
+
+---
+
+## 📴 Offline POS & Sync Capabilities
+
+The application implements a robust offline fallback to ensure uninterrupted dining room operations during network outages:
+
+*   **PWA Caching Proxy**: A Service Worker caches core static assets (`/`, `/index.html`, `/manifest.json`, styles, images, etc.) using a stale-while-revalidate pattern to allow the app to boot offline.
+*   **IndexedDB Local DB (`TeaxoPOSDatabase` v2)**: Stores critical data structures including Products, Categories, Add-ons, System Settings, User Permissions, Dining Tables, and Customer profiles.
+*   **Offline Table Selection**: Caches floor plan table status online, with an automatic fallback that generates 16 default offline tables if the cache is empty or fails.
+*   **Offline Customer Management**: Searches cached customer profiles offline by mobile number. Supports offline creation of new customers, saving them with `isSyncPending: true`.
+*   **Offline Order Processing**: Processes and prints KOT/Bar tickets and client receipts offline, saving invoice transactions to the local `invoices` store.
+*   **Automatic Synchronization**: Automatically detects network status changes. On regaining internet connection, it runs a background sync that:
+    1. POSTs pending offline-created customers to the database first to register them.
+    2. POSTs pending offline invoices afterward, automatically linking them to the newly registered customer database records.
+*   **Database Lock Prevention**: Handles IndexedDB `onversionchange` and `onblocked` requests to automatically close active connections across multiple open browser tabs during database schema upgrades.
 
 ---
 

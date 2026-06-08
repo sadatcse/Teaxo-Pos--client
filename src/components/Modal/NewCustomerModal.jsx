@@ -5,7 +5,7 @@ import { AuthContext } from "../../providers/AuthProvider";
 import { toast } from "react-toastify"; // Import the toast function
 import "react-toastify/dist/ReactToastify.css"; // Import the toast CSS
 
-const NewCustomerModal = ({ isOpen, onClose, mobile }) => {
+const NewCustomerModal = ({ isOpen, onClose, mobile, onCustomerAdded }) => {
   const { addNewCustomer, error } = useCustomerTableSearch();
   const { branch } = useContext(AuthContext);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -45,9 +45,12 @@ const NewCustomerModal = ({ isOpen, onClose, mobile }) => {
     }
 
     setIsSubmitting(true); // Set submitting state to true before making the API call
-    await addNewCustomer(formData); // Call the function to add the customer
+    const newCust = await addNewCustomer(formData); // Call the function to add the customer
     if (!error) {
       toast.success("Customer added successfully!"); // Show success toast
+      if (onCustomerAdded && newCust) {
+        onCustomerAdded(newCust);
+      }
       onClose(); // Close modal only if no error
     } else {
       toast.error("Failed to add customer. Please try again."); // Show error toast

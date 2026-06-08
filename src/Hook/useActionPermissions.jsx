@@ -2,6 +2,7 @@
 import { useState, useEffect, useContext, useCallback } from 'react';
 import { AuthContext } from '../providers/AuthProvider';
 import UseAxiosSecure from './UseAxioSecure';
+import { dbPut, dbGet } from '../utilities/db';
 
 const useActionPermissions = () => {
     const { user } = useContext(AuthContext);
@@ -19,14 +20,25 @@ const useActionPermissions = () => {
                 setLoading(true);
                 const response = await axiosSecure.get(`/role-permissions?role=${user.role}&branch=${user.branch}`);
                 if (response.data && response.data.data && response.data.data.permissions) {
-                    setPermissions(response.data.data.permissions);
+                    const permissionsData = response.data.data.permissions;
+                    // Cache in IndexedDB
+                    await dbPut('actionPermissions', { role: user.role, permissions: permissionsData });
+                    setPermissions(permissionsData);
                 } else {
                     setPermissions({});
                 }
             } catch (error) {
-                // It's normal for a role to not have permissions set yet (404), so we just treat it as empty.
-                console.log("No action permissions found for this role, or an error occurred.");
-                setPermissions({});
+                console.log("Error fetching action permissions, checking IndexedDB cache:", error);
+                try {
+                    const cached = await dbGet('actionPermissions', user.role);
+                    if (cached && cached.permissions) {
+                        setPermissions(cached.permissions);
+                    } else {
+                        setPermissions({});
+                    }
+                } catch (dbErr) {
+                    setPermissions({});
+                }
             } finally {
                 setLoading(false);
             }

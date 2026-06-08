@@ -1,6 +1,7 @@
 import { useState, useEffect, useContext } from "react";
 import UseAxiosSecure from "./UseAxioSecure";
 import { AuthContext } from "../providers/AuthProvider";
+import { dbBulkPut, dbGetAll } from "../utilities/db";
 
 const CategroieHook = () => {
   const [categories, setCategories] = useState([]);
@@ -10,12 +11,8 @@ const CategroieHook = () => {
   const axiosSecure = UseAxiosSecure();
   const { branch } = useContext(AuthContext);
 
-  const EXPIRATION_TIME = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
-
   useEffect(() => {
     if (!branch) return;
-
-    const LOCAL_STORAGE_KEY = `categories_${branch}`;
 
     const fetchActiveCategories = async () => {
       try {
@@ -23,38 +20,34 @@ const CategroieHook = () => {
         const sortedCategories = response.data.sort((a, b) => a.serial - b.serial);
         const categoryData = sortedCategories.map((category) => category.categoryName);
 
-        localStorage.setItem(
-          LOCAL_STORAGE_KEY,
-          JSON.stringify({ data: sortedCategories, timestamp: Date.now() })
-        );
+        // Store to IndexedDB
+        await dbBulkPut('categories', sortedCategories);
 
         setCategoryNames(sortedCategories);
         setCategories(categoryData);
         setLoading(false);
       } catch (err) {
-        setError(err.message);
+        console.error("Error fetching categories, falling back to IndexedDB:", err);
+        // Fallback to IndexedDB
+        try {
+          const cached = await dbGetAll('categories');
+          if (cached && cached.length > 0) {
+            const sortedCategories = cached.sort((a, b) => a.serial - b.serial);
+            const categoryData = sortedCategories.map((category) => category.categoryName);
+            setCategoryNames(sortedCategories);
+            setCategories(categoryData);
+          } else {
+            setError(err.message);
+          }
+        } catch (dbErr) {
+          setError(err.message);
+        }
         setLoading(false);
       }
     };
 
-    const checkLocalStorage = () => {
-      const storedData = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedData) {
-        const { data, timestamp } = JSON.parse(storedData);
-        if (Date.now() - timestamp < EXPIRATION_TIME) {
-          const sortedCategories = data.sort((a, b) => a.serial - b.serial);
-          const categoryData = sortedCategories.map((category) => category.categoryName);
-          setCategoryNames(sortedCategories);
-          setCategories(categoryData);
-          setLoading(false);
-          return;
-        }
-      }
-      fetchActiveCategories();
-    };
-
-    checkLocalStorage();
-  }, [branch, axiosSecure, EXPIRATION_TIME]); 
+    fetchActiveCategories();
+  }, [branch, axiosSecure]); 
 
   return { categoryNames, categories, loading, error };
 };

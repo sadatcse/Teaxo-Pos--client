@@ -16,6 +16,7 @@ import { toast } from "react-toastify";
 import ProductSelection from "../../components/Product/ProductSelection.jsx";
 import OrderSummary from "../../components/Product/OrderSummary.jsx";
 import useCategoriesWithProducts from './../../Hook/useCategoriesWithProducts';
+import { dbPut, dbGet, syncPendingInvoices } from "../../utilities/db";
 
 const CollectOrder = () => {
     const { state: routeState } = useLocation();
@@ -23,9 +24,26 @@ const CollectOrder = () => {
     const loginUserEmail = user?.email || "info@leavesoft.com";
     const loginUserName = user?.name || "leavesoft";
     const [mobile, setMobile] = useState("");
-    const { customer, tables, searchCustomer, selectedTable, isCustomerModalOpen, setSelectedTable, setCustomerModalOpen } = useCustomerTableSearch();
+    const { customer, setCustomer, tables, searchCustomer, selectedTable, isCustomerModalOpen, setSelectedTable, setCustomerModalOpen } = useCustomerTableSearch();
     const axiosSecure = UseAxiosSecure();
     const { products, categories, selectedCategory, setSelectedCategory, loadingProducts } = useCategoriesWithProducts(branch);
+    
+    // Sync offline orders on startup & when network status changes
+    useEffect(() => {
+        const handleOnline = () => {
+            toast.info("Connection restored. Syncing offline orders...");
+            syncPendingInvoices(axiosSecure, branch);
+        };
+        window.addEventListener("online", handleOnline);
+
+        if (navigator.onLine) {
+            syncPendingInvoices(axiosSecure, branch);
+        }
+
+        return () => {
+            window.removeEventListener("online", handleOnline);
+        };
+    }, [axiosSecure, branch]);
     
     const [addedProducts, setAddedProducts] = useState([]);
     const [orderType, setOrderType] = useState(null);
@@ -345,14 +363,20 @@ const CollectOrder = () => {
 
         try {
             let response;
-            if (currentInvoiceId) {
-                response = await axiosSecure.put(`/invoice/update/${currentInvoiceId}`, invoiceDetails);
-                toast.success("Invoice updated successfully!");
+            let data;
+            
+            if (navigator.onLine) {
+                if (currentInvoiceId && !currentInvoiceId.startsWith('local_')) {
+                    response = await axiosSecure.put(`/invoice/update/${currentInvoiceId}`, invoiceDetails);
+                    toast.success("Invoice updated successfully!");
+                } else {
+                    response = await axiosSecure.post("/invoice/post", invoiceDetails);
+                    toast.success("Invoice saved successfully!");
+                }
+                data = response.data;
             } else {
-                response = await axiosSecure.post("/invoice/post", invoiceDetails);
-                toast.success("Invoice saved successfully!");
+                throw new Error("Device is offline");
             }
-            const data = response.data;
             
             const dataForPrint = { 
                 ...invoiceDetails, 
@@ -362,6 +386,9 @@ const CollectOrder = () => {
                 invoiceSerial: data.invoiceSerial || data._id 
             };
             
+            // Cache locally in IndexedDB as well
+            await dbPut('invoices', { ...dataForPrint, isSyncPending: false });
+
             setPrint(dataForPrint);
             setCurrentInvoiceId(data.invoiceId || data._id);
             
@@ -376,10 +403,47 @@ const CollectOrder = () => {
             }
             return true;
         } catch (error) {
-            console.error("Error saving/updating invoice:", error);
-            const errorMessage = error.response?.data?.error || "Failed to process the invoice.";
-            Swal.fire("Error", errorMessage, "error");
-            return false;
+            console.warn("API request failed or device is offline. Saving locally to IndexedDB:", error);
+            
+            try {
+                const localId = currentInvoiceId || 'local_' + Date.now();
+                const localSerial = 'LOCAL-' + String(Date.now()).slice(-6);
+                
+                const localInvoice = {
+                    ...invoiceDetails,
+                    _id: localId,
+                    invoiceId: localId,
+                    invoiceSerial: localSerial,
+                    dateTime: new Date().toISOString(),
+                    isSyncPending: true,
+                    isOfflineCreated: !currentInvoiceId || currentInvoiceId.startsWith('local_')
+                };
+                
+                await dbPut('invoices', localInvoice);
+                
+                // Broadcast local offline update to other tabs (like kitchen board)
+                const channel = new BroadcastChannel('teaxo-pos-offline-sync');
+                channel.postMessage({ type: 'INVOICE_UPDATED' });
+                channel.close();
+                
+                setPrint(localInvoice);
+                setCurrentInvoiceId(localId);
+                
+                toast.info("Saved locally (Offline mode). Receipt generated.");
+                
+                if (isPrintAction && companies[0]) {
+                    setTimeout(() => {
+                        if (receiptRef.current) {
+                            receiptRef.current.printReceipt();
+                        }
+                    }, 100);
+                }
+                return true;
+            } catch (dbErr) {
+                console.error("Failed to save offline invoice to IndexedDB:", dbErr);
+                Swal.fire("Offline Error", "Could not process order offline: " + dbErr.message, "error");
+                return false;
+            }
         } finally {
             setIsProcessing(false);
         }
@@ -407,7 +471,7 @@ const CollectOrder = () => {
 
             {!isOrderTypeModalOpen && !isTableSelectionModalOpen && !isDeliveryProviderModalOpen && (
                 <div className="flex flex-col lg:flex-row p-1 gap-1">
-                    <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} />
+                    <NewCustomerModal isOpen={isCustomerModalOpen} onClose={() => setCustomerModalOpen(false)} mobile={mobile} onCustomerAdded={setCustomer} />
                     
                     <ProductSelection
                         products={products}
