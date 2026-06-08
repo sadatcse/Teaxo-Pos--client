@@ -322,7 +322,14 @@ const Kitchendisplay = () => {
 
         fetchOrders();
 
-        const socket = io(process.env.REACT_APP_UPLOAD_URL);
+        // Standard fallback polling once every 30 seconds for serverless environments (where WebSockets fail)
+        const pollInterval = setInterval(fetchOrders, 30000);
+
+        const socket = io(process.env.REACT_APP_UPLOAD_URL, {
+            transports: ['websocket'],
+            reconnectionAttempts: 3,
+            timeout: 5000,
+        });
         socket.emit('join-branch', branchName);
 
         socket.on('kitchen-update', (updatedOrder) => {
@@ -355,7 +362,11 @@ const Kitchendisplay = () => {
             });
         });
 
-        return () => { socket.off('kitchen-update'); socket.disconnect(); };
+        return () => { 
+            clearInterval(pollInterval);
+            socket.off('kitchen-update'); 
+            socket.disconnect(); 
+        };
     }, [branchName, axiosSecure, isAlertEnabled]);
 
     const handleUpdateOrder = async (updatedOrder) => {
